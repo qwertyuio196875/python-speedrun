@@ -1,0 +1,24 @@
+{
+  "name": "python-speedrun",
+  "private": true,
+  "version": "1.0.0",
+  "description": "面向 Java 开发者的 Python 速通学习平台（5~10 小时跨过 Python 基础门槛，直通 AI 应用开发）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "validate": "node scripts/validate-content.mjs",
+    "check": "node scripts/validate-content.mjs && vite build"
+  },
+  "dependencies": {
+    "element-plus": "^2.9.7",
+    "pinia": "^3.0.1",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.3",
+    "vite": "^6.2.5"
+  }
+}
