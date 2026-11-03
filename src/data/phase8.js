@@ -347,5 +347,216 @@ export default [
         explain: '参数类型写成 Pydantic 模型，框架就把 JSON 请求体解析成对象并校验，取字段直接用 body.字段名。'
       }
     ]
+  },
+  {
+    id: 'llm-chat-api',
+    title: '调用大模型接口：第一次拿到 AI 回复',
+    phase: 8,
+    order: 5,
+    minutes: 32,
+    rating: { level: 4, must: 5 },
+    summary: '用一个 POST 请求调用兼容 OpenAI 格式的 chat 接口，拿到模型的回复；把密钥放进环境变量，再按类别处理报错。',
+    keywords: ['LLM', '大模型', 'chat/completions', 'API Key', '环境变量', 'Bearer', 'OpenAI'],
+    tip: '零基础提示：模型接口其实就是一个普通的 POST 网址。你已经会发请求、会读 JSON，把这两件事拼起来，就是所谓"调用 AI"。',
+    what: '大模型能力通过 HTTP 接口暴露出来：你发一段对话，它回一段对话。去掉名词，这一步就是你上一节学会的 POST——只是请求体里放的是消息列表，响应里多了一层 choices。多数平台都兼容同一套格式，因此你会用 requests 或 httpx 直接发，不依赖任何额外框架，网络、密钥、状态码、JSON 解析都在你手上。',
+    analogy: '像给客服发一条工单：你填好表单（messages）、带上工牌（密钥）、投进指定的信箱（网址）；客服回你一张回执，真正的答复写在"回执里的第一条内容"那一栏（choices[0]），额度用没用掉写在另外一栏（usage）。',
+    terms: [
+      { term: 'api key', zh: '接口密钥', note: '一串证明"是你本人在调用"的字符，通常放在请求头里发出去' },
+      { term: 'endpoint', zh: '接口地址', note: '具体的访问网址，比如 /v1/chat/completions' },
+      { term: 'messages', zh: '消息列表', note: '一次对话的上下文，每条消息有 role（角色）和 content（内容）两个字段' },
+      { term: 'token', zh: '词元', note: '模型计费和上下文长度的计量单位，一段文字会被切成若干词元' },
+      { term: 'stream', zh: '流式返回', note: '模型边想边把内容分多次发回，而不是憋完整段再发' },
+    ],
+    steps: [
+      '在模型平台申请一个 API Key，并记下它的接口地址（base_url）和模型名。',
+      '把密钥写进环境变量：Windows 用 setx LLM_API_KEY "你的密钥"，然后重开终端。',
+      '用 os.environ 读出来，写进请求头的 Authorization: Bearer 里。',
+      '用 requests.post 发 messages 列表，先打印 status_code，再打印解析后的字段。',
+      '刻意传一个错的密钥，观察 401；再传一个不存在的模型名，观察 404/400 的提示文字。',
+    ],
+    examples: [
+      {
+        title: '最小的一次模型调用',
+        code: `import os
+import requests
+
+api_key = os.environ["LLM_API_KEY"]
+url = "https://api.deepseek.com/chat/completions"
+
+body = {
+    "model": "deepseek-chat",
+    "messages": [
+        {"role": "user", "content": "用一句话解释什么是变量"}
+    ],
+}
+
+r = requests.post(
+    url,
+    headers={"Authorization": f"Bearer {api_key}"},
+    json=body,
+    timeout=30,
+)
+print(r.status_code)
+data = r.json()
+print(data["choices"][0]["message"]["content"])`,
+        output: '预期说明：正常时第一行打印 200，第二行打印模型对"变量"的一句话解释（内容每次不同）。需自行申请可用的 API Key、设置环境变量并联网运行。',
+        note: '需联网并配置可用的 API Key 在本机运行。密钥从环境变量读取，不要写进代码；timeout=30 是必须的，模型生成比普通网页慢。',
+        verify: false,
+      },
+      {
+        title: '多轮对话与读取用量',
+        code: `import os
+import requests
+
+api_key = os.environ["LLM_API_KEY"]
+url = "https://api.deepseek.com/chat/completions"
+
+messages = [
+    {"role": "system", "content": "你是零基础 Python 老师，回答不超过 40 字。"},
+    {"role": "user", "content": "列表和元组有什么区别？"},
+]
+
+r = requests.post(
+    url,
+    headers={"Authorization": f"Bearer {api_key}"},
+    json={"model": "deepseek-chat", "messages": messages},
+    timeout=30,
+)
+data = r.json()
+print(data["choices"][0]["message"]["content"])
+print(data["usage"])`,
+        output: '预期说明：先打印一句简短解释，再打印一个含 prompt_tokens、completion_tokens 等字段的用量字典。需配置 API Key 并联网在本机运行。',
+        note: '需联网并配置可用的 API Key 在本机运行。system 消息用来定角色和限制；把上一轮的回复按 {"role": "assistant", "content": ...} 追加进 messages，就能实现多轮对话。',
+        verify: false,
+      },
+      {
+        title: '把报错分开处理',
+        code: `import os
+import requests
+
+api_key = os.environ["LLM_API_KEY"]
+
+try:
+    r = requests.post(
+        "https://api.deepseek.com/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}"},
+        json={"model": "deepseek-chat", "messages": [{"role": "user", "content": "你好"}]},
+        timeout=30,
+    )
+    r.raise_for_status()
+    print(r.json()["choices"][0]["message"]["content"])
+except requests.Timeout:
+    print("超时：网络太慢或内容太长，重试或加大 timeout")
+except requests.HTTPError as e:
+    print("接口返回错误：", e.response.status_code, e.response.text[:200])
+except requests.ConnectionError:
+    print("连不上：检查网络和接口地址")`,
+        output: '预期说明：正常时打印模型的回复；超时、接口报错、连不上三种情况分别打印不同的提示。需配置 API Key 并联网在本机运行。',
+        note: '需联网并配置可用的 API Key 在本机运行。raise_for_status() 会在 4xx/5xx 时抛出异常，比"不检查状态码直接用 r.json()"更安全。',
+        verify: false,
+      },
+    ],
+    pitfalls: [
+      {
+        title: '把 API Key 写进代码并提交到仓库',
+        bad: 'headers={"Authorization": "Bearer sk-真实密钥"}',
+        good: 'key = os.environ["LLM_API_KEY"]\nheaders={"Authorization": f"Bearer {key}"}',
+        note: '密钥进了公开仓库等于送给别人用你的额度。发现泄露后先去平台重置，再改代码。',
+      },
+      {
+        title: '不检查状态码就取 choices',
+        bad: 'print(r.json()["choices"][0]["message"]["content"])',
+        good: 'r.raise_for_status()\ndata = r.json()\nprint(data["choices"][0]["message"]["content"])',
+        note: '密钥错、额度用完、模型名写错都会返回非 200，此时的 JSON 里没有 choices，会报 KeyError 掩盖真正原因。',
+      },
+      {
+        title: '请求体拼错结构',
+        bad: 'json={"message": "你好"}  # 少了 model，也没有 messages 列表',
+        good: 'json={"model": "deepseek-chat", "messages": [{"role": "user", "content": "你好"}]}',
+        note: '接口要的是 messages 列表，每条里面有 role 和 content；消息写成字符串或漏掉 model 都会 400。',
+      },
+      {
+        title: '不设超时，程序卡住不动',
+        bad: 'requests.post(url, headers=..., json=body)',
+        good: 'requests.post(url, headers=..., json=body, timeout=30)',
+        note: '模型生成耗时不稳定，不设超时可能让你等很久且无法判断是慢还是挂了。',
+      },
+    ],
+    practice: [
+      {
+        prompt: '写一段代码调用 chat 接口问"你好"，打印状态码和模型回复内容，密钥从环境变量 LLM_API_KEY 读取。',
+        starter: `import os
+import requests
+
+api_key = os.environ["LLM_API_KEY"]
+# TODO: 发送 POST 请求，打印 r.status_code 和 choices[0].message.content
+`,
+        answer: `import os
+import requests
+
+api_key = os.environ["LLM_API_KEY"]
+r = requests.post(
+    "https://api.deepseek.com/chat/completions",
+    headers={"Authorization": f"Bearer {api_key}"},
+    json={"model": "deepseek-chat", "messages": [{"role": "user", "content": "你好"}]},
+    timeout=30,
+)
+print(r.status_code)
+print(r.json()["choices"][0]["message"]["content"])`,
+        output: '预期说明：正常时打印 200 和一句问候。需配置 API Key 并联网在本机运行。',
+        hint: '请求头带 Authorization: Bearer <key>，请求体要有 model 和 messages 两个字段。',
+      },
+      {
+        prompt: '写一个函数 ask(question)，用同一个会话连续问两个问题，并把第二次回答也打印出来。',
+        starter: `import os
+import requests
+
+def ask(question, history=None):
+    # TODO: 把 question 追加进 messages，发请求并返回回复文本
+    pass
+`,
+        answer: `import os
+import requests
+
+def ask(question, history=None):
+    history = history or []
+    messages = history + [{"role": "user", "content": question}]
+    r = requests.post(
+        "https://api.deepseek.com/chat/completions",
+        headers={"Authorization": f"Bearer {os.environ['LLM_API_KEY']}"},
+        json={"model": "deepseek-chat", "messages": messages},
+        timeout=30,
+    )
+    r.raise_for_status()
+    reply = r.json()["choices"][0]["message"]["content"]
+    history.append({"role": "assistant", "content": reply})
+    return reply`,
+        output: '预期说明：函数可被连续调用，history 里会累积 user/assistant 消息。需配置 API Key 并联网在本机运行。',
+        hint: '把历史消息与本次问题拼成 messages；返回后记得把 assistant 的回复追加进历史。',
+      },
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '模型真正的回复文本在返回 JSON 的哪个位置？',
+        options: ['data["text"]', 'data["choices"][0]["message"]["content"]', 'data["reply"]', 'data["usage"]["content"]'],
+        answer: 1,
+        explain: '兼容 OpenAI 格式的接口把回复放在 choices 数组第一条的 message.content 里。',
+      },
+      {
+        type: 'judge',
+        question: 'API Key 应该写进代码文件，方便部署到任何机器。',
+        answer: false,
+        explain: '密钥要放在环境变量或 .env 里，代码只读取；写进代码并提交会造成泄露。',
+      },
+      {
+        type: 'code',
+        question: '补全请求头，让它用变量 api_key 做认证：headers={"Authorization": ________}',
+        code: `headers = {"Authorization": f"________"}`,
+        answer: 'Bearer {api_key}',
+        accept: ['Bearer {api_key}'],
+        explain: '标准写法是 Authorization: Bearer <你的密钥>，中间有一个空格。'
+      },
+    ]
   }
 ]

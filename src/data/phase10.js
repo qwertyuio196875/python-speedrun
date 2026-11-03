@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 第十阶段：AI 应用框架（进阶选修，约 3 小时）
  * 前置：第九阶段装包跑通、第八阶段会发请求与解析 JSON。
  * 只讲"框架帮你省掉哪一步、第一个能跑的例子长什么样"，不追求覆盖全部功能。
@@ -780,6 +780,175 @@ export default [
         question: '夹具函数用 @pytest.fixture 装饰，测试函数在参数名里写夹具的名字即可使用。',
         answer: true,
         explain: 'pytest 按参数名匹配夹具，并把夹具的返回值交给测试函数。',
+      },
+    ],
+  },
+  {
+    id: 'ai-app-capstone',
+    title: '实战：从零实现一个可运行的 RAG 问答接口',
+    phase: 10,
+    order: 10,
+    minutes: 40,
+    rating: { level: 5, must: 5 },
+    summary: '把前面所有零件装成一台机器：FastAPI 提供接口、依赖注入管配置、LlamaIndex 检索你的资料、Pydantic 约束返回格式、pytest 守住行为。',
+    keywords: ['实战', 'RAG', 'FastAPI', '依赖注入', 'Pydantic', 'pytest', '项目结构', '整合'],
+    tip: '零基础提示：这一节不是在学新知识，而是把前面学过的零件按顺序装起来。跑不通时，一次只改一处，并确认上一步确实是好的。',
+    what: '一个能被别人使用的 AI 问答服务，需要这几件事同时成立：有稳定的接口和错误处理、有可替换的配置、检索结果来自真实资料、返回结构固定、失败路径有测试。逐块搭起来的顺序是：先让检索跑通，再接上接口，再补错误处理和依赖注入，最后用测试把行为固定下来。整个过程你会反复用到前面几节的代码，但这一次它们组装在一个项目里。',
+    analogy: '像装一辆车：发动机（检索）、方向盘（接口）、仪表盘（返回格式）、安全带（错误处理）、质检（测试）缺一不可。零件都见过，难的是按正确顺序装上并逐个确认。',
+    terms: [
+      { term: 'capstone', zh: '综合项目', note: '把多项技能合并到一个真实可运行的小项目里' },
+      { term: 'layered app', zh: '分层结构', note: '把配置、检索、接口、模型分层放，方便替换和测试' },
+      { term: 'dependency override', zh: '依赖覆盖', note: '测试时把真实依赖换成假对象，避开网络和密钥' },
+      { term: 'graceful degradation', zh: '优雅降级', note: '依赖不可用时仍给出可理解的错误提示，而不是崩溃' },
+    ],
+    steps: [
+      '建项目骨架：app/、tests/、data/、.env.example，先把目录定下来。',
+      '单独写 retrieve.py，用 LlamaIndex 读 data 目录并建索引，让它在命令行里就能跑通。',
+      '写 main.py：FastAPI 应用 + 一个返回 Pydantic 模型结果的 /ask 接口。',
+      '把"加载配置""获取问答引擎"抽成依赖函数，用 Depends 注入进接口。',
+      '补错误处理：资料为空、检索失败、超时分别返回不同提示。',
+      '用 pytest 写三条测试：字段齐全、空问题被拒、依赖不可用时返回 503。',
+    ],
+    examples: [
+      {
+        title: '可测试的接口骨架',
+        code: `# app/main.py
+from fastapi import FastAPI, Depends, HTTPException
+from pydantic import BaseModel
+
+class AskBody(BaseModel):
+    question: str
+
+class AskResult(BaseModel):
+    answer: str
+    sources: list[str]
+
+def get_engine():
+    """真实项目里在这里加载索引；测试时会被替换掉。"""
+    raise RuntimeError("尚未配置检索引擎")
+
+app = FastAPI()
+
+@app.post("/ask", response_model=AskResult)
+def ask(body: AskBody, engine=Depends(get_engine)):
+    question = body.question.strip()
+    if not question:
+        raise HTTPException(status_code=400, detail="question 不能为空")
+    try:
+        response = engine.query(question)
+    except Exception:
+        raise HTTPException(status_code=503, detail="检索服务暂不可用")
+    return AskResult(answer=str(response), sources=["data/"])`,
+        output: '预期说明：服务启动后，POST /ask 传 {"question": "..."} 会返回含 answer 和 sources 的 JSON；question 为空返回 400。需安装 fastapi uvicorn 并在本机运行。',
+        note: '需安装 fastapi uvicorn 并在本机运行。response_model 让 FastAPI 按 AskResult 过滤和校验输出；把引擎做成依赖，测试时可以整体替换，不必联网。',
+        verify: false,
+      },
+      {
+        title: '用依赖覆盖写不联外网的测试',
+        code: `# tests/test_ask.py
+from fastapi.testclient import TestClient
+
+from app.main import app, get_engine
+
+class FakeEngine:
+    def query(self, question):
+        return f"针对「{question}」的回答"
+
+def fake_engine():
+    return FakeEngine()
+
+app.dependency_overrides[get_engine] = fake_engine
+client = TestClient(app)
+
+def test_ask_ok():
+    r = client.post("/ask", json={"question": "什么是变量"})
+    assert r.status_code == 200
+    assert "回答" in r.json()["answer"]
+
+def test_ask_empty():
+    r = client.post("/ask", json={"question": "  "})
+    assert r.status_code == 400`,
+        output: '预期说明：终端运行 pytest 显示两条用例通过，全程不联网、不需要密钥。需安装 fastapi、pytest 并在本机运行。',
+        note: '需安装 fastapi、pytest 并在本机运行。dependency_overrides 是这套结构最大的好处：业务逻辑照常被测，耗时的真实检索被一个假对象顶替。',
+        verify: false,
+      },
+    ],
+    pitfalls: [
+      {
+        title: '把检索、接口、配置全写在一个文件里',
+        bad: 'main.py 里既建索引、又写接口、还读环境变量',
+        good: 'retrieve.py 管检索，main.py 管接口，配置由依赖提供',
+        note: '混在一起时，改一行就可能同时影响三件事，测试也没法单独替换其中一块。',
+      },
+      {
+        title: '测试时真的去调用模型',
+        bad: '测试里直接用真实索引和真实 API Key 查询',
+        good: '用 app.dependency_overrides 换成一个返回固定内容的假引擎',
+        note: '真实调用慢、要花钱、还依赖网络，测试会变得又慢又随机。把外部依赖挡住，测试才可靠。',
+      },
+      {
+        title: '异常全被吞掉，只回一个 200',
+        bad: 'except Exception: return {"answer": ""}',
+        good: 'except Exception: raise HTTPException(status_code=503, detail="检索服务暂不可用")',
+        note: '把失败包装成成功，调用方无法区分"没检索到"和"服务挂了"，排查会变得非常困难。',
+      },
+    ],
+    practice: [
+      {
+        prompt: '为 /ask 接口补一条测试：当引擎抛异常时，接口返回 503。',
+        starter: `from fastapi.testclient import TestClient
+from app.main import app, get_engine
+
+class BrokenEngine:
+    def query(self, question):
+        raise RuntimeError("boom")
+
+def broken_engine():
+    return BrokenEngine()
+
+# TODO: 用 dependency_overrides 替换引擎并断言 503
+`,
+        answer: `from fastapi.testclient import TestClient
+from app.main import app, get_engine
+
+class BrokenEngine:
+    def query(self, question):
+        raise RuntimeError("boom")
+
+def broken_engine():
+    return BrokenEngine()
+
+app.dependency_overrides[get_engine] = broken_engine
+client = TestClient(app)
+
+def test_ask_unavailable():
+    r = client.post("/ask", json={"question": "你好"})
+    assert r.status_code == 503`,
+        output: '预期说明：终端运行 pytest 时这条用例通过，接口返回 503。需安装 fastapi、pytest 并在本机运行。',
+        hint: '先覆盖依赖，再建 TestClient，最后断言 status_code == 503。',
+      },
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '测试里用 app.dependency_overrides 的主要目的是？',
+        options: ['让接口跑得更慢以便观察', '用假对象替换真实依赖，避开网络和密钥', '自动生成接口文档', '把测试结果写进数据库'],
+        answer: 1,
+        explain: '依赖覆盖让测试专注于自己的逻辑，不被外部服务影响，速度和稳定性都可控。',
+      },
+      {
+        type: 'judge',
+        question: '检索服务出错时，接口应当返回一个明确的状态码（如 503）并说明原因，而不是伪装成 200。',
+        answer: true,
+        explain: '调用方靠状态码区分成功和失败；伪装成功会让问题被掩盖到更难排查的地方。',
+      },
+      {
+        type: 'code',
+        question: '补全这行，让接口在 question 为空时返回 400：raise ________(status_code=400, detail="question 不能为空")',
+        code: 'raise ________(status_code=400, detail="question 不能为空")',
+        answer: 'HTTPException',
+        accept: ['HTTPException', 'fastapi.HTTPException'],
+        explain: 'FastAPI 里用 HTTPException 指定状态码和提示信息，框架会把它转成规范的错误响应。'
       },
     ],
   },

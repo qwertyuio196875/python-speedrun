@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 第九阶段：常用框架与工具（主线与选修之间的桥梁，约 3.5 小时）
  * 目标读者：学完主线、想用现成框架写小工具的人。
  * 每个知识点都给出"装什么、跑什么、看到什么"，示例需装包或联网时标 verify: false。
@@ -533,6 +533,137 @@ export default [
         question: 'input() 读到的内容可以直接拿来加 1。',
         answer: false,
         explain: 'input() 返回的是字符串，要先用 int() 或 float() 转换成数字再做算术。',
+      },
+    ],
+  },
+  {
+    id: 'flask-api',
+    title: '用 Flask 写一个 JSON 接口',
+    phase: 9,
+    order: 7,
+    minutes: 34,
+    rating: { level: 4, must: 4 },
+    summary: '做一个能被别的程序调用的接口：收到 JSON 校验字段，处理后在响应里带上正确的状态码。',
+    keywords: ['Flask', 'JSON', '接口', 'request.get_json', 'jsonify', '状态码', '400', 'API'],
+    tip: '零基础提示：网页接口和 JSON 接口是同一个东西的两种用途——前者给人看，后者给程序读。判断标准是"调用方是不是程序"：是程序就返回 JSON。',
+    what: '接口调用方不是人，而是另一段程序。所以它需要三件事：一是明确的输入格式（约定的 JSON 字段），二是稳定的输出格式（同样是 JSON，字段名固定），三是能判断成功或失败的状态码。Flask 里用 request.get_json() 取到请求体，用 jsonify(...) 把字典转成 JSON 响应；数据不对时返回 400 并说明哪个字段有问题，而不是让调用方拿到一个格式混乱的错误页。',
+    analogy: '像填表办业务：窗口只接受规定格式的表格（JSON 字段）。填错栏目，柜员不会收下硬办，而是退回并注明哪里不对（400 + 提示）；办得成，就给你一张格式固定的回执（200 + JSON）。',
+    terms: [
+      { term: 'jsonify', zh: '转成 JSON 响应', note: '把 Python 字典变成带 JSON 内容的响应对象' },
+      { term: 'request', zh: '请求对象', note: '本次访问带进来的信息，包含请求体、网址参数和请求头' },
+      { term: 'status code', zh: '状态码', note: '数字形式的处理结果：200 成功、400 调用方数据不对、404 找不到、500 服务端出错' },
+      { term: 'validate', zh: '校验', note: '检查调用方传来的字段是否齐全、类型是否正确' },
+    ],
+    steps: [
+      '写 @app.post("/todos") 的接口函数，先只返回一个固定字典，确认能通。',
+      '用 data = request.get_json(silent=True) 取请求体，处理"没传或不是 JSON"的情况。',
+      '逐项检查字段是否齐全、类型对不对；不对就 return jsonify(...), 400。',
+      '成功时用 jsonify 返回业务数据，并明确带上 201 或 200。',
+      '用另一个脚本或浏览器插件发一次请求，把 200 和 400 两条路都走通。',
+    ],
+    examples: [
+      {
+        title: '接收 JSON 并返回结果',
+        code: `from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.post("/todos")
+def create_todo():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or "title" not in data:
+        return jsonify({"error": "缺少 title 字段"}), 400
+    title = str(data["title"]).strip()
+    if not title:
+        return jsonify({"error": "title 不能为空"}), 400
+    return jsonify({"id": 1, "title": title, "done": False}), 201`,
+        output: '预期说明：用 JSON 请求体 {"title": "写作业"} 访问 /todos，返回 201 和 {"done": false, "id": 1, "title": "写作业"}；不传 title 时返回 400 和提示。需安装 flask 并在本机运行。',
+        note: '需安装 flask 并在本机运行。get_json(silent=True) 在请求体不是合法 JSON 时返回 None 而不是直接抛异常，配合后面的判断就能给出友好提示。',
+        verify: false,
+      },
+      {
+        title: '在同一个接口里返回不同状态码',
+        code: `from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+todos = {}
+
+@app.post("/todos")
+def create_todo():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or "title" not in data:
+        return jsonify({"error": "缺少 title 字段"}), 400
+    todo_id = len(todos) + 1
+    todos[todo_id] = {"id": todo_id, "title": data["title"], "done": False}
+    return jsonify(todos[todo_id]), 201
+
+@app.get("/todos/<int:todo_id>")
+def get_todo(todo_id):
+    todo = todos.get(todo_id)
+    if todo is None:
+        return jsonify({"error": "没有这条待办"}), 404
+    return jsonify(todo)`,
+        output: '预期说明：创建成功返回 201，查询一个不存在的编号返回 404 和错误说明。需安装 flask 并在本机运行。',
+        note: '需安装 flask 并在本机运行。返回 jsonify(...), 状态码 这种写法末尾的逗号是"再返回一个状态码"的意思，Flask 会照着它设置响应码。',
+        verify: false,
+      },
+    ],
+    pitfalls: [
+      {
+        title: '直接用 request.json 但调用方没带 JSON',
+        bad: 'data = request.json  # 没带请求体时会报错或得到 None',
+        good: 'data = request.get_json(silent=True)\nif not isinstance(data, dict):\n    return jsonify({"error": "请发送 JSON"}), 400',
+        note: '调用方忘记带 Content-Type 或没带请求体时，接口应当友好地返回 400 提示，而不是抛 500 让调用方一头雾水。',
+      },
+      {
+        title: '失败时也返回 200',
+        bad: 'return jsonify({"error": "缺少 title"})  # 状态码还是 200',
+        good: 'return jsonify({"error": "缺少 title"}), 400',
+        note: '调用方多数靠状态码判断成功与否。失败却返回 200，会让自动化逻辑把错误当成结果处理。',
+      },
+      {
+        title: '响应字段名随意变动',
+        bad: '这次返回 {"title": ...}，下次改成 {"name": ...}',
+        good: '字段名一次定好并保持不变，只增不改',
+        note: '接口字段是两边程序之间的约定。改名等于让所有调用方同时失效，属于破坏性改动。',
+      },
+    ],
+    practice: [
+      {
+        prompt: '写一个 POST /echo 接口：接收 {"text": "..."} 并原样返回；没有 text 字段时返回 400。',
+        starter: `from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+# TODO: 写 POST /echo 接口
+`,
+        answer: `from flask import Flask, request, jsonify
+
+app = Flask(__name__)
+
+@app.post("/echo")
+def echo():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or "text" not in data:
+        return jsonify({"error": "缺少 text 字段"}), 400
+    return jsonify({"text": data["text"]})`,
+        output: '预期说明：传 {"text": "你好"} 返回 200 和 {"text": "你好"}；不传 text 返回 400。需安装 flask 并在本机运行。',
+        hint: '先取出请求体并判断类型，再检查字段；成功返回 jsonify，失败返回 jsonify(...), 400。',
+      },
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '调用方传来的数据缺了必填字段，接口最合适的响应是？',
+        options: ['返回 200 和一段 HTML 错误页', '返回 400 和说明缺哪个字段的 JSON', '让程序直接崩溃', '忽略这次请求不做任何返回'],
+        answer: 1,
+        explain: '400 表示调用方的请求有问题，配一段说明字段的 JSON，调用方才能自动修正。',
+      },
+      {
+        type: 'judge',
+        question: '给程序调用的接口，返回 JSON 比返回 HTML 页面更合适。',
+        answer: true,
+        explain: '调用方是程序，需要能直接解析的数据结构，而不是给人看的页面。',
       },
     ],
   },

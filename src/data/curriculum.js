@@ -22,10 +22,10 @@ export const PHASES = [
   { id: 4, name: '认识"对象"', short: '对象', minutes: 130, desc: 'class、self、继承：理解什么是对象，给数据和行为打包。' },
   { id: 5, name: '读文件与异常', short: '异常', minutes: 160, desc: '文件读写、异常处理、with 语句、日志：让程序更健壮、遇错不崩。' },
   { id: 6, name: '常用模块', short: '模块', minutes: 150, desc: '标准库常用模块：json、datetime、random、os、命令行参数：直接解决日常小需求。' },
-  { id: 7, name: '进阶选修', short: '选修', minutes: 120, desc: '装饰器、生成器、多进程与性能：主线之外，按需选学的高阶特性。' },
-  { id: 8, name: 'AI 应用入门', short: 'AI', minutes: 130, desc: '选修主线：用 FastAPI + Pydantic 把能力包成 HTTP 服务，为调用 LLM 打基础。' },
-  { id: 9, name: '常用框架与工具', short: '框架', minutes: 184, desc: '选修：Flask 与 Django 写网页、httpx 并发请求、pandas 处理表格、pytest 自动测试：把现成框架用起来。' },
-  { id: 10, name: 'AI 应用框架', short: 'AI 框架', minutes: 278, desc: '选修：FastAPI 与 Flask/Django 进阶、LangChain 串起模型调用与工具、LlamaIndex 用你的资料作答：进阶到真实 AI 应用。' },
+  { id: 7, name: '进阶选修', short: '选修', minutes: 137, desc: '选修：lambda/sorted 精确排序、生成器与装饰器实现小流水线、itertools 工具箱：练到能实现。' },
+  { id: 8, name: 'AI 应用入门', short: 'AI', minutes: 135, desc: '选修：requests 与 JSON、FastAPI 接口与 Pydantic 校验、调用大模型接口：为真实 AI 应用打基础。' },
+  { id: 9, name: '常用框架与工具', short: '框架', minutes: 218, desc: '选修：Flask 与 Django、httpx 并发、pandas 处理表格、pytest 自动测试、网页接口：写出能用的小工具。' },
+  { id: 10, name: 'AI 应用框架', short: 'AI 框架', minutes: 318, desc: '选修：调用大模型接口、LangChain 工具与结构化输出、LlamaIndex RAG、从零实现可测试的问答接口。' },
 ]
 
 const RAW = { 1: phase1, 2: phase2, 3: phase3, 4: phase4, 5: phase5, 6: phase6, 7: phase7, 8: phase8, 9: phase9, 10: phase10 }

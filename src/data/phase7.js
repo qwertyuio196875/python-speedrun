@@ -14,13 +14,14 @@ export default [
     summary: 'lambda 匿名函数配合 sorted 的 key 参数，能用一行代码自定义几乎任何排序规则。',
     keywords: ['lambda', 'sorted', 'key', '匿名函数', '排序', 'reverse'],
     tip: '零基础提示：lambda 就是一个没有名字的小函数，只在"用一次"的场合用；排序难就难在想清楚"按什么排"，key 就是回答这个问题的地方。',
-    what: 'lambda 的写法是 lambda 参数: 返回的结果，它不需要 def 和函数名，常用于要立刻传给别人的场景。sorted(集合, key=函数) 会先调 key 算出每个元素的"排序依据"再据此排序，key 常常就用 lambda 来写。默认按依据从小到大排（升序），想反过来就加 reverse=True。记住 sorted 返回一个新的排好序的列表、原集合不变，而列表自己的 .sort() 才会直接改动原列表。',
-    analogy: '打个比方：一群人要按身高排队，长什么样不重要，关键是"按身高排"还是"按年龄排"。人群就是原始数据，key 就是你说的那条"按身高排"的规则，lambda 就是顺手把这条规则写下来的小纸条。',
+    what: 'lambda 的写法是 lambda 参数: 返回的结果，它不需要 def 和函数名，常用于要立刻传给别人的场景。sorted(集合, key=函数) 会先调 key 算出每个元素的"排序依据"再据此排序，key 常常就用 lambda 来写。默认按依据从小到大排（升序），想反过来就加 reverse=True。真正做事的是内置排序算法 Timsort（稳定排序）：当两条数据的排序依据算出来一样时，它不会乱换位置，而是保持它们在原数据里的先后。记住 sorted 返回一个新的排好序的列表、原集合不变，而列表自己的 .sort() 才会直接改动原列表。',
+    analogy: '打个比方：一群人要按身高排队，长什么样不重要，关键是"按身高排"还是"按年龄排"。人群就是原始数据，key 就是你说的那条"按身高排"的规则，lambda 就是顺手把这条规则写下来的小纸条。身高一样的人不会随便插队，谁原来站前面就还站前面——这就是"稳定"。',
     terms: [
       { term: 'lambda', zh: '匿名函数', note: '没有名字的一行小函数，写法是 lambda 参数: 返回结果' },
       { term: 'key', zh: '排序依据', note: '传给 sorted 的一个函数，用它算出的值来决定谁先谁后' },
       { term: 'sorted', zh: '排序函数', note: '返回新排序列表，不改动原集合' },
-      { term: 'reverse', zh: '反向', note: '设成 True 就从大到小排' }
+      { term: 'reverse', zh: '反向', note: '设成 True 就从大到小排' },
+      { term: 'stable', zh: '稳定排序', note: '排序依据相同时，保持原来的先后顺序不变' }
     ],
     steps: [
       '先想清楚"按什么排"，比如按字符串长度、按元组的第几个元素。',
@@ -42,6 +43,15 @@ people.sort(key=lambda p: p[1])
 print(people)`,
         output: "[('阿明', 18), ('林晚', 20), ('小林', 30)]",
         note: 'p[1] 取出每个人元组的第二个值（年龄），这样排出来就是从年轻到年长。'
+      },
+      {
+        title: '二级排序：先按分数，同分再按名字',
+        code: `students = [("林晚", 88), ("阿明", 95), ("小林", 88)]
+print(sorted(students, key=lambda s: (-s[1], s[0])))
+print(sorted(students, key=lambda s: s[1]))`,
+        output: `[('阿明', 95), ('小林', 88), ('林晚', 88)]
+[('林晚', 88), ('小林', 88), ('阿明', 95)]`,
+        note: 'key 返回一个元组，就按元组各项依次比较：先用 -s[1] 让分数从高到低，同分时再用 s[0] 按名字排。下面那行只按分数排，同为 88 的两人保持了原来的先后（林晚在小林前面），这就是稳定排序。'
       },
       {
         title: 'reverse 让分数从高到低',
@@ -67,8 +77,14 @@ print(sorted(students, key=lambda s: s[1], reverse=True))`,
       {
         title: '混淆 sorted 和 list.sort',
         bad: `data = sorted(data)  # 以为 data 被改了？不，返回的是新列表`,
-        good: `new_data = sorted(data)\\ndata.sort()  # sort 才是在原地改`,
+        good: `new_data = sorted(data)\ndata.sort()  # sort 才是在原地改`,
         note: 'sorted 改不了原变量，结果要接住；要在原列表上改就用 .sort()。'
+      },
+      {
+        title: 'reverse=True 会连同同分顺序一起反过来',
+        bad: `sorted(students, key=lambda s: s[1], reverse=True)`,
+        good: `sorted(students, key=lambda s: (-s[1], s[0]))`,
+        note: 'reverse=True 反转整个比较结果，同分的原有先后也会颠倒；只想让分数降序、同分保持原序，用取负数的元组写法。'
       }
     ],
     practice: [
@@ -81,9 +97,26 @@ print(sorted(students, key=lambda s: s[1], reverse=True))`,
 print(sorted(words, key=len))`,
         output: "['kiwi', 'plum', 'apple', 'banana']",
         hint: 'kiwi 和 plum 都长 4，排在前，且保持原来的先后。'
+      },
+      {
+        prompt: '把成绩列表按分数从高到低排，分数相同按姓名升序排：[("林晚", 88), ("阿明", 95), ("小林", 88)]。',
+        starter: `students = [("林晚", 88), ("阿明", 95), ("小林", 88)]
+# TODO: 用 sorted 和一个返回元组的 key 排序
+`,
+        answer: `students = [("林晚", 88), ("阿明", 95), ("小林", 88)]
+print(sorted(students, key=lambda s: (-s[1], s[0])))`,
+        output: "[('阿明', 95), ('小林', 88), ('林晚', 88)]",
+        hint: 'key 里写 (-s[1], s[0])：分数取负变成高到低，分数相同再按姓名（s[0]）升序。'
       }
     ],
     quiz: [
+      {
+        type: 'choice',
+        question: 'key=lambda s: (-s[1], s[0]) 表示什么排序？',
+        options: ['先按名字升序，再按分数降序', '先按分数降序，同分再按名字升序', '先按分数升序，同分再按姓名降序', '先随机打乱，再按分数排序'],
+        answer: 1,
+        explain: '元组从左到右依次比较：-s[1] 让分数高的在前，s[0] 让同分时按名字升序。'
+      },
       {
         type: 'choice',
         question: 'sorted(数据, key=函数) 里的 key 参数负责什么？',
@@ -557,6 +590,200 @@ print(list(islice(alarm, ______)))`,
         answer: true,
         explain: 'itertools 随 Python 自带，无需安装额外第三方包。'
       }
+    ]
+  },
+  {
+    id: 'stream-pipeline',
+    title: '实战：流式处理日志并用装饰器计时',
+    phase: 7,
+    order: 5,
+    minutes: 32,
+    rating: { level: 4, must: 4 },
+    summary: '把筛选、转换、统计三步串成一条生成器流水线，再给耗时的步骤套上计时装饰器：从“会语法”走到“能实现”。',
+    keywords: ['生成器流水线', 'yield from', '装饰器', '计时', '流式处理', 'pipeline', 'itertools'],
+    tip: '零基础提示：别一上来就想把所有代码写进一个 for。把每一步拆成一个只做一件事的函数，再用生成器把它们串起来，程序会小很多，也好出错定位。',
+    what: '真实程序里，数据常常一批批来：一行日志、一段文本、一条记录。如果先读进列表再每一步都建一个新列表，内存会浪费。流水线的写法是：每一步都是生成器，上一步产出、下一步消费，数据始终只有一份在流。再用计时装饰器包住耗时步骤，就能知道瓶颈在哪。',
+    analogy: '把它想成一条食品流水线：选菜 → 洗菜 → 切菜。菜在流水线上传递，不必每步都搬到仓库存一大筐。计时员贴在某一站，就能记录这站累计花了多久。',
+    terms: [
+      { term: 'pipeline', zh: '流水线', note: '把一段输入按固定步骤逐步转换为结果的一串函数' },
+      { term: 'generator pipeline', zh: '生成器流水线', note: '每个环节都是生成器，数据边流过边处理，不物化完整中间结果' },
+      { term: 'timing decorator', zh: '计时装饰器', note: '在函数执行前后记录耗时的装饰器' },
+      { term: 'yield from', zh: '委托生成器', note: '从另一个可迭代对象里依次交出所有值的语法' },
+    ],
+    steps: [
+      '把需求先写成三个小函数：读取、筛选、转换，不要先合并。',
+      '让“筛选”和“转换”函数都用 yield 交出结果，形成可组合的流。',
+      '写一个 timed 装饰器，用 time.perf_counter 记录函数累计耗时。',
+      '用 @timed 装饰耗时步骤，再打印统计摘要，确认它只包住该包的部分。',
+      '换一份 1000 行左右的测试数据，确认一次遍历就能出统计结果。',
+    ],
+    examples: [
+      {
+        title: '三个生成器串成一条流水线',
+        code: `lines = [
+    "2026-11-01 INFO start",
+    "2026-11-01 ERROR disk full",
+    "2026-11-01 INFO done",
+    "2026-11-02 ERROR timeout",
+]
+
+def read_lines(source):
+    yield from source
+
+def errors_only(records):
+    for line in records:
+        if " ERROR " in line:
+            yield line
+
+def shout(records):
+    for line in records:
+        yield line.split(" ERROR ", 1)[1].upper()
+
+stream = shout(errors_only(read_lines(lines)))
+print(list(stream))`,
+        output: "['DISK FULL', 'TIMEOUT']",
+        note: 'yield from 把 source 里的值逐个交给 read_lines 的调用方；两个处理步骤不建中间列表，list 只在最终取结果时触发执行。'
+      },
+      {
+        title: '给流水线装上计时装饰器',
+        code: `import time
+from functools import wraps
+
+def timed(func):
+    total = [0.0]
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        total[0] += time.perf_counter() - start
+        return result
+    wrapper.elapsed = total
+    return wrapper
+
+@timed
+def heavy_sum(numbers):
+    total = 0
+    for n in numbers:
+        total += n * n
+    return total
+
+print(heavy_sum([1, 2, 3]))
+print(heavy_sum([1, 2, 3]))
+print(round(heavy_sum.elapsed[0], 6) >= 0)`,
+        output: `14
+14
+True`,
+        note: 'perf_counter 用于测量时间间隔。wraps 保留原函数名，避免调试时函数名被 wrapper 覆盖；elapsed 挂在函数对象上，可多次累计。'
+      },
+      {
+        title: 'islice 切出前几条做抽样',
+        code: `from itertools import islice
+
+def logs():
+    for i in range(1, 11):
+        yield f"log-{i}"
+
+print(list(islice(logs(), 3)))`,
+        output: "['log-1', 'log-2', 'log-3']",
+        note: 'islice 只真正取前几个元素，不需要把 logs 全部跑完。抽样、预览、限流都用它。'
+      },
+    ],
+    pitfalls: [
+      {
+        title: '把每一步都做成列表，流水线就失去了意义',
+        bad: 'step1 = list(load())\nstep2 = list(clean(step1))\nstep3 = list(report(step2))',
+        good: 'stream = report(clean(load()))\nresult = list(stream)',
+        note: '只有最终需要落地结果时再 list；中间每一步都物化会成倍增加内存和等待时间。'
+      },
+      {
+        title: '计时装饰器忘了保留原函数信息',
+        bad: 'def wrapper(*args, **kwargs):\n    ...',
+        good: 'from functools import wraps\n\n@wraps(func)\ndef wrapper(*args, **kwargs):\n    ...',
+        note: '不用 wraps，函数名、文档字符串都会变成 wrapper，排查调用栈和写文档时都很难受。'
+      },
+      {
+        title: '在生成器里做一次性统计却还想回头遍历',
+        bad: 'stats = (sum(x * x for x in rows), rows)  # 生成器只能消费一次',
+        good: '先完成统计函数返回结果，或把输入转成可重复访问的列表再复用',
+        note: '生成器被消费后就空了。需要多次使用时，要么重建流，要么接受一次性物化。'
+      },
+    ],
+    practice: [
+      {
+        prompt: '写一个生成器 evens(numbers)，只交出其中的偶数；再用它输出 [1, 2, 3, 4] 中的偶数。',
+        starter: `def evens(numbers):
+    # TODO: 用 yield 交出偶数
+    pass
+
+print(list(evens([1, 2, 3, 4])))
+`,
+        answer: `def evens(numbers):
+    for n in numbers:
+        if n % 2 == 0:
+            yield n
+
+print(list(evens([1, 2, 3, 4])))`,
+        output: '[2, 4]',
+        hint: '判断 n % 2 == 0，再 yield n；不要 return 整个列表。'
+      },
+      {
+        prompt: '写一个 timed 装饰器，包住 add(a, b) 并返回结果；然后调用 add(2, 3) 打印结果。',
+        starter: `from functools import wraps
+import time
+
+def timed(func):
+    # TODO: 记录耗时并返回结果，保留函数名
+    pass
+
+@timed
+def add(a, b):
+    return a + b
+
+print(add(2, 3))
+`,
+        answer: `from functools import wraps
+import time
+
+def timed(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        wrapper.elapsed = time.perf_counter() - start
+        return result
+    return wrapper
+
+@timed
+def add(a, b):
+    return a + b
+
+print(add(2, 3))`,
+        output: '5',
+        hint: '装饰器里的 wrapper 必须 return func(...)；@wraps(func) 保留 add 的名字。'
+      },
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '为什么流水线里的每一步都建议写成生成器？',
+        options: ['生成器必须放在最外层才能运行', '数据可以边流过边处理，不必一次装满内存', '生成器不能被多次调用', '因为 yield 比 return 快一倍'],
+        answer: 1,
+        explain: '生成器按需交出下一个值，中间结果不必全部物化，内存占用稳定。'
+      },
+      {
+        type: 'judge',
+        question: 'timed 装饰器用 @wraps(func) 是为了保留被包装函数的名字和文档信息。',
+        answer: true,
+        explain: 'wraps 会复制 name、qualname、doc 等属性，调试时更容易看出真正调用的是哪个函数。'
+      },
+      {
+        type: 'code',
+        question: '补全成一个从 source 逐个交出值的生成器：________ source。',
+        code: 'def copy(source):\n    ________',
+        answer: 'yield from source',
+        accept: ['yield from source', 'for item in source:\n        yield item'],
+        explain: 'yield from source 等价于把 source 里每个元素依次 yield 出去。'
+      },
     ]
   }
 ]

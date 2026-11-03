@@ -1,6 +1,6 @@
 # Python 零基础教程 · 从第一行代码开始
 
-一个纯前端的 Python 学习平台，专门为**从没写过代码的人**设计：把 Python 入门整理成 **10 个阶段 / 54 个知识点 + 综合实战**，
+一个纯前端的 Python 学习平台，专门为**从没写过代码的人**设计：把 Python 入门整理成 **10 个阶段 / 58 个知识点 + 综合实战**，
 用"生活化类比 + 可运行示例 + 常见坑 + 自测"的方式，带你从安装 Python、写下第一行代码开始，
 一步步做出自己的第一个命令行小工具；学有余力再走进阶选修，直通 LLM、RAG、Tool Calling、Agent 等 AI 应用开发。
 
@@ -109,7 +109,7 @@ python-speedrun/
    │  ├─ CheatSheetView.vue    # 速查表
    │  └─ FinishView.vue        # 通关页
    ├─ data/
-   │  ├─ phase1.js ~ phase10.js  # 全部分阶段知识点（共 54 节）
+   │  ├─ phase1.js ~ phase10.js  # 全部分阶段知识点（共 58 节）
    │  ├─ practice.js           # 综合实战（主线 CLI 小工具 + 进阶选修 FastAPI）
    │  ├─ cheatsheet.js         # Python 语法速查表（按"想做什么"查）
    │  └─ curriculum.js         # 聚合层：导航、阶段统计、上一/下一节、搜索索引
