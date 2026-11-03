@@ -1,618 +1,464 @@
 /**
- * 第二阶段：Python 核心（约 1 小时）
+ * 第二阶段：常用的数据（零基础入门，约 3 小时）
  * 内容规范见 docs/content-schema.md
  */
 export default [
   {
-    id: 'list-comprehension',
-    title: '列表推导式',
+    id: 'strings',
+    title: '字符串：处理文字',
     phase: 2,
     order: 1,
-    minutes: 10,
-    rating: { python: 3, java: 2, ai: 4 },
-    summary: '一行完成"遍历 + 过滤 + 变换"生成新列表，相当于 Java Stream 的 map/filter/collect。',
-    keywords: ['list comprehension', '推导式', 'Stream', 'map', 'filter', '生成器表达式'],
-    tip: 'Java 开发者提示：列表推导式 ≈ list.stream().map(...).filter(...).collect(toList())，但写法是一行。',
-    what: '列表推导式用 [表达式 for 变量 in 可迭代对象 if 条件] 的形式，一次生成新列表。它比手写 for + append 更短、更快，也是 Python 里最常用的写法之一。同族还有字典推导式、集合推导式和生成器表达式（用小括号）。',
-    javaCompare: [
-      {
-        title: '遍历 + 过滤 + 变换',
-        java: 'List<Integer> doubled = nums.stream()\n    .filter(n -> n % 2 == 1)\n    .map(n -> n * 2)\n    .collect(Collectors.toList());',
-        python: 'doubled = [n * 2 for n in nums if n % 2 == 1]',
-        diff: 'Python 把整个流水线写成一行：表达式在前，条件在最后，顺序和 Stream 链相反。'
-      }
+    minutes: 30,
+    rating: { level: 2, must: 5 },
+    summary: '拼接、查找、替换、格式化文字，以及 f-string：处理文本信息的基本功。',
+    keywords: ['字符串', 'str', '拼接', 'f-string', '替换', 'format', 'join'],
+    tip: '零基础提示：字符串就是"一段文字"。你会经常把它拼起来、从里面找东西、按模板排版。',
+    what: '很多程序做的事其实是处理文字：把两条信息拼成一句话、从一段话里找某个词、把名字写进一条固定格式的通知里。字符串（str）就是用来保存和操作这些文字的，f-string 则是把变量放进文字里最省事的方法。',
+    analogy: '字符串像一条彩色胶带，你能把它一段段接起来（拼接），也能用模板在中间留空、往空里填名字（f-string）。',
+    terms: [
+      { term: 'string', zh: '字符串', note: '一段文字数据，写代码时放进引号里。' },
+      { term: 'concatenate', zh: '拼接', note: '把两段文字连成一段。' },
+      { term: 'f-string', zh: '格式化字符串', note: '把变量直接插入文字中的写法，引号前加 f。' },
+      { term: 'join', zh: '连接', note: '用一个分隔符把多个字符串连成一个。' },
     ],
     examples: [
       {
-        title: '过滤 + 变换',
-        code: 'nums = [1, 2, 3, 4, 5]\ndoubled = [n * 2 for n in nums if n % 2 == 1]\nprint(doubled)',
-        output: '[2, 6, 10]',
-        note: '先写"结果是什么"，再写"从哪里来"和"条件"。'
+        title: '拼接与查找',
+        code: 'first = "你好"\nsecond = "世界"\nprint(first + "，" + second)\nprint("世" in second)\nprint(len(first + second))',
+        output: '你好，世界\nTrue\n6',
+        note: '用 + 拼接文字；in 判断一段是否在另一段里；len() 得到字符个数。',
       },
       {
-        title: '带条件的表达式',
-        code: 'words = ["hello", "world", "py"]\nprint([w.upper() if len(w) > 2 else w for w in words])\nprint([len(w) for w in words])',
-        output: "['HELLO', 'WORLD', 'py']\n[5, 5, 2]",
-        note: 'if 在最后是过滤；if/else 写在前面是"每个元素都产出"的取值分支。'
+        title: '替换与去除空格',
+        code: 's = "  Hello world  "\nprint(s.strip())\nprint(s.replace("world", "Python"))',
+        output: 'Hello world\n  Hello Python  ',
+        note: 'strip() 去掉两端空格；replace(旧, 新) 替换文字。',
       },
       {
-        title: '字典推导式与集合推导式',
-        code: 'print({k: len(k) for k in ["a", "bb", "ccc"]})\nprint({n % 3 for n in range(7)})',
-        output: "{'a': 1, 'bb': 2, 'ccc': 3}\n{0, 1, 2}",
-        note: '处理 LLM 返回的 JSON 列表时，常用这种写法一次性抽字段或去重。'
-      }
+        title: 'f-string 把变量放进文字',
+        code: 'name = "xiaoming"\nage = 18\nprint(f"你好，我叫{name}，今年{age}岁。")',
+        output: '你好，我叫xiaoming，今年18岁。',
+        note: 'f-string 在引号前加 f，变量用 { } 包起来，运行时会自动替换成值。',
+      },
+      {
+        title: 'join 把列表拼成字符串',
+        code: 'tags = ["Python", "sudo_data", "begin"]\nprint("、".join(tags))',
+        output: 'Python、sudo_data、begin',
+        note: '使用 "分隔符".join(列表)，把所有元素用分隔符连成一个字符串。',
+      },
     ],
     pitfalls: [
       {
-        title: '把复杂逻辑塞进推导式',
-        bad: 'items = [f(x) if x else g(y) for x in xs for y in ys if y not in seen]',
-        good: '# 超过两个条件就老老实实写成 for 循环，或者先算中间列表',
-        note: '推导式适合"一眼能读懂"的转换，嵌套两层以上就该换成普通循环。'
+        title: '数字不能直接拼文字',
+        bad: 'print("age" + 18)',
+        good: 'print("age" + str(18))  # 或 f"age{18}"',
+        note: '文字 + 数字会报错；用 str() 转成文字，或干脆用 f-string。',
       },
       {
-        title: '嵌套循环的顺序',
-        bad: '[x for x in range(2) for y in range(3)]   # 想要 [[0,1,2],[0,1,2]] 却写成这样',
-        good: '[[y for y in range(3)] for x in range(2)]',
-        note: '推导式里多个 for 是"笛卡尔积展平"，要生成二维列表必须用嵌套推导式。'
+        title: '内部的引号冲突',
+        bad: 's = "say "hi" to you"   # 引号打架',
+        good: "s = 'say \"hi\" to you'   # 或外层换引号",
+        note: '字符串内部再出现同一种引号要转义，或外层换一种引号。',
       },
       {
-        title: '列表推导式 vs 生成器表达式',
-        bad: 'total = sum([len(w) for w in words])   # 先造一个完整列表',
-        good: 'total = sum(len(w) for w in words)    # 惰性生成，省内存',
-        note: '只为聚合（sum/max/any）时用生成器表达式；RAG 场景处理大文档列表要注意内存。'
-      }
+        title: '不该用 + 循环拼接',
+        bad: 's = ""\nfor x in items:\n    s += x',
+        good: 's = "".join(items)',
+        note: '循环里用 += 每次都会新建字符串，很慢；用 join 一次拼好。',
+      },
     ],
     practice: [
       {
-        prompt: '用列表推导式生成 1~10 的平方，打印结果。',
-        starter: '# TODO: 用列表推导式生成 1~10 的平方，注意 range 右边界\n',
-        answer: 'print([n * n for n in range(1, 11)])',
-        output: '[1, 4, 9, 16, 25, 36, 49, 64, 81, 100]',
-        hint: 'range(1, 11) 才是 1~10，右边界不含。'
-      }
+        prompt: '用 f-string 打印：姓名 xiaoming，得分 95。',
+        starter: 'name = "xiaoming"\nscore = 95\n# TODO: 用 f-string 打印 姓名 xiaoming，得分 95\n',
+        answer: 'name = "xiaoming"\nscore = 95\nprint(f"姓名 {name}，得分 {score}")',
+        output: '姓名 xiaoming，得分 95',
+        hint: 'f-string：引号前加 f，用 {name} {score} 放入变量。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: '列表推导式最接近 Java 的哪个特性？',
-        options: ['数组初始化', 'Stream 的 map/filter/collect', '反射', '注解'],
+        question: '"hello".replace("l", "L") 的结果是什么？',
+        options: ['hello', 'heLLo', 'HeLLo', 'LL'],
         answer: 1,
-        explain: '两者都是"声明式的遍历 + 变换 + 收集"，只是 Python 写成一行。'
+        explain: 'replace 把所有出现的 "l" 替换成 "L"，得到 heLLo。',
       },
       {
         type: 'judge',
-        question: '列表推导式一定比等价的 for 循环更省内存。',
-        answer: false,
-        explain: '列表推导式同样会一次性生成完整列表；省内存的是生成器表达式。'
+        question: 'f-string 引号前要加 f，变量要用花括号 { } 包起来。',
+        answer: true,
+        explain: 'f"hi {name}" 运行时会把 {name} 替换成变量的值。',
       },
       {
         type: 'code',
-        question: '补全推导式，取出 users 中所有 status 为 active 的 name。',
-        code: 'users = [{"name": "张三", "status": "active"}, {"name": "李四", "status": "banned"}]\nnames = __________\nprint(names)',
-        answer: '[u["name"] for u in users if u["status"] == "active"]',
-        accept: ["[u['name'] for u in users if u['status'] == 'active']"],
-        explain: '表达式写在最前面，过滤条件放最后，这是解析 JSON 列表的标准写法。'
-      }
-    ]
+        question: '补全：打印 "今天是2026年11月3日"。',
+        code: 'y = 2026\nm = 11\nd = 3\nprint(__________)',
+        answer: 'f"{y}年{m}月{d}日"',
+        accept: [],
+        explain: '用 f-string 把三个变量插进带年月日的文字里。',
+      },
+    ],
   },
   {
-    id: 'dict-ops',
-    title: '字典操作',
+    id: 'dict',
+    title: '字典：用名字存数据',
     phase: 2,
     order: 2,
-    minutes: 12,
-    rating: { python: 2, java: 1, ai: 5 },
-    summary: 'dict 的常用读写、安全取值、合并与遍历；LLM 请求体和返回 JSON 都是 dict。',
-    keywords: ['dict', 'get', 'setdefault', 'update', 'items', 'HashMap', '计数'],
-    tip: 'Java 开发者提示：dict 就是 HashMap，但 [] 取不存在的键会抛 KeyError，Java 的 get 只是返回 null。',
-    what: '字典操作集中在：取值用 get 给默认值、写入直接赋值、批量更新用 update 或 | 合并、遍历用 keys/values/items。字典是 Python 里最重要的数据结构：配置、请求体、LLM 返回的 JSON、Tool Calling 的参数都是 dict。',
-    javaCompare: [
-      {
-        title: '安全取值与默认值',
-        java: 'int age = map.getOrDefault("age", 0);',
-        python: 'age = data.get("age", 0)',
-        diff: '思路一致；区别是 Python 的 data["age"] 缺失时直接抛 KeyError，不像 Java 返回 null。'
-      },
-      {
-        title: '遍历键值对',
-        java: 'for (Map.Entry<String, Integer> e : map.entrySet()) {\n    System.out.println(e.getKey() + "=" + e.getValue());\n}',
-        python: 'for k, v in data.items():\n    print(f"{k}={v}")',
-        diff: 'items() 返回 (键, 值)，配合解包一步到位。'
-      }
+    minutes: 30,
+    rating: { level: 2, must: 5 },
+    summary: '字典用一个"键"来存放对应的"值"，就像真字典里的词条和解释，取数据特别方便。',
+    keywords: ['dict', '字典', '键', '值', 'key', 'value', 'get', 'items'],
+    tip: '零基础提示：字典是一张"名字到内容"的表。不靠数字下标，而是靠一个名字（键）来取。',
+    what: '列表用数字编号取数据，可很多信息更适合"按名字"存：一个人的名字对应年龄、一个单词对应意思。字典（dict）用一对对"键（key）和值（value）"组织数据，你用一个键就能找到它对应的值，非常适合存"一个人的资料"这种结构。',
+    analogy: '字典像通讯录：每个联系人的名字（键）对应一串号码（值）。你按名字找人，而不是按第几个找。',
+    terms: [
+      { term: 'dict', zh: '字典', note: '用键值对存数据，用花括号 {} 定义。' },
+      { term: 'key', zh: '键', note: '用来定位数据的名字，相当于目录里的词条。' },
+      { term: 'value', zh: '值', note: '键所对应的内容。' },
+      { term: 'items()', zh: '条目方法', note: '同时取出所有键和值进行遍历。' },
     ],
     examples: [
       {
-        title: '取值与写入',
-        code: 'user = {"name": "张三"}\nprint(user.get("age", "未知"))\nuser["age"] = 20\nuser.setdefault("city", "北京")\nprint(user)',
-        output: '未知\n{\'name\': \'张三\', \'age\': 20, \'city\': \'北京\'}',
-        note: 'setdefault 只在键不存在时写入，等价于 computeIfAbsent。'
+        title: '创建和取值',
+        code: 'user = {"name": "xiaoming", "age": 18, "city": "Guangzhou"}\nprint(user["name"])\nprint(user["age"])',
+        output: 'xiaoming\n18',
+        note: '用 字典[键] 取值；键找不到时会报 KeyError。',
       },
       {
-        title: '最常见的计数统计',
-        code: 'words = ["llm", "rag", "llm", "agent", "llm"]\ncounter = {}\nfor w in words:\n    counter[w] = counter.get(w, 0) + 1\nprint(counter)',
-        output: "{'llm': 3, 'rag': 1, 'agent': 1}",
-        note: '统计 token 用量、工具调用次数都用这个模式；也可以用 collections.Counter。'
+        title: 'get 安全取值',
+        code: 'user = {"name": "xiaoming"}\nprint(user.get("phone", "unfilled"))\nprint(user.get("name", "noname"))',
+        output: 'unfilled\nxiaoming',
+        note: 'get(键, 默认值) 在键不存在时返回默认值，不会报错。',
       },
       {
-        title: '合并与安全取深层字段',
-        code: 'base = {"model": "deepseek-chat", "temperature": 0.7}\noverride = {"temperature": 0}\nmerged = {**base, **override}\nprint(merged)\nresp = {"choices": [{"message": {"content": "你好"}}]}\nprint(resp.get("choices", [{}])[0].get("message", {}).get("content"))',
-        output: "{'model': 'deepseek-chat', 'temperature': 0}\n你好",
-        note: '后者等价于 Java 里把 temperature 改成 0 的 builder 覆盖写法。'
-      }
+        title: '修改值并遍历',
+        code: 'user = {"name": "xiaoming", "age": 18}\nuser["age"] = 19\nfor k, v in user.items():\n    print(k, "=", v)',
+        output: 'name = xiaoming\nage = 19',
+        note: '用 键 直接修改已存在的值；items() 依次给出一对键和值。',
+      },
     ],
     pitfalls: [
       {
-        title: '遍历时修改字典',
-        bad: 'for k in data:\n    if data[k] is None:\n        del data[k]',
-        good: 'data = {k: v for k, v in data.items() if v is not None}',
-        note: '遍历中增删键会抛 RuntimeError: dictionary changed size during iteration。'
+        title: '取不存在的键',
+        bad: 'print(user["phone"])  # KeyError',
+        good: 'print(user.get("phone", "unfilled"))',
+        note: '用 [] 取不存在的键会直接报错；拿不准的字段一律用 get + 默认值。',
       },
       {
-        title: '链式取深层字段会崩',
-        bad: 'resp["choices"][0]["message"]["content"]',
-        good: 'resp.get("choices", [{}])[0].get("message", {}).get("content", "")',
-        note: 'LLM 返回结构可能缺字段（如报错时没有 choices），逐层 get 更稳。'
+        title: '花括号创建的是字典',
+        bad: 'empty = {}   # 以为是空集合',
+        good: 'empty_set = set()   # 空集合要这样写',
+        note: '{} 是空字典，不是空集合；空集合要写成 set()。',
       },
       {
-        title: '键必须先可哈希',
-        bad: 'cache[[1, 2]] = "x"',
-        good: 'cache[(1, 2)] = "x"',
-        note: 'list 不能当键，tuple 可以；这也是缓存 key 要拼成 tuple 或字符串的原因。'
-      }
+        title: '键必须是不可变类型',
+        bad: 'd = {[1, 2]: "x"}   # 报错',
+        good: 'd = {(1, 2): "x"}   # 用元组当键',
+        note: '字典的键必须是"不可变"的，列表可以变所以不能当键，要换元组。',
+      },
     ],
     practice: [
       {
-        prompt: '统计字符串 "aabbc" 中每个字符出现的次数，打印结果。',
-        starter: 'text = "aabbc"\ncounts = {}\n# TODO: 遍历 text 计数\n',
-        answer: 'text = "aabbc"\ncounts = {}\nfor ch in text:\n    counts[ch] = counts.get(ch, 0) + 1\nprint(counts)',
-        output: "{'a': 2, 'b': 2, 'c': 1}",
-        hint: 'counts.get(ch, 0) + 1 是计数模板，背下来直接用。'
-      }
+        prompt: '建一个字典存 xiaoming 的 name 和 age，用 f-string 打印：xiaoming今年18岁。',
+        starter: 'user = {"name": "xiaoming", "age": 18}\n# TODO: 打印 xiaoming今年18岁\n',
+        answer: 'name = user["name"]\nage = user["age"]\nprint(f"{name}今年{age}岁")',
+        output: 'xiaoming今年18岁',
+        hint: '先用 user["name"]、user["age"] 取出值放进变量，再用 f-string 打印。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'data 中没有 "phone" 键时，下面哪种写法不会抛异常？',
-        options: ['data["phone"]', 'data.get("phone")', 'data.pop("phone")', 'data["phone"] + ""'],
-        answer: 1,
-        explain: 'get 缺省返回 None（或指定的默认值）；pop 缺键也会抛 KeyError。'
+        question: 'user.get("phone", "none") 在 user 里没有 phone 时返回什么？',
+        options: ['报错', 'None', '"none"', '空字典'],
+        answer: 2,
+        explain: 'get 的第二个参数是默认值，键不存在时返回它，这里是 "none"。',
       },
       {
         type: 'judge',
-        question: '遍历字典时删除元素是安全的操作。',
-        answer: false,
-        explain: '会抛 RuntimeError，正确做法是生成一个新字典。'
+        question: '字典里的键必须是不可变的（比如字符串）。',
+        answer: true,
+        explain: '列表可变不能当键，会用字符串、数字、元组等不可变类型当键。',
       },
       {
         type: 'code',
-        question: '补全代码，在没有 "retries" 键时写入默认值 3。',
-        code: 'config = {}\nconfig.__________("retries", 3)\nprint(config)',
-        answer: 'setdefault',
-        explain: 'setdefault 只在键不存在时写值，等价于 Java 的 computeIfAbsent。'
-      }
-    ]
+        question: '补全：往字典 d 里加一个键 "age" 值 18。',
+        code: 'd = {"name": "xiaoming"}\n__________',
+        answer: 'd["age"] = 18',
+        accept: ["d['age'] = 18"],
+        explain: '用 字典[新键] = 值 来新增一个键值对。',
+      },
+    ],
   },
   {
-    id: 'strings-fstring',
-    title: '字符串与 f-string',
+    id: 'tuple',
+    title: '元组：装好就不许改的列表',
     phase: 2,
     order: 3,
-    minutes: 12,
-    rating: { python: 2, java: 2, ai: 5 },
-    summary: '字符串切分、拼接、清洗与 f-string 格式化；Prompt 模板与 LLM 输出清洗都靠它。',
-    keywords: ['string', 'f-string', 'format', 'split', 'join', 'strip', '正则', 'prompt'],
-    tip: 'Java 开发者提示：字符串拼接用 join 而不是循环 +=，格式化用 f-string 而不是 String.format。',
-    what: 'f-string 是 Python 3.6+ 的字符串格式化方式：在引号前加 f，用花括号嵌入表达式，支持格式说明符（{x:.2f}）和自文档写法（{x=}）。常用方法包括 strip、split、join、replace、startswith、lower、count。写 Prompt 时通常用三引号多行字符串 + f-string 变量插值。',
-    javaCompare: [
-      {
-        title: '格式化输出',
-        java: 'String s = String.format("%s 有 %d 条消息，平均 %.2f 秒", model, n, avg);',
-        python: 's = f"{model} 有 {n} 条消息，平均 {avg:.2f} 秒"',
-        diff: 'f-string 直接把变量写进字符串，格式说明符写在冒号后面，可读性更好。'
-      },
-      {
-        title: '拼接列表',
-        java: 'String.join(", ", list)',
-        python: '", ".join(items)',
-        diff: '分隔符是字符串字面量，被拼接的序列作为参数，刚好和 Java 的参数顺序相反。'
-      }
+    minutes: 20,
+    rating: { level: 2, must: 4 },
+    summary: '元组和列表很像，但它一旦建好就不能修改，适合装"固定的一组值"。',
+    keywords: ['tuple', '元组', '不可变', '解包', '小括号'],
+    tip: '零基础提示：元组就是"锁死的列表"。装好之后不能再增删改，但它更安全、更不会出错。',
+    what: '有些数据天生不该变：一个点的坐标、一年 12 个月、一个人的出生年月。元组（tuple）就是用来装这种"固定不变"的一组值的。它和列表写起来很像，但不能添加、删除、修改元素——这反而能防止你手误改坏不该改的数据。',
+    analogy: '元组像一份贴了封条的清单：列好了就不能改，也不允许再加，因为这份清单就该是固定的。',
+    terms: [
+      { term: 'tuple', zh: '元组', note: '不可变的有序序列，用小括号 () 定义。' },
+      { term: 'immutable', zh: '不可变', note: '创建之后不能增删改元素，保护数据不被意外改动。' },
+      { term: 'unpack', zh: '解包', note: '把元组里的各个值一次取出来赋给多个变量。' },
     ],
     examples: [
       {
-        title: 'f-string 常用格式化',
-        code: 'model = "deepseek-chat"\ntokens = 1234\ncost = 0.012345\nprint(f"{model} 用了 {tokens} tokens")\nprint(f"花费 {cost:.2f} 元")\nprint(f"{cost=}")',
-        output: 'deepseek-chat 用了 1234 tokens\n花费 0.01 元\ncost=0.012345',
-        note: '{cost=} 会同时打印表达式和值，调试时非常好用。'
+        title: '创建和读取元组',
+        code: 'point = (3, 5)\nprint(point[0])\nprint(point[1])\nprint(len(point))',
+        output: '3\n5\n2',
+        note: '元组和列表一样用下标取元素、有长度，但不能修改。',
       },
       {
-        title: '清洗 LLM 返回的文本',
-        code: 'raw = "  你好，有什么可以帮助你的？  \\n"\nprint(repr(raw.strip()))\nprint(len("a,b,c".split(",")))',
-        output: "'你好，有什么可以帮助你的？'\n3",
-        note: 'strip 去掉首尾空白与换行；split 默认按空白切分，可传分隔符。'
+        title: '给元组解包',
+        code: 'x, y = (3, 5)\nprint("x =", x)\nprint("y =", y)',
+        output: 'x = 3\ny = 5',
+        note: '把元组里的值一次性赋给多个变量，顺序一一对应。',
       },
       {
-        title: '多行 Prompt 模板',
-        code: 'context = "Python 支持 async/await。"\nquestion = "Python 怎么做异步？"\nprompt = f"""请只根据下面的资料回答问题。\n资料：{context}\n问题：{question}\n"""\nprint(prompt.strip().splitlines()[0])',
-        output: '请只根据下面的资料回答问题。',
-        note: '三引号保留换行，非常适合组装系统提示词；strip 去掉首尾多余空行。'
-      }
+        title: '列表和元组的转换',
+        code: 'lst = [1, 2, 3]\nt = tuple(lst)\nprint(t)\nlst2 = list(t)\nprint(lst2)',
+        output: '(1, 2, 3)\n[1, 2, 3]',
+        note: 'tuple() 把列表变元组（锁上），list() 把元组变列表（打开）。',
+      },
     ],
     pitfalls: [
       {
-        title: 'f-string 里同类引号冲突',
-        bad: 'f"名字是 {data["name"]}"',
-        good: 'f"名字是 {data[\'name\']}"   # 3.12+ 也允许内层用同种引号',
-        note: 'Python 3.12 之前内外引号不能相同，稳妥做法是外层双引号、内层单引号。'
+        title: '尝试修改元组',
+        bad: 't = (1, 2)\nt[0] = 99   # 报错 TypeError',
+        good: 'lst = list(t)\nlst[0] = 99',
+        note: '元组不可变，改了会报错；需要改就先转成列表。',
       },
       {
-        title: '循环里拼接字符串',
-        bad: 'result = ""\nfor w in words:\n    result += w',
-        good: 'result = "".join(words)',
-        note: '字符串不可变，循环 += 每次都新建对象；join 一次完成，性能差距很明显。'
+        title: '单元素元组要加逗号',
+        bad: 't = (5)   # 这是数字5，不是元组',
+        good: 't = (5,)  # 加个逗号才是单元素元组',
+        note: '只有一个元素时，后面要有逗号，否则 (5) 就是个普通数字。',
       },
       {
-        title: '窗口环境下读写文件乱码',
-        bad: 'open("out.txt", "w").write("中文")',
-        good: 'open("out.txt", "w", encoding="utf-8")',
-        note: 'Windows 默认编码可能是 GBK，处理中文文本务必显式指定 encoding。'
-      }
+        title: '把元组当成能变的列表',
+        bad: 't = (1, 2)\nt.append(3)   # 元组没有 append',
+        good: '用 list = [1, 2]; list.append(3)',
+        note: '元组没有 append / remove 这些改元素的方法，因为它是不可变的。',
+      },
     ],
     practice: [
       {
-        prompt: '把 "  张三,20  " 清洗后拆成 name 和 age，用 f-string 打印 "姓名: 张三, 年龄: 20"。',
-        starter: 'raw = "  张三,20  "\n# TODO: strip -> split -> 打印\n',
-        answer: 'raw = "  张三,20  "\nname, age = raw.strip().split(",")\nprint(f"姓名: {name}, 年龄: {age}")',
-        output: '姓名: 张三, 年龄: 20',
-        hint: '方法可以链式调用：raw.strip().split(",")。'
-      }
+        prompt: '建一个元组保存"周一"到"周三"，打印第一个和最后一个。',
+        starter: 'days = ("Monday", "Tuesday", "Wednesday")\n# TODO: 打印第一个和最后一个\n',
+        answer: 'days = ("Monday", "Tuesday", "Wednesday")\nprint(days[0], days[-1])',
+        output: 'Monday Wednesday',
+        hint: '第一个是下标 0，最后一个用 -1 负下标。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'f"{3.14159:.2f}" 的结果是？',
-        options: ['3.14159', '3.14', '3.1', '3.142'],
+        question: '元组和列表最主要的区别是什么？',
+        options: ['元组更慢', '元组创建后不能修改', '元组只能存数字', '没有区别'],
         answer: 1,
-        explain: ':.2f 表示保留两位小数的定点格式，结果是 "3.14"。'
+        explain: '元组是不可变的，创建后不能增删改元素；列表可以修改。',
       },
       {
         type: 'judge',
-        question: 'Python 的字符串对象创建后不能原地修改。',
-        answer: true,
-        explain: 'str 不可变，所有"修改"方法都返回新字符串。'
+        question: 't = (1, 2); t[0] = 3 能正常执行。',
+        answer: false,
+        explain: '元组不可变，尝试修改元素会报 TypeError。',
       },
       {
         type: 'code',
-        question: '补全代码，把列表拼接成以逗号分隔的字符串。',
-        code: 'items = ["a", "b", "c"]\nprint(__________)',
-        answer: '", ".join(items)',
-        accept: ["','.join(items)", '",".join(items)'],
-        explain: 'join 由分隔符调用，接收可迭代对象，是拼接列表的标准做法。'
-      }
-    ]
+        question: '补全：把元组 point 的两个值分别给 x 和 y。',
+        code: 'point = (4, 9)\nx, y = __________',
+        answer: 'point',
+        accept: ['(4, 9)'],
+        explain: '解包语法一次性把元组的各值赋给多个变量。',
+      },
+    ],
   },
   {
     id: 'unpacking',
-    title: '解包',
+    title: '一键解包：一次取出很多值',
     phase: 2,
     order: 4,
-    minutes: 10,
-    rating: { python: 3, java: 3, ai: 3 },
-    summary: '一次取出多个值、用 * 收集剩余、交换变量、把参数摊开传给函数；Java 里没有等价写法。',
-    keywords: ['unpacking', '解包', '星号', 'args', 'kwargs', '交换', 'tuple'],
-    tip: 'Java 开发者提示：Java 取集合元素要逐个 get，Python 一条赋值就能同时解出多个值。',
-    what: '解包（unpacking）是把序列或字典里的值一次分配给多个名字。左侧变量个数与右侧元素个数一致即可解包；用 *rest 收集多余元素；函数调用时用 *args 展开位置参数、**kwargs 展开关键字参数。这是 Python 特有的便利语法，读框架源码时会大量遇到。',
-    javaCompare: [
+    minutes: 20,
+    rating: { level: 2, must: 4 },
+    summary: '用一行代码把一个容器里的值拆给多个变量，还能用 * 收集"剩下的全部"。',
+    keywords: ['解包', 'unpack', 'star', '多赋值', '交换变量', '元素'],
+    tip: '零基础提示：解包就像把一盒东西按顺序分发出去，一次一个变量接一样，省得去下标。',
+    what: '当你有一组值想"拆"给几个变量时，Python 让你不用逐个按下标取，直接一行把容器里的值按顺序赋给一组变量。它还能用星号 * 把"剩下的所有值"打包给一个变量，用来交换变量更是极其方便。',
+    analogy: '解包像排队发礼物：你把一串礼物按人数一人发一个，多余的用一个大袋子 * 一次性全收。',
+    terms: [
+      { term: 'unpack', zh: '解包', note: '把一组值拆开，按顺序赋给多个变量。' },
+      { term: 'star', zh: '星号', note: '在变量前放 *，收集剩下的所有值。' },
+      { term: 'swap', zh: '交换', note: '把两个变量的值互相调换。' },
+    ],
+    examples: [
+      {
+        title: '一次取多个值',
+        code: 'a, b, c = [1, 2, 3]\nprint(a)\nprint(b)\nprint(c)',
+        output: '1\n2\n3',
+        note: '把列表的 3 个值按顺序给 a、b、c，数量必须对得上。',
+      },
+      {
+        title: '用 * 收集剩下的',
+        code: 'first, *rest = [10, 20, 30, 40]\nprint(first, rest)',
+        output: '10 [20, 30, 40]',
+        note: '*rest 会收走所有没被前面变量接走的元素。',
+      },
       {
         title: '交换两个变量',
-        java: 'int t = a; a = b; b = t;',
-        python: 'a, b = b, a',
-        diff: 'Python 右侧先打包成 tuple 再解包，不需要临时变量。'
-      }
-    ],
-    examples: [
-      {
-        title: '基础解包与星号收集',
-        code: 'point = (3, 5)\nx, y = point\nprint(x, y)\nfirst, *rest = [1, 2, 3, 4]\nprint(first, rest)\nhead, *mid, tail = "abcde"\nprint(head, mid, tail)',
-        output: '3 5\n1 [2, 3, 4]\na [\'b\', \'c\', \'d\'] e',
-        note: '*rest 收集成一个列表，可以放在中间位置。'
+        code: 'a = 1\nb = 2\na, b = b, a\nprint(a, b)',
+        output: '2 1',
+        note: '不用临时变量，a, b = b, a 一行就能交换。',
       },
-      {
-        title: '交换与忽略',
-        code: 'a, b = 1, 2\na, b = b, a\nprint(a, b)\n_, age = ("张三", 20)\nprint(age)',
-        output: '2 1\n20',
-        note: '下划线 _ 是"我不关心这个值"的约定写法。'
-      },
-      {
-        title: '函数调用时展开参数',
-        code: 'def call_llm(model, temperature, **options):\n    return f"model={model}, temperature={temperature}, options={options}"\n\nconfig = {"model": "deepseek-chat", "temperature": 0.2}\nprint(call_llm(**config, stream=True))',
-        output: "model=deepseek-chat, temperature=0.2, options={'stream': True}",
-        note: '把配置字典直接展开成关键字参数，是封装 LLM 客户端的常见做法。'
-      }
     ],
     pitfalls: [
       {
-        title: '数量不匹配',
+        title: '变量数量不匹配',
+        bad: 'a, b = [1, 2, 3]   # 报错',
+        good: 'a, *b = [1, 2, 3]   # a=1, b=[2,3]',
+        note: '右边值比变量多会报错；用 * 收走多余的。',
+      },
+      {
+        title: '忘了 .items()',
+        bad: 'for k, v in user:   # 只拿到键',
+        good: 'for k, v in user.items():   # 才有键和值',
+        note: '直接遍历字典拿的是键；要键和值都拿用 items()。',
+      },
+      {
+        title: '混淆解包和切片',
         bad: 'a, b = [1, 2, 3]',
-        good: 'a, b, *rest = [1, 2, 3]',
-        note: '会抛 ValueError: too many values to unpack，需要星号或切片。'
+        good: 'a, b = [1, 2, 3][:2]',
+        note: '解包要求两边数量一致；只需要前两个就先用切片取出来。',
       },
-      {
-        title: '字符串会被逐字符解包',
-        bad: 'first, second = "python"',
-        good: 'first, second = "python".split(" ")[0:2]   # 明确切分',
-        note: '字符串也是序列，误写成解包会得到单个字符或直接报错。'
-      },
-      {
-        title: '星号只能出现一次',
-        bad: 'a, *b, *c = [1, 2, 3, 4]',
-        good: 'a, *b, c = [1, 2, 3, 4]',
-        note: '一个解包目标里只允许一个带星号的变量。'
-      }
     ],
     practice: [
       {
-        prompt: '用一行代码交换 x 与 y 的值并打印。',
-        starter: 'x, y = "左", "右"\n# TODO: 交换并打印 x y\n',
-        answer: 'x, y = "左", "右"\nx, y = y, x\nprint(x, y)',
-        output: '右 左',
-        hint: 'x, y = y, x 就是完整的一行。'
-      }
+        prompt: '把列表 [7, 8] 的两个值解包给 a 和 b，然后打印 a * b。',
+        starter: 'nums = [7, 8]\n# TODO: 解包后打印 a * b\n',
+        answer: 'nums = [7, 8]\na, b = nums\nprint(a * b)',
+        output: '56',
+        hint: 'a, b = nums 一行解包，然后 print(a * b)。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'a, *b = [1, 2, 3] 之后，b 的值是？',
-        options: ['2', '[2, 3]', '(2, 3)', '报错'],
+        question: 'first, *rest = [10, 20, 30] 之后，rest 的值是什么？',
+        options: ['20', '[20, 30]', '[30]', '报错'],
         answer: 1,
-        explain: '带星号的变量收集剩余元素，类型是 list。'
+        explain: '*rest 收集剩下所有值，得到 [20, 30]。',
       },
       {
         type: 'judge',
-        question: '**kwargs 在函数调用时用于展开字典为关键字参数。',
+        question: 'a, b = b, a 可以交换两个变量的值。',
         answer: true,
-        explain: '定义时 **kwargs 收集关键字参数，调用时 **dict 展开它们。'
-      }
-    ]
-  },
-  {
-    id: 'lambda',
-    title: 'lambda 与高阶函数',
-    phase: 2,
-    order: 5,
-    minutes: 8,
-    rating: { python: 2, java: 2, ai: 4 },
-    summary: '匿名函数 lambda 与 sorted/max/map/filter 的组合，等价于 Java 的函数式接口。',
-    keywords: ['lambda', 'sorted', 'map', 'filter', 'key', '函数式', 'Comparator'],
-    tip: 'Java 开发者提示：lambda 相当于 Java 的 lambda 表达式，但只能写一个表达式，不能有语句块。',
-    what: 'lambda 定义一个匿名函数，语法是 lambda 参数: 表达式，只能有一个表达式、不能写赋值或 return。它最常见的用途是给 sorted、max、min、map、filter 提供 key 或函数参数。实际项目里优先考虑推导式，只有"传给别的函数一小段逻辑"时才用 lambda。',
-    javaCompare: [
-      {
-        title: '按字段排序',
-        java: 'users.sort(Comparator.comparing(User::getAge));',
-        python: 'users.sort(key=lambda u: u["age"])',
-        diff: 'Python 用 key 函数取排序依据，不需要实现 Comparator 接口。'
-      }
-    ],
-    examples: [
-      {
-        title: '按字段排序',
-        code: 'users = [{"name": "张三", "age": 30}, {"name": "李四", "age": 22}]\nprint([u["name"] for u in sorted(users, key=lambda u: u["age"])])\nprint(max(users, key=lambda u: u["age"])["name"])',
-        output: "['李四', '张三']\n张三",
-        note: 'sorted 返回新列表；users.sort() 则原地排序。'
-      },
-      {
-        title: '多级排序与 map/filter',
-        code: 'rows = [("b", 2), ("a", 3), ("a", 1)]\nprint(sorted(rows, key=lambda r: (r[0], r[1])))\nprint(list(map(lambda n: n * 2, [1, 2, 3])))\nprint(list(filter(lambda n: n > 1, [1, 2, 3])))',
-        output: "[('a', 1), ('a', 3), ('b', 2)]\n[2, 4, 6]\n[2, 3]",
-        note: 'key 返回 tuple 就是按多个字段排序；map/filter 也可以用推导式替代。'
-      }
-    ],
-    pitfalls: [
-      {
-        title: '闭包晚绑定',
-        bad: 'fns = [lambda: i for i in range(3)]  # 全部返回 2',
-        good: 'fns = [lambda i=i: i for i in range(3)]',
-        note: 'lambda 里的 i 是定义时捕获名字、调用时才取值，所以都是最后一个值。'
-      },
-      {
-        title: '在 lambda 里写语句',
-        bad: 'lambda x: x = 1',
-        good: 'def set_one(x):\n    ...',
-        note: 'lambda 只能包含表达式，赋值、print 这类语句都要用 def。'
-      },
-      {
-        title: '以为 sorted 会原地排序',
-        bad: 'sorted(nums)   # 忽略了返回值，nums 没变',
-        good: 'nums = sorted(nums)   或   nums.sort()',
-        note: 'sorted 返回新列表，list.sort() 才是原地排序且返回 None。'
-      }
-    ],
-    practice: [
-      {
-        prompt: '按 age 从小到大排序并打印所有人的名字。',
-        starter: 'users = [{"name": "张三", "age": 30}, {"name": "李四", "age": 22}]\n# TODO: 排序后打印 name\n',
-        answer: 'users = [{"name": "张三", "age": 30}, {"name": "李四", "age": 22}]\nfor u in sorted(users, key=lambda u: u["age"]):\n    print(u["name"])',
-        output: '李四\n张三',
-        hint: 'sorted(users, key=lambda u: u["age"])。'
-      }
-    ],
-    quiz: [
-      {
-        type: 'choice',
-        question: '关于 Python lambda，下面说法正确的是？',
-        options: ['可以有多个表达式', '可以包含 return 语句', '只能有一个表达式', '必须有名字'],
-        answer: 2,
-        explain: 'lambda 的语法限制就是"单个表达式"，返回值就是该表达式的值。'
-      },
-      {
-        type: 'judge',
-        question: 'sorted(items, key=...) 会修改原列表。',
-        answer: false,
-        explain: 'sorted 返回新列表；要原地排序用 items.sort()。'
-      }
-    ]
-  },
-  {
-    id: 'exceptions',
-    title: '异常处理',
-    phase: 2,
-    order: 6,
-    minutes: 12,
-    rating: { python: 2, java: 1, ai: 4 },
-    summary: 'try/except/else/finally、自定义异常与 raise from；Python 没有 checked 异常。',
-    keywords: ['try', 'except', 'finally', 'raise', '异常', 'Exception', 'EAFP'],
-    tip: 'Java 开发者提示：Python 没有 checked 异常，方法签名不声明 throws，所有异常都是运行期的。',
-    what: '异常处理用 try / except / else / finally：except 按类型捕获，else 在没出错时执行，finally 一定执行（清理资源）。所有异常都继承自 BaseException，业务异常一般继承 Exception。抛出用 raise，链式保留原始原因用 raise ... from err。',
-    javaCompare: [
-      {
-        title: '捕获异常',
-        java: 'try {\n    risky();\n} catch (IOException e) {\n    log.error("失败", e);\n}',
-        python: 'try:\n    risky()\nexcept OSError as e:\n    print("失败", e)',
-        diff: 'except 用类名匹配并可 as 绑定变量；没有 checked/unchecked 之分。'
-      },
-      {
-        title: '自定义异常',
-        java: 'class BizException extends RuntimeException { ... }',
-        python: 'class BizError(Exception):\n    pass',
-        diff: 'Python 一个 pass 就够了，不需要写构造方法。'
-      }
-    ],
-    examples: [
-      {
-        title: '多种异常与 else/finally',
-        code: 'def parse(text):\n    try:\n        value = int(text)\n    except ValueError as e:\n        print("不是数字:", e)\n    else:\n        print("解析成功:", value)\n    finally:\n        print("完成")\n\nparse("42")\nparse("abc")',
-        output: '解析成功: 42\n完成\n不是数字: invalid literal for int() with base 10: \'abc\'\n完成',
-        note: 'else 只在没有异常时执行，finally 无论成功失败都执行。'
-      },
-      {
-        title: '自定义异常与 raise from',
-        code: 'class LLMError(Exception):\n    pass\n\ndef call_llm():\n    try:\n        raise TimeoutError("连接超时")\n    except TimeoutError as e:\n        raise LLMError("模型调用失败, 请重试") from e\n\ntry:\n    call_llm()\nexcept LLMError as e:\n    print(type(e).__name__, e)\n    print(type(e.__cause__).__name__)',
-        output: 'LLMError 模型调用失败, 请重试\nTimeoutError',
-        note: 'from e 保留原始异常（__cause__），排错时能看到根因。'
-      }
-    ],
-    pitfalls: [
-      {
-        title: '裸 except 吞掉一切',
-        bad: 'try:\n    work()\nexcept:\n    pass',
-        good: 'try:\n    work()\nexcept (ValueError, OSError) as e:\n    logger.warning("跳过: %s", e)',
-        note: '裸 except 连 Ctrl+C 都可能吞掉，还会掩盖真实 bug，是代码评审重点。'
-      },
-      {
-        title: '捕获范围过宽',
-        bad: 'try:\n    data = json.loads(text)\n    return data["choices"][0]\nexcept Exception:\n    return {}',
-        good: '# 只包住可能出错的一行，并记录日志',
-        note: '把整段逻辑包进 try 会让真正的逻辑 bug 变成"静默返回空值"。'
-      },
-      {
-        title: '异常变量在 except 外不可用',
-        bad: 'except ValueError as e:\n    pass\nprint(e)   # NameError',
-        good: 'except ValueError as e:\n    msg = str(e)\nprint(msg)',
-        note: 'Python 3 在 except 块结束后会删除 e，需要先存到别的变量。'
-      }
-    ],
-    practice: [
-      {
-        prompt: '写一个函数 safe_int(text)，转换失败时返回 None（不要抛异常）。',
-        starter: 'def safe_int(text):\n    # TODO\n    pass\n\nprint(safe_int("42"))\nprint(safe_int("abc"))',
-        answer: 'def safe_int(text):\n    try:\n        return int(text)\n    except ValueError:\n        return None\n\nprint(safe_int("42"))\nprint(safe_int("abc"))',
-        output: '42\nNone',
-        hint: '只捕获 ValueError，不要用裸 except。'
-      }
-    ],
-    quiz: [
-      {
-        type: 'choice',
-        question: 'Python 与 Java 异常机制的主要区别是？',
-        options: ['没有 try/catch 概念', '没有 checked 异常，不需要在签名里声明', '不能自定义异常', '异常不能嵌套'],
-        answer: 1,
-        explain: 'Python 所有异常都是运行期的，方法签名不声明 throws。'
-      },
-      {
-        type: 'judge',
-        question: 'finally 块只在发生异常时执行。',
-        answer: false,
-        explain: 'finally 无论是否发生异常都会执行，常用于释放资源。'
+        explain: '等号右边先算好值，再按顺序赋给左边，所以能交换。',
       },
       {
         type: 'code',
-        question: '补全捕获语句，捕获 ValueError 并绑定为 e。',
-        code: 'try:\n    n = int("abc")\n__________ ValueError as e:\n    print("转换失败", e)',
-        answer: 'except',
-        explain: 'Python 用 except 类名 as 变量 的形式绑定异常对象。'
-      }
-    ]
+        question: '补全：把列表 [5, 6] 解包给变量 x 和 y。',
+        code: 'nums = [5, 6]\n__________',
+        answer: 'x, y = nums',
+        accept: [],
+        explain: '一行把两个元素分别赋给 x、y。',
+      },
+    ],
   },
   {
-    id: 'ternary-any-all',
-    title: '三元表达式与 all / any',
+    id: 'list-comprehension',
+    title: '列表推导式：一行生成新列表',
     phase: 2,
-    order: 7,
-    minutes: 8,
-    rating: { python: 2, java: 2, ai: 3 },
-    summary: '条件表达式 A if c else B，以及 all/any 做一些"全满足/存在满足"的校验。',
-    keywords: ['ternary', '三元', 'any', 'all', '真值', '校验', 'anyMatch'],
-    tip: 'Java 开发者提示：all/any 相当于 Stream 的 allMatch / anyMatch，但接收的是可迭代对象。',
-    what: '条件表达式的语法是 A if 条件 else B，它是表达式而不是语句，所以可以直接写在赋值、return、函数参数里。all 判断是否全部为真、any 判断是否存在真值，两者都会短路。配合生成器表达式，可以一行完成参数校验，这在 Tool Calling 的参数检查里很常见。',
-    javaCompare: [
-      {
-        title: '存在/全部判断',
-        java: 'boolean ok = items.stream().allMatch(i -> i.size() > 0);',
-        python: 'ok = all(len(i) > 0 for i in items)',
-        diff: 'any/all 直接吃生成器表达式，不需要先 collect。'
-      }
+    order: 5,
+    minutes: 30,
+    rating: { level: 3, must: 5 },
+    summary: '把"遍历 + 变换 + 过滤"压缩成一行，快速生成一个新列表。',
+    keywords: ['推导式', 'comprehension', '列表', 'filter', 'map', '生成新列表'],
+    tip: '零基础提示：推导式是个提速写法——你会发现它比写一整段 for 循环要短得多。先看清它分三段。',
+    what: '常常要做"把一个列表变成另一个列表"的活：比如所有分数加 10 分、只保留大于 0 的数。你可以写完整 for 循环，也可以用"列表推导式"把这件事压缩成一行：它像一个带条件的生成器，告诉你每个元素怎么变、要不要留下。',
+    analogy: '推导式像一条筛子加加工流水线：原料从一边进，经过"挑拣（if）"和"加工（表达式）"，另一边出来就是成品新列表。',
+    terms: [
+      { term: 'comprehension', zh: '推导式', note: '用一行表达式，从旧列表生成新列表的简写。' },
+      { term: 'filter', zh: '过滤', note: '只保留满足条件的元素。' },
+      { term: 'transform', zh: '变换', note: '对每个元素做某种处理生成新值。' },
     ],
     examples: [
       {
-        title: '条件表达式',
-        code: 'temp = 0.2\nlabel = "确定性高" if temp < 0.5 else "更发散"\nprint(label)\nprint(["-" if n else "*" for n in [0, 1, 0, 1]])',
-        output: '确定性高\n[\'*\', \'-\', \'*\', \'-\']',
-        note: '注意顺序：先写"条件成立时的值"，条件写在中间。'
+        title: '给每个数翻倍',
+        code: 'nums = [1, 2, 3, 4]\ndoubled = [n * 2 for n in nums]\nprint(doubled)',
+        output: '[2, 4, 6, 8]',
+        note: '语法 = [对每个元素做什么 for n in 列表]。',
       },
       {
-        title: 'all / any 校验参数',
-        code: 'args = {"city": "北京", "days": 3}\nrequired = ["city", "days"]\nprint(all(k in args for k in required))\nprint(any(v is None for v in args.values()))\nprint(any([False, False, True]), all([]))',
-        output: 'True\nFalse\nTrue True',
-        note: '空集合的 all 是 True（真空真），校验时要注意这一点。'
-      }
+        title: '过滤：只留大于 2 的',
+        code: 'nums = [1, 2, 3, 4, 5]\nbig = [n for n in nums if n > 2]\nprint(big)',
+        output: '[3, 4, 5]',
+        note: '在末尾加 if 条件，只有满足条件的才进入新列表。',
+      },
+      {
+        title: '变换加过滤一起用',
+        code: 'nums = [1, 2, 3, 4, 5]\nresult = [n * 10 for n in nums if n % 2 == 1]\nprint(result)',
+        output: '[10, 30, 50]',
+        note: '先过滤（只留奇数），再变换（乘 10），一行搞定。',
+      },
     ],
     pitfalls: [
       {
-        title: '嵌套三元难读',
-        bad: 'grade = "A" if s > 90 else "B" if s > 60 else "C"',
-        good: 'if s > 90:\n    grade = "A"\nelif s > 60:\n    grade = "B"',
-        note: '超过一层嵌套就改用 if/elif，可读性优先。'
+        title: '括号用错',
+        bad: 'doubled = n * 2 for n in nums   # 少了 []',
+        good: 'doubled = [n * 2 for n in nums]',
+        note: '推导式外面必须用方括号包住整个表达式。',
       },
       {
-        title: 'all([]) 是 True',
-        bad: 'if all(x["ok"] for x in results):  # results 为空时也为真',
-        good: 'if results and all(x["ok"] for x in results):',
-        note: '空列表的 all 返回 True、any 返回 False，这是数学上的约定。'
-      }
+        title: '列表推导误以为会改原列表',
+        bad: 'nums = [n * 2 for n in nums]\nprint(nums)  # 已经变了，旧数据没了',
+        good: 'doubled = [n * 2 for n in nums]\nprint(nums, doubled)',
+        note: '推导式生成的是新的列表；若想保留原数据，就赋给另一个名字。',
+      },
+      {
+        title: '逻辑复杂硬写成推导式',
+        bad: '[[x for x in range(y)] for y in range(3)]   # 看不懂',
+        good: '先拆成普通 for 循环写清楚',
+        note: '嵌套又长又绕的时候别硬挤成一行，清晰优先。',
+      },
     ],
     practice: [
       {
-        prompt: '给定用户字典，判断是否所有用户都已激活（active 为 True），打印结果。',
-        starter: 'users = [{"active": True}, {"active": False}]\n# TODO: 用 all 判断并打印\n',
-        answer: 'users = [{"active": True}, {"active": False}]\nprint(all(u["active"] for u in users))',
-        output: 'False',
-        hint: 'all(u["active"] for u in users) 会短路，遇到 False 立刻返回。'
-      }
+        prompt: '用列表推导式生成 0 到 9 中偶数的平方，例如 [0, 4, 16, 36, 64]。',
+        starter: '# TODO: 用推导式生成列表并打印\n',
+        answer: 'even_squares = [n * n for n in range(10) if n % 2 == 0]\nprint(even_squares)',
+        output: '[0, 4, 16, 36, 64]',
+        hint: '先 range(10) 取 0~9，加 if n % 2 == 0 过滤偶数，再平方。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'print(any([]), all([])) 的结果是？',
-        options: ['False False', 'False True', 'True False', 'True True'],
+        question: '[n for n in range(5) if n > 1] 的结果是什么？',
+        options: ['[0,1,2,3,4]', '[2,3,4]', '[3,4]', '[n]'],
         answer: 1,
-        explain: 'any([]) 没有任何真值所以是 False；all([]) 是"真空真"，返回 True。'
+        explain: '取 0~4 里大于 1 的 n，得到 2、3、4。',
       },
       {
         type: 'judge',
-        question: 'x = "有值" if flag else "无值" 是合法的 Python 语句。',
+        question: '列表推导式会生成一个新的列表。',
         answer: true,
-        explain: '条件表达式是表达式，可以直接用于赋值。'
-      }
-    ]
-  }
+        explain: '推导式的作用就是从旧列表（或别的可迭代对象）生成一个新的列表。',
+      },
+      {
+        type: 'code',
+        question: '补全：把 nums 里的每个数平方放进新列表。',
+        code: 'nums = [1, 2, 3, 4]\nsquares = [__________ for n in nums]',
+        answer: 'n * n',
+        accept: ['n**2', 'pow(n, 2)'],
+        explain: '把每个 n 变换为 n*n 后放进新列表。',
+      },
+    ],
+  },
 ]

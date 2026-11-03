@@ -2,7 +2,7 @@
   "name": "python-speedrun",
   "private": true,
   "version": "1.0.0",
-  "description": "面向 Java 开发者的 Python 速通学习平台（5~10 小时跨过 Python 基础门槛，直通 AI 应用开发）",
+  "description": "面向零基础的 Python 教程（从第一行代码开始的 30 小时课程，主线做出命令行小工具，进阶选修直通 AI 应用开发）",
   "type": "module",
   "scripts": {
     "dev": "vite",

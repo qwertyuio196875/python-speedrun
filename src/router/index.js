@@ -10,7 +10,7 @@ const routes = [
     meta: { title: '知识点' },
   },
   { path: '/practice', name: 'practice', component: () => import('../views/PracticeView.vue'), meta: { title: '综合实战' } },
-  { path: '/cheatsheet', name: 'cheatsheet', component: () => import('../views/CheatSheetView.vue'), meta: { title: 'Java → Python 速查表' } },
+  { path: '/cheatsheet', name: 'cheatsheet', component: () => import('../views/CheatSheetView.vue'), meta: { title: 'Python 速查表' } },
   { path: '/finish', name: 'finish', component: () => import('../views/FinishView.vue'), meta: { title: '通关' } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
 ]
@@ -26,7 +26,9 @@ const router = createRouter({
 
 router.afterEach((to) => {
   const lesson = to.name === 'lesson' ? lessonById[to.params.id] : null
-  const title = lesson ? `${lesson.title} · Python 速通` : `${to.meta.title || 'Python 速通'} · Python 速通`
+  const brand = 'Python 零基础教程'
+  const title = lesson ? `${lesson.title} · ${brand}` : `${to.meta.title || brand} · ${brand}`
+  document.title = title
   document.title = title
 })
 

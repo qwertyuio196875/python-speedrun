@@ -7,7 +7,7 @@
       </button>
       <RouterLink v-if="collapsed" class="mini-brand" to="/">
         <span class="logo">{ }</span>
-        <span class="mini-name">Python 速通</span>
+        <span class="mini-name">Python 零基础教程</span>
       </RouterLink>
     </div>
 

@@ -1,567 +1,553 @@
 /**
- * 第一阶段：快速基础（约 1 小时）
+ * 第一阶段：认识 Python（零基础入门，约 3.5 小时）
  * 内容规范见 docs/content-schema.md
+ * 目标读者：从未写过任何代码的人。
  */
 export default [
   {
-    id: 'variables',
-    title: '变量与数据类型',
+    id: 'install',
+    title: '安装 Python 并运行第一个程序',
     phase: 1,
     order: 1,
-    minutes: 10,
-    rating: { python: 1, java: 1, ai: 3 },
-    summary: 'Python 变量是"名字绑对象"，不需要声明类型；掌握 int/float/str/bool/None 与动态类型。',
-    keywords: ['variable', 'type', 'int', 'float', 'str', 'bool', 'None', '动态类型'],
-    tip: 'Java 开发者提示：把变量当成"贴着名字的便利贴"，类型属于对象而不是变量，随时可换。',
-    what: 'Python 里没有变量声明，赋值即创建。类型信息挂在对象上，同一个名字可以先指向 int、后指向 str，这就是动态类型。内置标量类型只有 int、float、str、bool 和空值 None，整数不区分 int/long/short，也不会溢出。',
-    javaCompare: [
-      {
-        title: '声明并初始化变量',
-        java: 'int age = 20;\nString name = "张三";',
-        python: 'age = 20\nname = "张三"',
-        diff: 'Python 不写类型、不写分号；类型由右侧值决定。'
-      },
-      {
-        title: '常量与不可变',
-        java: 'final double PI = 3.14;',
-        python: 'PI = 3.14  # 约定：全大写表示"请不要改"',
-        diff: 'Python 没有 final/const，只能靠命名约定；真正的不可变对象是 int、str、tuple 这些。'
-      }
+    minutes: 25,
+    rating: { level: 1, must: 5 },
+    summary: '把 Python 装到你的电脑上，打开"终端"，写下人生第一个 print 命令并把它跑出来。',
+    keywords: ['安装', '下载', '终端', '命令行', 'python', 'print', '运行', 'IDLE'],
+    tip: '零基础提示：第一次装软件别慌，按步骤点"下一步"就好。之后所有东西都要从这里开始。',
+    what: '写代码的第一步是先让电脑能"听懂" Python。你需要做两件事：装一个叫 Python 的软件，以及知道在哪里输入代码。这一节的目标很简单——在你的电脑上弹出一行你写的字。',
+    analogy: '学用 Python 就像学开口说话：先把"嗓子"（Python 软件）装好，再从喊出第一个字（一行代码）开始。',
+    terms: [
+      { term: 'install', zh: '安装', note: '把软件复制到电脑上并能运行的过程。' },
+      { term: 'terminal', zh: '终端 / 命令行', note: '一个可以打字给电脑、通过文字交流的窗口。' },
+      { term: 'code', zh: '代码', note: '用英文和符号写出来的"命令"，电脑照着它执行。' },
+      { term: 'print', zh: '打印', note: '把内容显示到屏幕上的命令。' },
+    ],
+    steps: [
+      '去 Python 官网 python.org 下载 Python 3.12 版本。Windows 安装时一定勾选 "Add python.exe to PATH"。',
+      '装好后，在开始菜单里打开一个叫 "Python" 或按 Win+R 输入 cmd 打开命令行。',
+      '在终端里输入 python 回车，看到 Python 3.12 开头的字，就说明装好了。输入 exit() 退出。',
+      '在自己电脑上新建一个文本文件 hello.py，写 print("你好，世界")，然后在终端用 python hello.py 运行它。',
     ],
     examples: [
       {
-        title: '一次赋值多个变量',
-        code: 'name, age, score = "张三", 20, 91.5\nprint(name, age, score)\nprint(type(age), type(score))',
-        output: '张三 20 91.5\n<class \'int\'> <class \'float\'>',
-        note: '多个值可以一次解包赋值；type() 相当于运行期的 getClass()。'
+        title: '你的第一行代码',
+        code: 'print("你好，世界")',
+        output: '你好，世界',
+        note: '这行命令让电脑把引号里的话显示出来。记住：命令外面是英文括号和引号。',
       },
       {
-        title: '动态类型与空值',
-        code: 'value = 10\nvalue = "现在是字符串"\nprint(value)\nempty = None\nprint(empty is None)',
-        output: '现在是字符串\nTrue',
-        note: '判空统一用 is None，不要写 == None。'
+        title: '用代码进行问答',
+        code: 'print("你几岁？")\nprint("我 18 岁")',
+        output: '你几岁？\n我 18 岁',
+        note: 'print 每次会换行，多次 print 就一行一句往下排列。',
       },
       {
-        title: '布尔与真假判断',
-        code: 'print(bool(0), bool(""), bool([]), bool("0"))\nprint(1 == 1.0, 7 // 2, 7 % 2, 2 ** 10)',
-        output: 'False False False True\nTrue 3 1 1024',
-        note: '空值在条件判断里都是假；`0` 是非空字符串，所以为真。'
-      }
+        title: '打印多个东西',
+        code: 'print("我是", "Python")',
+        output: '我是 Python',
+        note: 'print 里可以放多个值，中间用英文逗号隔开，输出时自动用空格分隔。',
+      },
     ],
     pitfalls: [
       {
-        title: '整数除法与整除',
-        bad: 'print(7 / 2)      # 3.5\nprint(7 // 2)     # 3',
-        good: 'ratio = 7 / 2    # 需要小数用 /\ncount = 7 // 2    # 需要整数商用 //',
-        note: 'Java 的 / 对 int 是整除，Python 的 / 永远是浮点除法，整数商要用 //。'
+        title: '拼音 vs 中文串',
+        bad: 'print(你好)',
+        good: 'print("你好")',
+        note: '中文不能直接写，要放进英文引号 " " 里；否则电脑不知道"你好"是什么。',
       },
       {
-        title: '字符串与数字拼接',
-        bad: '"年龄:" + 20',
-        good: 'f"年龄:{age}"',
-        note: 'Python 不做隐式类型转换，str + int 会抛 TypeError，用 f-string 或 str() 转换。'
+        title: '全角标点',
+        bad: 'print（"你好"）',
+        good: 'print("你好")',
+        note: '括号、引号、逗号都必须是英文半角，中文标点会直接报语法错误。',
       },
       {
-        title: '可变与不可变',
-        bad: 'a = [1, 2]\nb = a\nb.append(3)   # a 也变成 [1, 2, 3]',
-        good: 'b = list(a)   # 复制后再改',
-        note: '赋值只是让两个名字指向同一个对象；list 是可变对象，改一个等于改全体。'
-      }
+        title: '忘记存文件就运行',
+        bad: 'python hello.py   # 但还是打印出一堆报错',
+        good: '运行前先 Ctrl+S 保存，再回命令行运行',
+        note: '改完代码先保存，再运行；不保存时运行的是上一次的旧代码。',
+      },
     ],
     practice: [
       {
-        prompt: '定义一个变量保存你的名字，一个变量保存年龄，然后打印 "name=张三 age=20" 这种格式。',
-        starter: 'name = "张三"\nage = 20\n# TODO: 用 f-string 打印 name=张三 age=20\n',
-        answer: 'name = "张三"\nage = 20\nprint(f"name={name} age={age}")',
-        output: 'name=张三 age=20',
-        hint: 'f-string 写法：在引号前加 f，变量用花括号包起来。'
-      }
+        prompt: '写一行代码，让屏幕显示：我会写代码了！',
+        starter: '# 在这里写你的 print 语句\n',
+        answer: 'print("我会写代码了！")',
+        output: '我会写代码了！',
+        hint: '用 print(...)，把这句话放进英文引号里。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'Python 中的 None 最接近 Java 的哪个概念？',
-        options: ['null', 'void', 'false', 'Optional'],
-        answer: 0,
-        explain: 'None 是唯一的空值单例对象，对应 Java 的 null；void 表示没有返回值，语义不同。'
+        question: 'print 命令的作用是什么？',
+        options: ['把内容保存到文件', '把内容显示到屏幕上', '让电脑关机', '计算数学题'],
+        answer: 1,
+        explain: 'print（打印）的作用是把内容输出到屏幕上，让你看到运行结果。',
       },
       {
         type: 'judge',
-        question: 'Python 中同一个变量可以先保存 int，之后保存 str。',
-        answer: true,
-        explain: '这是动态类型的表现：类型属于对象，不属于变量名。'
+        question: 'print("你好") 里的引号可以用中文引号吗？',
+        answer: false,
+        explain: '不能用中文引号。代码里的引号、括号、逗号必须是英文半角，否则会语法错误。',
       },
       {
         type: 'code',
-        question: '补全代码，打印 "年龄: 20"（使用 f-string）。',
-        code: 'age = 20\nprint(__________)',
-        answer: 'f"年龄: {age}"',
-        accept: ['f"年龄: {age}"', "f'年龄: {age}'", 'f"年龄: {age}" '.trim()],
-        explain: 'f-string 在运行时把表达式插入字符串，等价于 Java 的 String.format 或模板字符串。'
-      }
-    ]
+        question: '补全代码，让屏幕显示 你好世界。',
+        code: 'print(__________)',
+        answer: '"你好世界"',
+        accept: ["'你好世界'"],
+        explain: '把要显示的内容用英文引号包起来放进 print 里。',
+      },
+    ],
   },
   {
-    id: 'operators',
-    title: '运算符与类型转换',
+    id: 'variables',
+    title: '变量：给数据起名字',
     phase: 1,
     order: 2,
-    minutes: 8,
-    rating: { python: 1, java: 1, ai: 2 },
-    summary: 'Python 多出 ** 幂、// 整除、链式比较和 and/or/not，类型转换靠 int()/float()/str() 显式调用。',
-    keywords: ['operator', '算术', '比较', 'and', 'or', 'not', '类型转换', 'int()', 'str()'],
-    tip: 'Java 开发者提示：逻辑运算符是 and / or / not，不是 && / || / !。',
-    what: '算术运算符基本一致，新增 ** 表示幂、// 表示整除。比较运算符支持链式写法，1 <= x <= 10 就是合法表达式。逻辑运算符用 and、or、not，并且返回的是操作数本身而不一定是布尔值。类型转换全部通过构造函数式的调用完成，例如 int("42")。',
-    javaCompare: [
+    minutes: 20,
+    rating: { level: 1, must: 5 },
+    summary: '用一个名字装下数据，之后用名字就能随时取用它——这就是"变量"。',
+    keywords: ['变量', '赋值', 'int', 'str', 'float', '类型', '变量名'],
+    tip: '零基础提示：变量就是一个"带名字的小盒子"。把东西放进去（赋值），以后喊名字就能把它拿出来。',
+    what: '程序里经常要记住数据，比如一个人的名字、年龄。如果把数据直接写死在每个角落，改起来很麻烦。变量帮你把一个值"命名"并保存，之后用那个名字就能反复使用同一个值。这就是为什么程序能处理会变化的数据。',
+    analogy: '变量像冰箱冷藏柜的格子：你把一块肉放进去并贴上"猪肉"的标签，之后随时能按标签把它拿出来用。',
+    terms: [
+      { term: 'variable', zh: '变量', note: '给一个值起的名字，用于保存和反复使用。' },
+      { term: 'assign', zh: '赋值', note: '用等号把右侧的值"放"进左边名字的操作。' },
+      { term: 'type', zh: '数据类型', note: '数据的种类，比如数字、文字；不同类型处理方式不同。' },
+    ],
+    examples: [
       {
-        title: '逻辑运算',
-        java: 'if (a != null && a.size() > 0) { }',
-        python: 'if a and len(a) > 0:',
-        diff: 'Python 用 and/or/not；且 and 返回操作数本身，可用于"取默认值"。'
+        title: '保存并打印一个数',
+        code: 'age = 18\nprint(age)\nage = 19\nprint(age)',
+        output: '18\n19',
+        note: '用 = 把值 18 交给名字 age。之后再赋值就把旧值覆盖成新值。',
+      },
+      {
+        title: '给运行结果起名',
+        code: 'price = 3\ncount = 5\nprint(price, count)\nprint(price * count)',
+        output: '3 5\n15',
+        note: '可以同时建好几个变量；用 ＊ 做乘法得到总价。',
+      },
+      {
+        title: '看看数据类型',
+        code: 'name = "小明"\nage = 18\nprint(type(name), type(age))',
+        output: "<class 'str'> <class 'int'>",
+        note: 'str 表示文字，int 表示整数。type() 能告诉你一个数据是哪种类型。',
+      },
+    ],
+    pitfalls: [
+      {
+        title: '给变量起的名字不能用中文',
+        bad: '我的名字 = "小明"',
+        good: 'name = "小明"',
+        note: '变量名一般用英文、数字和下划线，且不能用数字开头。',
+      },
+      {
+        title: '类型混用会报错',
+        bad: 'name = "小明"\nprint(name + 18)',
+        good: 'name = "小明"\nprint(name + " 18 岁")',
+        note: '文字加数字 Python 不知道怎么办，需要都转成文字再加。',
+      },
+      {
+        title: '等号是赋值不是相等',
+        bad: 'age = 18\nprint(age = 18)',
+        good: 'age = 18\nprint(age == 18)',
+        note: '单个等号 = 是"把值放进变量"，两个等号 == 才是"比较是否相等"。',
+      },
+    ],
+    practice: [
+      {
+        prompt: '创建一个变量保存你的名字，另一个保存年龄，然后打印出来。',
+        starter: 'name = "小明"\nage = 18\n# TODO: 用 print 打印这两个变量\n',
+        answer: 'name = "小明"\nage = 18\nprint(name, age)',
+        output: '小明 18',
+        hint: '把两个变量放进同一个 print，用逗号隔开。',
+      },
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '下面哪个是给变量 age 赋值为 18 的正确写法？',
+        options: ['age == 18', 'age = 18', '18 = age', 'print(age=18)'],
+        answer: 1,
+        explain: '用单个等号把右边的值放进左边的变量名：age = 18。',
+      },
+      {
+        type: 'judge',
+        question: '运行 age = 18 后，再次执行 age = 19，age 的值会变成 19。',
+        answer: true,
+        explain: '重新赋值会覆盖旧值，所以 age 现在是 19。',
+      },
+      {
+        type: 'code',
+        question: '补全代码，让变量 score 保存数字 95，并打印它。',
+        code: '__________\nprint(score)',
+        answer: 'score = 95',
+        explain: '用等号把 95 放进变量 score。',
+      },
+    ],
+  },
+  {
+    id: 'data-types',
+    title: '数据类型：数字、文字、布尔',
+    phase: 1,
+    order: 3,
+    minutes: 30,
+    rating: { level: 1, must: 5 },
+    summary: '认识 Python 的几种最基础的数据：整数、小数、文字、真假、空值，以及它们之间的转换。',
+    keywords: ['int', 'float', 'str', 'bool', 'None', '类型转换', 'int()', 'str()'],
+    tip: '零基础提示：不同类型的"东西"不能随便混着算。先认识它们，后面写程序就不会老报错。',
+    what: '现实里数字和文字是两种东西，Python 里也一样——你没法直接"3 加 五"。Python 把数据分成几种类型：整数（int）、小数（float）、文字（str）、真假（bool）、空（None）。知道类型，才能知道哪些操作允许、结果长什么样。',
+    analogy: '类型就像给物品贴了标签：一个盒子标"整数"，一个盒子标"文字"。从不同盒子里取东西，用法完全不同。',
+    terms: [
+      { term: 'int', zh: '整数', note: '没有小数点的数，比如 1、-5、100。' },
+      { term: 'float', zh: '小数', note: '带小数点的数，比如 3.14、0.5。' },
+      { term: 'str', zh: '字符串', note: '一串文字，写代码时要放进引号里。' },
+      { term: 'bool', zh: '布尔', note: '只有真（True）或假（False）两种取值。' },
+    ],
+    examples: [
+      {
+        title: '看懂每种类型',
+        code: 'a = 10      # 整数\nb = 3.5     # 小数\nc = "你好"  # 文字\nd = True    # 真假\nprint(type(a))\nprint(type(b))\nprint(type(c))\nprint(type(d))',
+        output: "<class 'int'>\n<class 'float'>\n<class 'str'>\n<class 'bool'>",
+        note: 'type() 会告诉你一个值是什么类型。数字不加引号，文字必须加引号。',
       },
       {
         title: '类型转换',
-        java: 'Integer.parseInt("42")',
-        python: 'int("42")',
-        diff: 'Python 直接用类型名当转换函数，没有包装类。'
-      }
-    ],
-    examples: [
-      {
-        title: '算术与链式比较',
-        code: 'x = 2 ** 10\nprint(x, 10 // 3, 10 % 3, -7 // 2)\nprint(1 <= 5 <= 10)\nprint(3 < 2 < 5)',
-        output: '1024 3 1 -4\nTrue\nFalse',
-        note: '链式比较等价于 (1 <= 5) and (5 <= 10)，写起来更接近数学。'
+        code: 'print(int("42") + 8)\nprint(str(3) + " 个苹果")\nprint(float("2.5") * 2)',
+        output: '50\n3 个苹果\n5.0',
+        note: 'int() 把文字转成整数，str() 把数字转成文字，float() 转小数。',
       },
       {
-        title: 'and / or 的返回值',
-        code: 'print(0 or "默认值")\nprint("有值" or "默认值")\nprint(1 and 2)',
-        output: '默认值\n有值\n2',
-        note: 'or 返回第一个真值，and 返回第一个假值，这是 Python 的短路取值习惯。'
+        title: 'None 表示"没有"',
+        code: 'nothing = None\nprint(nothing is None)',
+        output: 'True',
+        note: 'None 表示"这里还没有值"，常用来代表空/缺省，用 is None 来判断。',
       },
-      {
-        title: '类型转换与陷阱',
-        code: 'print(int("42"), float("3.5"), str(3.5) + "!")\nprint(int(3.99), int("  7  "))',
-        output: '42 3.5 3.5!\n3 7',
-        note: 'int() 对 float 是截断（向零取整），不是四舍五入；字符串两端空白会被忽略。'
-      }
     ],
     pitfalls: [
       {
-        title: '假值列表',
-        bad: 'if x == None: ...',
-        good: 'if x is None: ...',
-        note: '0、0.0、""、[]、{}、None 在条件里都为 False；判空值请用 is None。'
+        title: '整数和小数做除法',
+        bad: 'print(7 / 2)   # 得到 3.5',
+        good: 'print(7 // 2)  # 得到 3，取整除的整数部分',
+        note: '一个 / 得到带小数的精确结果，两个 // 只取整数部分（向下）。',
       },
       {
-        title: '浮点精度',
-        bad: 'print(0.1 + 0.2 == 0.3)',
-        good: 'print(abs(0.1 + 0.2 - 0.3) < 1e-9)',
-        note: '和 Java 的 double 一样有二进制精度问题，比较浮点数要留容差。'
-      }
+        title: '文字和数字相加',
+        bad: 'print("年龄" + 18)',
+        good: 'print("年龄" + str(18))',
+        note: '不能把文字和数字直接相加，先用 str() 把数字变成文字。',
+      },
+      {
+        title: '把不能转成数字的文字转进 int',
+        bad: 'print(int("abc"))',
+        good: 'print(int("123"))',
+        note: 'int() 只认长得像数字的文字，"abc" 不是数字，会报错。',
+      },
     ],
     practice: [
       {
-        prompt: '把字符串 "18" 转成整数并加 2，打印结果。',
-        starter: 'age_text = "18"\n# TODO: 转成 int，加 2，打印\n',
+        prompt: '把字符串 "18" 转成整数，加上 2，并打印结果。',
+        starter: 'age_text = "18"\n# TODO: 转成整数，加 2，打印\n',
         answer: 'age_text = "18"\nprint(int(age_text) + 2)',
         output: '20',
-        hint: 'Python 不做隐式转换，"18" + 2 会直接报 TypeError。'
-      }
+        hint: '用 int(age_text) 把文字转成整数，再加 2。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'print(7 // 2, 7 % 2) 的输出是？',
-        options: ['3.5 1', '3 1', '3 0', '4 1'],
+        question: 'print(7 // 2) 的输出是？',
+        options: ['3.5', '3', '2', '报错'],
         answer: 1,
-        explain: '// 是整除（向下取整），% 取余数，7 = 3 * 2 + 1。'
+        explain: '// 是整除，只取整数部分，7 // 2 得到 3。',
       },
       {
         type: 'judge',
-        question: 'Python 中 and 的结果一定是 True 或 False。',
-        answer: false,
-        explain: 'and/or 返回其中一个操作数本身，例如 1 and 2 的结果是 2。'
-      }
-    ]
-  },
-  {
-    id: 'control-flow',
-    title: '条件判断',
-    phase: 1,
-    order: 3,
-    minutes: 8,
-    rating: { python: 1, java: 1, ai: 2 },
-    summary: '用缩进代替大括号，if / elif / else 与三目表达式的写法。',
-    keywords: ['if', 'elif', 'else', '缩进', '三元表达式', '条件'],
-    tip: 'Java 开发者提示：Python 没有大括号，也没有 switch 的常用写法（3.10+ 有 match）。',
-    what: '条件判断只有 if、elif、else 三个关键字，条件后面必须有冒号，靠缩进（推荐 4 个空格）划分代码块。Python 用缩进表达"块"而不是花括号，所以缩进不一致会直接抛 IndentationError，不存在格式宽松的余地。',
-    javaCompare: [
-      {
-        title: '多分支',
-        java: 'if (score >= 90) { grade = "A"; }\nelse if (score >= 60) { grade = "B"; }\nelse { grade = "C"; }',
-        python: 'if score >= 90:\n    grade = "A"\nelif score >= 60:\n    grade = "B"\nelse:\n    grade = "C"',
-        diff: 'else if 缩写成 elif；代码块用缩进表示，条件后加冒号。'
-      }
-    ],
-    examples: [
-      {
-        title: '基本分支',
-        code: 'score = 72\nif score >= 90:\n    grade = "A"\nelif score >= 60:\n    grade = "B"\nelse:\n    grade = "C"\nprint(grade)',
-        output: 'B',
-        note: '缩进必须是 4 的倍数且同级对齐，混用空格和 Tab 会报错。'
-      },
-      {
-        title: '条件表达式（Python 三元）',
-        code: 'age = 17\nlabel = "成年" if age >= 18 else "未成年"\nprint(label)',
-        output: '未成年',
-        note: '语法是 A if 条件 else B，和 Java 的 条件 ? A : B 顺序不同。'
-      },
-      {
-        title: '成员判断与 None 判断',
-        code: 'role = "admin"\nprint(role in ("admin", "root"))\nname = None\nif name is None:\n    name = "匿名"\nprint(name)',
-        output: 'True\n匿名',
-        note: 'in 可以直接判断是否在容器里，替代 contains() 调用。'
-      }
-    ],
-    pitfalls: [
-      {
-        title: '把 = 写成 ==',
-        bad: 'if x = 1: ...',
-        good: 'if x == 1: ...',
-        note: 'Python 里赋值不是表达式，if x = 1 是语法错误，比 Java 里少一种隐蔽 bug。'
-      },
-      {
-        title: '空代码块',
-        bad: 'if ready:\n\nprint("go")',
-        good: 'if ready:\n    pass',
-        note: '块内不能为空，占位用 pass（相当于 Java 的空语句块）。'
-      }
-    ],
-    practice: [
-      {
-        prompt: '判断一个数是正数、负数还是零，并打印 正数/负数/零。',
-        starter: 'n = -3\n# TODO: 用 if / elif / else 判断并打印\n',
-        answer: 'n = -3\nif n > 0:\n    print("正数")\nelif n < 0:\n    print("负数")\nelse:\n    print("零")',
-        output: '负数',
-        hint: '三个分支依次是 n > 0、n < 0、其他。'
-      }
-    ],
-    quiz: [
-      {
-        type: 'choice',
-        question: 'Python 中用哪个关键字表示 Java 的 else if？',
-        options: ['elseif', 'elsif', 'elif', 'else if'],
-        answer: 2,
-        explain: 'Python 的写法是 elif，可以连续使用多个。'
-      },
-      {
-        type: 'judge',
-        question: 'Python 的代码块可以写在 if 条件的同一行（用冒号加语句）。',
+        question: '字符串（str）是给文字数据用的类型。',
         answer: true,
-        explain: '简短语句允许写成 if x > 0: print("ok")，但不推荐在复杂逻辑中使用。'
+        explain: '文字数据要用字符串类型，写代码时放进引号 " " 里。',
       },
       {
         type: 'code',
-        question: '补全条件表达式：如果是偶数打印 even，否则打印 odd。',
-        code: 'n = 7\nprint("even" if __________ else "odd")',
-        answer: 'n % 2 == 0',
-        explain: '条件表达式语法为 值1 if 条件 else 值2，条件写在中间。'
-      }
-    ]
+        question: '补全代码，把字符串 "42" 转成整数后打印它的两倍。',
+        code: 'num = int("42")\nprint(__________)',
+        answer: 'num * 2',
+        explain: '转换后 num 是整数 42，乘以 2 得到 84。',
+      },
+    ],
   },
   {
-    id: 'loops',
-    title: '循环',
+    id: 'list',
+    title: '列表：把一组数据装在一起',
     phase: 1,
     order: 4,
-    minutes: 12,
-    rating: { python: 2, java: 2, ai: 3 },
-    summary: 'for 直接遍历元素（没有长度就是个迭代器），range 生成序列，while 与 break/continue/else。',
-    keywords: ['for', 'while', 'range', 'enumerate', 'break', 'continue', '循环', '迭代'],
-    tip: 'Java 开发者提示：Python 的 for 是 for-each 的加强版，没有 for(i=0;i<n;i++) 这种结构。',
-    what: 'for 用来遍历任何可迭代对象——列表、字符串、字典、文件、生成器都可以，不需要下标。需要序号时用 enumerate，需要区间时用 range。while 基于条件循环；两者都可以用 break 跳出、continue 跳过本次，并且都有一个容易忽略的 for/while ... else 子句（循环没有被 break 打断时执行）。',
-    javaCompare: [
-      {
-        title: '遍历集合',
-        java: 'for (String name : names) {\n    System.out.println(name);\n}',
-        python: 'for name in names:\n    print(name)',
-        diff: '写法几乎一样，但 Python 的 for 后面直接跟可迭代对象，没有类型声明。'
-      },
-      {
-        title: '带下标的循环',
-        java: 'for (int i = 0; i < names.size(); i++) {\n    System.out.println(i + ":" + names.get(i));\n}',
-        python: 'for i, name in enumerate(names):\n    print(f"{i}:{name}")',
-        diff: 'enumerate 一次给出下标和元素，避免手动维护计数器。'
-      }
+    minutes: 30,
+    rating: { level: 1, must: 5 },
+    summary: '列表能按顺序装很多个数据，用下标取其中的某一个，是 Python 里最常用的一种"容器"。',
+    keywords: ['list', '列表', '下标', '索引', 'append', '切片', '容器'],
+    tip: '零基础提示：列表像一个"有格子的抽屉"，每格都有编号，从 0 开始数，可以放任意多个东西。',
+    what: '程序里经常要处理"一组"数据：一个班的成绩、一列表的待办事项。列表（list）就是用来按顺序存放和取用这些数据的容器。你可以往里面加东西、改东西、按编号取出其中一个，它是处理数据的基本功。',
+    analogy: '列表像超市货架：每个位置有编号，从 0 开始。你知道货架哪个位置放什么，随时能取下来。',
+    terms: [
+      { term: 'list', zh: '列表', note: '按顺序存放一组数据，用方括号 [] 定义。' },
+      { term: 'index', zh: '下标 / 索引', note: '元素在列表里的位置编号，从 0 开始。' },
+      { term: 'append', zh: '追加', note: '往列表末尾加一个元素。' },
     ],
     examples: [
       {
-        title: 'for + range + enumerate',
-        code: 'total = 0\nfor i in range(1, 5):\n    total += i\nprint(total)\n\nfor idx, ch in enumerate("abc"):\n    print(idx, ch)',
-        output: '10\n0 a\n1 b\n2 c',
-        note: 'range(1, 5) 生成 1,2,3,4（右边界不含），和 Java 的 for 循环边界一致。'
+        title: '创建一个列表并取元素',
+        code: 'fruits = ["苹果", "香蕉", "橙子"]\nprint(fruits[0])\nprint(fruits[2])\nprint(len(fruits))',
+        output: '苹果\n橙子\n3',
+        note: '下标从 0 开始，所以下标 0 是第一个元素，下标 2 是第三个。len() 得到长度。',
       },
       {
-        title: 'while 与 zip',
-        code: 'n = 3\nwhile n > 0:\n    print("倒计时", n)\n    n -= 1\n\nfor name, age in zip(["张三", "李四"], [20, 22]):\n    print(name, age)',
-        output: '倒计时 3\n倒计时 2\n倒计时 1\n张三 20\n李四 22',
-        note: 'zip 把多个序列按位置配对，等价于同时遍历两个列表。'
+        title: '往列表里加东西',
+        code: 'names = ["小明"]\nnames.append("小红")\nnames.append("小刚")\nprint(names)\nprint(len(names))',
+        output: "['小明', '小红', '小刚']\n3",
+        note: 'append 把新元素加到末尾，列表会变长。',
       },
       {
-        title: 'break / continue',
-        code: 'for i in range(10):\n    if i % 2 == 0:\n        continue\n    if i > 6:\n        break\n    print(i)',
-        output: '1\n3\n5',
-        note: 'continue 跳过本次，break 直接结束整个循环，语义与 Java 相同。'
-      }
+        title: '修改和切片',
+        code: 'scores = [80, 90, 70]\nscores[1] = 95\nprint(scores)\nprint(scores[1:3])',
+        output: '[80, 95, 70]\n[95, 70]',
+        note: '可以用下标修改某一格；切片 [1:3] 取出第 2 到第 3 个元素。',
+      },
     ],
     pitfalls: [
       {
-        title: '边遍历边删除元素',
-        bad: 'for x in nums:\n    if x < 0:\n        nums.remove(x)',
-        good: 'nums = [x for x in nums if x >= 0]',
-        note: '遍历时修改列表会跳元素，标准做法是生成新列表。'
+        title: '下标从 0 开始',
+        bad: 'fruits[3]  # 一共 3 个时越界报错',
+        good: 'fruits[2]  # 取第 3 个，下标是 2',
+        note: '下标从 0 数起，所以最后一个元素的下标是 len(list)-1。',
       },
       {
-        title: 'range 的右边界不含',
-        bad: 'for i in range(1, 5):   # 只到 4',
-        good: 'for i in range(1, 6):   # 1..5',
-        note: 'range(start, stop) 是左闭右开；只写一个参数时从 0 开始。'
+        title: '下标越界',
+        bad: 'fruits[100]',
+        good: 'fruits[-1]  # 或判断下标是否小于 len',
+        note: '取不存在的下标会报 IndexError。负下标从尾部数，-1 是最后一个。',
       },
       {
-        title: '循环里累加字符串',
-        bad: 's = ""\nfor x in items:\n    s += str(x)',
-        good: 's = "".join(str(x) for x in items)',
-        note: '字符串不可变，循环里 += 会不断创建新对象，用 join 一次拼好。'
-      }
+        title: '赋值不是复制',
+        bad: 'a = [1, 2]\nb = a\nb.append(3)  # a 也变了',
+        good: 'b = a[:]   # 或 b = list(a)，复制一份再改',
+        note: 'a = b 只是让两个名字指向同一个列表，改一个等于改全部。要复制用 list(a) 或切片。',
+      },
     ],
     practice: [
       {
-        prompt: '遍历 numbers，只打印其中的偶数。',
-        starter: 'numbers = [1, 2, 3, 4, 5, 6]\n# TODO: 只打印偶数\n',
-        answer: 'numbers = [1, 2, 3, 4, 5, 6]\nfor n in numbers:\n    if n % 2 == 0:\n        print(n)',
-        output: '2\n4\n6',
-        hint: '循环里用 if n % 2 == 0 过滤。'
-      }
+        prompt: '建一个列表 chores 装三件要做的事，把第二件改成"写作业"，再打印整个列表。',
+        starter: 'chores = ["扫地", "晾衣服", "洗碗"]\n# TODO: 把第二件改成"写作业"，再打印\n',
+        answer: 'chores = ["扫地", "晾衣服", "洗碗"]\nchores[1] = "写作业"\nprint(chores)',
+        output: "['扫地', '写作业', '洗碗']",
+        hint: '第二件对应的下标是 1，用 chores[1] = "写作业"。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'range(3) 会生成哪些值？',
-        options: ['1, 2, 3', '0, 1, 2', '0, 1, 2, 3', '3'],
+        question: '一个列表有 3 个元素，最后一个元素的下标是几？',
+        options: ['3', '2', '1', '0'],
         answer: 1,
-        explain: 'range(3) 等价于 range(0, 3)，即 0、1、2。'
+        explain: '下标从 0 开始，所以第 1 个是下标 0，第 3 个是下标 2。',
       },
       {
         type: 'judge',
-        question: 'Python 的 for 循环可以直接遍历字典，拿到的是 key。',
+        question: 'names.append("小红") 会把新元素加到列表的末尾。',
         answer: true,
-        explain: '遍历 dict 默认拿 key；要同时取 key 和 value 用 items()。'
+        explain: 'append 专门用于往列表末尾追加元素。',
       },
       {
         type: 'code',
-        question: '补全代码，同时拿到下标和元素并打印。',
-        code: 'for i, name in __________:\n    print(i, name)',
-        answer: 'enumerate(names)',
-        accept: ['enumerate(names)'],
-        explain: 'enumerate 把序列包装成 (下标, 元素) 的迭代器。'
-      }
-    ]
+        question: '补全代码，往列表 nums 末尾加入数字 5。',
+        code: 'nums = [1, 2, 3]\n__________',
+        answer: 'nums.append(5)',
+        accept: ["nums.append(5)"],
+        explain: 'append 方法会修改原列表，把参数加到末尾。',
+      },
+    ],
   },
   {
-    id: 'functions',
-    title: '函数',
+    id: 'if-condition',
+    title: 'if 判断：让程序做选择',
     phase: 1,
     order: 5,
-    minutes: 14,
-    rating: { python: 2, java: 2, ai: 4 },
-    summary: 'def 定义函数、参数默认值与关键字传参、返回值可以是多个，函数是一等对象。',
-    keywords: ['def', '函数', '参数', 'default', 'kwargs', '返回值', 'return', '一等对象'],
-    tip: 'Java 开发者提示：Python 没有重载（overload），但默认参数、*args/**kwargs 能覆盖大部分场景。',
-    what: '用 def 定义函数，函数体靠缩进。参数支持默认值、关键字传参、可变位置参数 *args 和可变关键字参数 **kwargs。函数没有 return 时返回 None；返回多个值其实是返回一个 tuple，接收端自动解包。函数本身也是对象，可以赋给变量、当参数传递——这是后面装饰器和高阶用法的基础。',
-    javaCompare: [
-      {
-        title: '定义与调用',
-        java: 'int add(int a, int b) { return a + b; }',
-        python: 'def add(a, b):\n    return a + b',
-        diff: '不写返回类型和参数类型；用 def 关键字；缩进代替花括号。'
-      },
-      {
-        title: '默认参数',
-        java: 'int add(int a) { return add(a, 1); }   // 需要重载',
-        python: 'def add(a, b=1):\n    return a + b',
-        diff: 'Python 直接支持默认值，通常不需要为了兼容写多个重载。'
-      }
+    minutes: 30,
+    rating: { level: 1, must: 5 },
+    summary: '用 if / elif / else 让程序根据不同条件走不同分支，是真的做"判断"的能力。',
+    keywords: ['if', 'elif', 'else', '条件', '判断', '缩进', '比较'],
+    tip: '零基础提示：if 就是"如果……就……"。靠缩进（前面空 4 格）表示哪些代码属于哪个分支，别小看缩进。',
+    what: '程序不是只会一路跑到底。你想让它在"成绩>=60"时显示及格、否则显示不及格，就需要判断语句。if / elif / else 让程序根据条件的真假，选择执行不同的代码，这是让程序"聪明"起来的第一步。',
+    analogy: 'if 像过马路看红绿灯：红灯就走不了（走 else 分支），绿灯才走（走 if 分支），每个情况对应一种走法。',
+    terms: [
+      { term: 'if', zh: '如果', note: '满足某个条件时才执行下面的代码。' },
+      { term: 'condition', zh: '条件', note: '一个能算成真或假的判断，比如 age >= 18。' },
+      { term: 'indentation', zh: '缩进', note: '行首的空格；用它表示代码属于哪个块。' },
     ],
     examples: [
       {
-        title: '默认值与关键字传参',
-        code: 'def greet(name, greeting="你好"):\n    return f"{greeting}，{name}"\n\nprint(greet("张三"))\nprint(greet("张三", greeting="早上好"))',
-        output: '你好，张三\n早上好，张三',
-        note: '调用时显式写出参数名（关键字传参）可以提升可读性，顺序也不再重要。'
+        title: '一个最简单的判断',
+        code: 'score = 75\nif score >= 60:\n    print("及格")\nelse:\n    print("不及格")',
+        output: '及格',
+        note: '条件成立执行 if 下的代码，否则执行 else 下的代码。',
       },
       {
-        title: '多返回值与可变参数',
-        code: 'def stats(nums):\n    return min(nums), max(nums), sum(nums) / len(nums)\n\nlow, high, avg = stats([3, 9, 1])\nprint(low, high, avg)\n\ndef log(*args, **kwargs):\n    print(args, kwargs)\n\nlog("msg", level="info")',
-        output: "1 9 4.333333333333333\n('msg',) {'level': 'info'}",
-        note: '*args 收集位置参数为 tuple，**kwargs 收集关键字参数为 dict。'
+        title: '用 elif 处理多个情况',
+        code: 'age = 15\nif age < 12:\n    print("儿童")\nelif age < 18:\n    print("青少年")\nelse:\n    print("成年")',
+        output: '青少年',
+        note: 'elif 是"否则如果"，可以连用很多个，从上往下一个个试。',
       },
       {
-        title: '函数是一等对象',
-        code: 'def double(x):\n    return x * 2\n\nf = double\nprint(f(21))\nprint(list(map(double, [1, 2, 3])))',
-        output: '42\n[2, 4, 6]',
-        note: '函数可以赋值给变量、传参，类似 Java 的方法引用 / 函数式接口。'
-      }
+        title: '在判断里放字符串',
+        code: 'color = "红"\nif color == "红":\n    print("停")\nelse:\n    print("走")',
+        output: '停',
+        note: '比较文字用 == 是否相等；一个等号是赋值，别写错。',
+      },
     ],
     pitfalls: [
       {
-        title: '可变默认参数',
-        bad: 'def add(item, items=[]):\n    items.append(item)\n    return items',
-        good: 'def add(item, items=None):\n    items = items or []\n    items.append(item)\n    return items',
-        note: '默认值只在定义时求值一次，list/dict 会被所有调用共享，这是最经典的坑。'
+        title: '缩进不一致',
+        bad: 'if score >= 60:\nprint("及格")',
+        good: 'if score >= 60:\n    print("及格")',
+        note: 'if 下面的代码必须缩进（一般 4 个空格），否则报 IndentationError。',
       },
       {
-        title: '没有 return 就没有值',
-        bad: 'def f():\n    x = 1\nprint(f() + 1)',
-        good: 'def f():\n    return 1',
-        note: '函数默认返回 None，对 None 做运算会报 TypeError。'
+        title: '用 = 而不是 ==',
+        bad: 'if score = 60:',
+        good: 'if score == 60:',
+        note: '判断相等是双等号 ==。单等号是赋值，放在判断里会语法错误。',
       },
       {
-        title: '作用域修改',
-        bad: 'count = 0\ndef inc():\n    count += 1',
-        good: 'def inc():\n    global count\n    count += 1   # 更好的做法是用返回值',
-        note: '函数内给变量赋值会创建局部变量，读外层值可以，改外层值必须声明 global/nonlocal。'
-      }
+        title: '条件后忘了冒号',
+        bad: 'if score >= 60',
+        good: 'if score >= 60:',
+        note: 'if 条件之后必须跟一个英文冒号 :。',
+      },
     ],
     practice: [
       {
-        prompt: '写一个函数 safe_div(a, b)，b 为 0 时返回 None，否则返回 a / b，并打印 safe_div(10, 0) 与 safe_div(10, 4)。',
-        starter: 'def safe_div(a, b):\n    # TODO\n    pass\n\nprint(safe_div(10, 0))\nprint(safe_div(10, 4))',
-        answer: 'def safe_div(a, b):\n    if b == 0:\n        return None\n    return a / b\n\nprint(safe_div(10, 0))\nprint(safe_div(10, 4))',
-        output: 'None\n2.5',
-        hint: '提前 return 可以让代码更扁平，避免多层 else。'
-      }
+        prompt: '判断温度：>=36 打印"有点热"，否则打印"还行"，用 if/else 实现。',
+        starter: 'temp = 32\n# TODO: 用 if/else 判断并打印\n',
+        answer: 'temp = 32\nif temp >= 36:\n    print("有点热")\nelse:\n    print("还行")',
+        output: '还行',
+        hint: '条件写 temp >= 36，成立走 if 分支。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: '关于 Python 可变默认参数，下面说法正确的是？',
-        options: ['每次调用都会新建一个默认 list', '默认值只在函数定义时创建一次', '默认参数不能是 list', 'Python 会报语法错误'],
+        question: '下面哪个是该用 if / elif / else 解决的问题？',
+        options: ['把列表里的每个数打印出来', '根据分数给出及格或不及格', '把两个数字相加', '连接两个字符串'],
         answer: 1,
-        explain: '默认值在定义时求值一次并保存在函数对象上，因此可变默认值会跨调用共享。'
+        explain: 'if 用来做判断、根据条件走不同的分支；遍历、相加属于其它场景。',
       },
       {
         type: 'judge',
-        question: 'Python 函数可以不写 return，此时调用结果是 None。',
+        question: 'if 后面的条件成立时，会执行冒号下面、缩进的那些代码。',
         answer: true,
-        explain: '没有 return（或只有 return）时，函数返回 None。'
+        explain: '条件为真就执行紧跟在其后、缩进 4 个空格的那些语句。',
       },
       {
         type: 'code',
-        question: '补全函数，返回两个数的最大值。',
-        code: 'def max_of(a, b):\n    return __________',
-        answer: 'a if a > b else b',
-        accept: ['max(a, b)', 'a if a > b else b'],
-        explain: '可以用条件表达式，也可以直接用内置 max；内置函数优先。'
-      }
-    ]
+        question: '补全：如果 x 大于 10 就打印"大"。',
+        code: 'x = 20\nif __________:\n    print("大")',
+        answer: 'x > 10',
+        accept: ['x>10'],
+        explain: '条件是一个比较表达式，为真才执行打印。',
+      },
+    ],
   },
   {
-    id: 'collections',
-    title: 'List / Dict / Set',
+    id: 'for-loop',
+    title: 'for 循环：反复做同一件事',
     phase: 1,
     order: 6,
-    minutes: 15,
-    rating: { python: 2, java: 1, ai: 5 },
-    summary: '三个最常用的内置容器：list 有序可重复、dict 键值映射、set 去重；JSON 和 LLM 数据全靠它们。',
-    keywords: ['list', 'dict', 'set', 'tuple', 'ArrayList', 'HashMap', 'HashSet', '容器'],
-    tip: 'Java 开发者提示：list 就是 ArrayList，dict 就是 HashMap，set 就是 HashSet，tuple 相当于不可变 List。',
-    what: 'list 是有序、可重复、可修改的序列，用 [] 定义；dict 是键值映射，用 {} 定义，键必须可哈希（str、int、tuple 都行，list 不行）；set 是无序不重复集合，适合去重和成员判断。tuple 是不可变序列，常用于"固定的一组值"。AI 应用里 API 请求体、LLM 返回的 JSON 解析结果，基本都是 dict + list 的组合。',
-    javaCompare: [
-      {
-        title: '三个容器的字面量',
-        java: 'List<String> a = new ArrayList<>();\nMap<String, Integer> b = new HashMap<>();\nSet<String> c = new HashSet<>();',
-        python: 'a = []\nb = {}\nc = set()',
-        diff: 'Python 有字面量语法，不需要 new 和泛型；注意 {} 是空 dict，不是 set。'
-      },
-      {
-        title: '取出元素',
-        java: 'b.get("age")',
-        python: 'b["age"]',
-        diff: 'Python 用下标取值，键不存在会抛 KeyError；安全取值用 b.get("age", 0)。'
-      }
+    minutes: 30,
+    rating: { level: 1, must: 5 },
+    summary: '用 for 循环遍历列表里的每一项，或照指定次数反复执行，是处理批量数据的核心。',
+    keywords: ['for', '循环', '遍历', 'range', '迭代', 'break', 'continue'],
+    tip: '零基础提示：for 就是"对里面的每一个，都做一遍"。不需要自己数数，Python 帮你挨个来处理。',
+    what: '遇到"把全班每个学生的成绩打印一遍""给每种水果都打个分"这类事，你会希望程序自动挨个处理，而不是手写一百遍。for 循环正是为此而生：它按顺序访问列表里的每一项，对每项执行同样的操作，这才是处理数据的核心。',
+    analogy: 'for 循环像流水线上的机械手：传送带把每个盒子递过来，机械手对每个盒子做同样的动作，直到送完为止。',
+    terms: [
+      { term: 'for loop', zh: 'for 循环', note: '逐个遍历一组数据，对每个元素执行循环里的代码。' },
+      { term: 'iterate', zh: '遍历 / 迭代', note: '按顺序访问每一个元素的过程。' },
+      { term: 'range', zh: '范围', note: '生成从几到几的整数序列，常配合 for 循环用。' },
     ],
     examples: [
       {
-        title: 'list 常用操作',
-        code: 'names = ["张三", "李四"]\nnames.append("王五")\nnames.insert(0, "赵六")\nprint(names, len(names), names[-1])\nprint(names[1:3])',
-        output: "['赵六', '张三', '李四', '王五'] 4 王五\n['张三', '李四']",
-        note: '负下标从尾部计数，切片 [1:3] 是左闭右开，等价于 subList。'
+        title: '遍历一个列表',
+        code: 'fruits = ["苹果", "香蕉", "橙子"]\nfor f in fruits:\n    print("我爱吃", f)',
+        output: '我爱吃 苹果\n我爱吃 香蕉\n我爱吃 橙子',
+        note: '每次循环 f 会被自动赋成列表里的下一个元素，循环体执行一遍。',
       },
       {
-        title: 'dict 读写与遍历',
-        code: 'user = {"name": "张三", "age": 20}\nuser["city"] = "北京"\nprint(user.get("phone", "未填写"))\nfor k, v in user.items():\n    print(k, "=", v)',
-        output: '未填写\nname = 张三\nage = 20\ncity = 北京',
-        note: 'get 提供默认值，避免 KeyError；items() 同时拿到键和值。'
+        title: '用 range 循环指定次数',
+        code: 'for i in range(5):\n    print("第", i, "次")',
+        output: '第 0 次\n第 1 次\n第 2 次\n第 3 次\n第 4 次',
+        note: 'range(5) 生成 0~4 共 5 个数（不含 5），从 0 开始数。',
       },
       {
-        title: 'set 去重与成员判断',
-        code: 'nums = [1, 1, 2, 3, 3]\nunique = set(nums)\nprint(unique, len(unique))\nprint(3 in unique, 9 in unique)\nprint(set([1, 2, 3]) & set([2, 3, 4]))',
-        output: '{1, 2, 3} 3\nTrue False\n{2, 3}',
-        note: '& 求交集，| 求并集，- 求差集；成员判断是 O(1)，大列表里查值优先用 set。'
-      }
+        title: 'break 和 continue',
+        code: 'for i in range(10):\n    if i % 2 == 0:\n        continue\n    if i > 6:\n        break\n    print(i)',
+        output: '1\n3\n5',
+        note: 'continue 跳过本次直接下一次；break 直接结束整个循环。',
+      },
     ],
     pitfalls: [
       {
-        title: 'dict 键不存在',
-        bad: 'age = user["age"]   # 没有该键就 KeyError',
-        good: 'age = user.get("age", 0)',
-        note: 'Java 的 get 返回 null，Python 的 [] 会直接抛异常，取可选字段一律用 get。'
+        title: 'range 右端不含',
+        bad: 'for i in range(1, 5):  # 只到 4',
+        good: 'for i in range(1, 6):  # 才到 5',
+        note: 'range(起点, 终点) 生成从起点到"终点前一个"，终点本身不算。',
       },
       {
-        title: '浅拷贝',
-        bad: 'copy = original',
-        good: 'copy = dict(original)   # 或 copy.deepcopy(original)',
-        note: '赋值不会复制内容；嵌套结构需要 deepcopy，否则改内层会影响原数据。'
+        title: '遍历时边删边改列表',
+        bad: 'for x in nums:\n    nums.remove(x)',
+        good: 'nums = [x for x in nums if x > 0]',
+        note: '在循环里删除当前项会跳过元素，正确做法是生成一个新列表。',
       },
       {
-        title: 'set 依赖可哈希',
-        bad: 'bad = {[1, 2], [3]}',
-        good: 'ok = {(1, 2), (3,)}',
-        note: 'list 和 dict 不可哈希，不能放进 set 或当作 dict 的键，要用 tuple。'
-      }
+        title: '以为要手动加下标',
+        bad: 'i = 0\nfor f in fruits:\n    print(i); i += 1',
+        good: 'for i, f in enumerate(fruits):\n    print(i, f)',
+        note: '需要"下标 + 元素"时用 enumerate，干净且不会出错。',
+      },
     ],
     practice: [
       {
-        prompt: '给定用户列表，打印每个用户的 name（用循环 + dict 取值）。',
-        starter: 'users = [{"name": "张三"}, {"name": "李四"}]\n# TODO: 打印每个用户的 name\n',
-        answer: 'users = [{"name": "张三"}, {"name": "李四"}]\nfor user in users:\n    print(user["name"])',
-        output: '张三\n李四',
-        hint: '遍历 list 拿到每个 dict，再用 ["name"] 取值。'
-      }
+        prompt: '用 for 循环遍历列表 nums，把每个数乘以 2 打印出来。',
+        starter: 'nums = [1, 2, 3, 4]\n# TODO: 用 for 循环打印每个数的两倍\n',
+        answer: 'nums = [1, 2, 3, 4]\nfor n in nums:\n    print(n * 2)',
+        output: '2\n4\n6\n8',
+        hint: '变量 n 会依次等于每个数，循环体里做 n * 2 并打印。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'Python 中 {} 表示什么？',
-        options: ['空 set', '空 dict', '空 tuple', '语法错误'],
+        question: 'range(3) 会生成哪些数？',
+        options: ['1, 2, 3', '0, 1, 2', '0, 1, 2, 3', '3'],
         answer: 1,
-        explain: '{} 是空字典，空集合要写成 set()。'
+        explain: 'range(3) 等价 range(0, 3)，生成 0、1、2 共 3 个数。',
       },
       {
         type: 'judge',
-        question: 'list 可以作为 dict 的键。',
-        answer: false,
-        explain: 'dict 的键必须可哈希，list 可变不可哈希；改用 tuple 即可。'
+        question: 'for f in fruits: 会依次把 fruits 里的每个元素赋给 f。',
+        answer: true,
+        explain: '每次循环 f 自动取列表的下一个元素，直到遍历完。',
       },
       {
         type: 'code',
-        question: '补全代码，安全取出 user 的 age，缺省为 18。',
-        code: 'user = {"name": "张三"}\nage = __________',
-        answer: 'user.get("age", 18)',
-        accept: ["user.get('age', 18)"],
-        explain: 'get(key, default) 在键不存在时返回默认值，不会抛 KeyError。'
-      }
-    ]
-  }
+        question: '补全：打印出 0 到 4（共 5 个数）里的每一个。',
+        code: 'for i in __________:\n    print(i)',
+        answer: 'range(5)',
+        accept: ['range(5)'],
+        explain: 'range(5) 生成 0、1、2、3、4 五个数，逐个打印。',
+      },
+    ],
+  },
 ]

@@ -29,9 +29,10 @@
       <div class="notice-title">关于「▶ 运行」</div>
       <div class="notice-body">
         本页代码块运行按钮展示的是<strong>示例输出</strong>（浏览器里没有 Python 解释器）。要真正跑起来，请在本机执行：
-        <code class="inline-code">python -m venv .venv</code> →
-        <code class="inline-code">.venv\Scripts\activate</code> →
-        <code class="inline-code">pip install -r requirements.txt</code> →
+        <code class="inline-code">cd my-todo</code> →
+        <code class="inline-code">python main.py</code>（主线命令行小工具）；
+        进阶选修则要用
+        <code class="inline-code">pip install fastapi uvicorn[standard]</code> →
         <code class="inline-code">uvicorn main:app --reload</code>
       </div>
     </div>

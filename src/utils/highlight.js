@@ -1,5 +1,5 @@
 /**
- * 轻量语法高亮：Python / Java / JSON / 终端。
+ * 轻量语法高亮：Python / JSON / 终端。
  * 只做教学展示，不追求完整词法分析，避免引入额外依赖。
  */
 
@@ -18,14 +18,7 @@ const PY_BUILTINS = new Set([
   'callable', 'classmethod', 'staticmethod', 'property', 'round', 'format', 'next', 'iter', 'bytes',
 ])
 
-const JAVA_KEYWORDS = new Set([
-  'abstract', 'boolean', 'break', 'case', 'catch', 'char', 'class', 'const', 'continue', 'default',
-  'do', 'double', 'else', 'enum', 'extends', 'final', 'finally', 'float', 'for', 'if', 'implements',
-  'import', 'instanceof', 'int', 'interface', 'long', 'new', 'package', 'private', 'protected',
-  'public', 'record', 'return', 'short', 'static', 'super', 'switch', 'synchronized', 'this',
-  'throw', 'throws', 'try', 'var', 'void', 'volatile', 'while', 'true', 'false', 'null', 'List',
-  'Map', 'Set', 'String', 'Integer', 'var',
-])
+const JAVA_KEYWORDS = null
 
 export function escapeHtml(text) {
   return String(text)
@@ -74,40 +67,6 @@ export function highlightPython(src) {
   return out
 }
 
-/** Java 高亮 */
-export function highlightJava(src) {
-  const re = new RegExp(
-    [
-      '(//[^\\n]*)', // 1 行注释
-      '("""[\\s\\S]*?"""|"(?:\\\\.|[^"\\\\\\n])*")', // 2 字符串（含文本块）
-      '(@[A-Za-z_][\\w.]*)', // 3 注解
-      '(\\b\\d+\\.?\\d*\\b)', // 4 数字
-      '(\\b[A-Za-z_]\\w*\\b)', // 5 标识符
-    ].join('|'),
-    'g',
-  )
-  let out = ''
-  let last = 0
-  let m
-  while ((m = re.exec(src))) {
-    out += escapeHtml(src.slice(last, m.index))
-    last = m.index + m[0].length
-    if (m[1]) out += wrap('tok-com', m[1])
-    else if (m[2]) out += wrap('tok-str', m[2])
-    else if (m[3]) out += wrap('tok-dec', m[3])
-    else if (m[4]) out += wrap('tok-num', m[4])
-    else {
-      const word = m[5]
-      if (JAVA_KEYWORDS.has(word)) out += wrap('tok-kw', word)
-      else if (/^[A-Z]/.test(word)) out += wrap('tok-fn', word)
-      else if (/^\s*\(/.test(src.slice(last))) out += wrap('tok-bi', word)
-      else out += escapeHtml(word)
-    }
-  }
-  out += escapeHtml(src.slice(last))
-  return out
-}
-
 /** JSON 高亮 */
 export function highlightJson(src) {
   const re = /("(?:\\.|[^"\\])*")(\s*:)?|(\b-?\d+\.?\d*\b)|(\btrue\b|\bfalse\b|\bnull\b)/g
@@ -144,8 +103,6 @@ export function highlightTerminal(src) {
 export function highlight(code, lang = 'python') {
   const source = String(code ?? '')
   switch (lang) {
-    case 'java':
-      return highlightJava(source)
     case 'json':
       return highlightJson(source)
     case 'bash':

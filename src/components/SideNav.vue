@@ -4,8 +4,8 @@
       <div class="brand-top">
         <span class="logo">{ }</span>
         <div>
-          <div class="name">Python 速通</div>
-          <div class="sub">Java 开发者 · 5~10 小时过关</div>
+          <div class="name">Python 零基础教程</div>
+          <div class="sub">从第一行代码开始 · 约 30 小时</div>
         </div>
       </div>
       <div class="brand-progress">
@@ -70,7 +70,7 @@
         @click="emit('navigate')"
       >
         <span class="ico">📖</span>
-        <span class="txt">Java → Python 速查表</span>
+        <span class="txt">Python 速查表</span>
       </RouterLink>
 
       <RouterLink
@@ -112,7 +112,7 @@ const open = ref(new Set())
 
 const currentId = computed(() => route.params.id || '')
 
-const PHASE_LABEL = { 1: '第一阶段', 2: '第二阶段', 3: '第三阶段', 4: '第四阶段', 5: '第五阶段', 6: '第六阶段', 7: '第七阶段', 8: '第八阶段' }
+const PHASE_LABEL = { 1: '第一阶段', 2: '第二阶段', 3: '第三阶段', 4: '第四阶段', 5: '第五阶段', 6: '第六阶段', 7: '第七阶段', 8: '第八阶段', 9: '第九阶段', 10: '第十阶段' }
 const phaseIndexLabel = (id) => PHASE_LABEL[id] || `第${id}阶段`
 
 const progressOf = (id) => store.phaseProgress.find((p) => p.id === id) || { done: 0, percent: 0, finished: false }

@@ -4,14 +4,14 @@
       <div class="head-top">
         <span class="badge primary">速查表</span>
         <span class="badge">{{ CHEATSHEET.categories.length }} 个分类</span>
-        <span class="badge">{{ cheatItems.length }} 条对照</span>
+        <span class="badge">{{ cheatItems.length }} 条写法</span>
       </div>
       <h1 class="title">{{ CHEATSHEET.title }}</h1>
       <p class="sub">{{ CHEATSHEET.subtitle }}</p>
 
       <div class="filter">
         <span class="f-ico">🔍</span>
-        <input v-model="keyword" type="text" placeholder="在速查表里过滤：ArrayList / dict / await / FastAPI …" />
+        <input v-model="keyword" type="text" placeholder="在速查表里找：去空格 / 遍历列表 / 读文件 / 发请求 …" />
         <button v-if="keyword" class="f-clear" @click="keyword = ''">✕</button>
       </div>
 
@@ -30,13 +30,14 @@
     </header>
 
     <div v-if="!filteredCategories.length" class="empty card">
-      没有匹配的条目。试试：ArrayList、dict、await、Pydantic、Maven。
+      没有匹配的条目。试试：去空格、遍历列表、读文件、requests、装饰器。
     </div>
 
     <section v-for="cat in filteredCategories" :key="cat.name" :id="anchor(cat.name)" class="cat">
       <div class="cat-head">
         <span class="cat-icon">{{ cat.icon }}</span>
         <h2 class="cat-title">{{ cat.name }}</h2>
+        <span v-if="cat.desc" class="cat-desc muted small">{{ cat.desc }}</span>
         <span class="cat-count muted">{{ cat.items.length }} 条</span>
       </div>
 
@@ -49,22 +50,19 @@
           :class="{ open: expanded.has(item.id), flash: highlightId === item.id }"
         >
           <button class="item-row" @click="toggle(item.id)">
-            <span class="cell java">
-              <span class="cell-label">Java</span>
-              <code>{{ item.java }}</code>
-            </span>
-            <span class="arrow">→</span>
-            <span class="cell python">
-              <span class="cell-label">Python</span>
-              <code>{{ item.python }}</code>
-            </span>
+            <span class="cell task">{{ item.task }}</span>
+            <code class="cell code">{{ item.code }}</code>
             <span class="cell note">{{ item.note }}</span>
             <span class="caret" :class="{ open: expanded.has(item.id) }">▾</span>
           </button>
 
           <div v-if="expanded.has(item.id)" class="detail">
             <div class="detail-text">{{ item.detail }}</div>
-            <CodeBlock v-if="item.code" :code="item.code" :output="item.output || ''" lang="python" title="示例" :storage-key="`cs-${item.id}`" />
+            <div v-if="item.code2" class="detail-alt">
+              <span class="alt-label">另一种写法</span>
+              <code>{{ item.code2 }}</code>
+            </div>
+            <CodeBlock v-if="item.example" :code="item.example.code" :output="item.example.output || ''" lang="python" title="示例" :storage-key="`cs-${item.id}`" />
           </div>
         </div>
       </div>
@@ -95,7 +93,7 @@ const filteredCategories = computed(() => {
     .map((cat) => ({
       ...cat,
       items: cat.items.filter((item) =>
-        [item.java, item.python, item.note, item.detail, cat.name].join(' ').toLowerCase().includes(q),
+        [item.task, item.code, item.note, item.detail, cat.name].join(' ').toLowerCase().includes(q),
       ),
     }))
     .filter((cat) => cat.items.length)
@@ -128,21 +126,17 @@ watch(
   },
   { immediate: true },
 )
-
-onMounted(() => {
-  store.setCurrent('cheatsheet')
-})
 </script>
 
 <style scoped>
 .cheat {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 18px;
 }
 
 .head {
-  padding: 22px;
+  padding: 20px;
 }
 
 .head-top {
@@ -154,112 +148,118 @@ onMounted(() => {
 
 .title {
   font-size: 24px;
+  margin-bottom: 4px;
 }
 
 .sub {
   color: var(--muted);
-  font-size: 14px;
-  margin-top: 6px;
+  font-size: 13.5px;
+  margin-bottom: 14px;
 }
 
 .filter {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 12px;
-  margin-top: 16px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--surface-2);
+  position: relative;
+  margin-bottom: 14px;
 }
 
-.filter:focus-within {
-  border-color: var(--primary);
-  background: var(--surface);
-  box-shadow: 0 0 0 3px var(--primary-weak);
-}
-
-.f-ico {
-  font-size: 12px;
-  opacity: 0.7;
+.filter .f-ico {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
 }
 
 .filter input {
-  flex: 1;
-  border: 0;
+  width: 100%;
+  height: 40px;
+  padding: 0 38px 0 34px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 14px;
   outline: none;
-  background: transparent;
-  color: var(--text-strong);
-  font-size: 13.5px;
-  font-family: inherit;
-  min-width: 0;
+}
+
+.filter input:focus {
+  border-color: var(--primary);
 }
 
 .f-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   border: 0;
   background: transparent;
   color: var(--muted);
+  font-size: 13px;
   cursor: pointer;
 }
 
 .cats {
   display: flex;
-  gap: 6px;
   flex-wrap: wrap;
-  margin-top: 12px;
+  gap: 8px;
 }
 
 .cat-chip {
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
   border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--muted);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 5px 12px;
   font-size: 12.5px;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
-.cat-chip:hover,
 .cat-chip.on {
-  border-color: var(--primary-border);
+  border-color: var(--primary);
   color: var(--primary);
-  background: var(--primary-weak);
 }
 
 .chip-count {
+  opacity: 0.6;
+  margin-left: 4px;
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  opacity: 0.8;
+  font-size: 11px;
 }
 
 .empty {
-  padding: 22px;
+  padding: 24px;
+  text-align: center;
   color: var(--muted);
-  font-size: 13.5px;
 }
 
 .cat {
-  scroll-margin-top: calc(var(--header-h) + 12px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .cat-head {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.cat-icon {
+  font-size: 18px;
 }
 
 .cat-title {
-  font-size: 17px;
+  font-size: 18px;
+  margin: 0;
 }
 
 .cat-count {
+  margin-left: auto;
   font-size: 12px;
+}
+
+.cat-desc {
+  color: var(--muted);
 }
 
 .items {
@@ -269,92 +269,53 @@ onMounted(() => {
 }
 
 .item {
+  padding: 0;
   overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.item.open {
-  border-color: var(--primary-border);
-}
-
-.item.flash {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-weak);
 }
 
 .item-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr) minmax(0, 1.05fr) 18px;
+  grid-template-columns: minmax(180px, 1.2fr) minmax(160px, 1fr) minmax(180px, 1.4fr) auto;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 11px 13px;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
   text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-size: 13.5px;
+  color: var(--text);
 }
 
 .item-row:hover {
   background: var(--surface-2);
 }
 
-.cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
+.cell.task {
+  font-weight: 600;
+  color: var(--text-strong);
 }
 
-.cell code {
+.cell.code {
   font-family: var(--font-mono);
   font-size: 12.5px;
-  color: var(--text-strong);
-  background: transparent;
+  color: var(--primary);
+  background: var(--primary-weak);
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cell-label {
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  padding: 1px 5px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  flex-shrink: 0;
-}
-
-.cell.java .cell-label {
-  color: #b45309;
-  border-color: transparent;
-  background: var(--warning-weak);
-}
-
-.cell.python .cell-label {
-  color: var(--primary);
-  border-color: transparent;
-  background: var(--primary-weak);
-}
-
-.arrow {
-  color: var(--muted);
-  text-align: center;
-  font-size: 12px;
 }
 
 .cell.note {
-  font-size: 12.5px;
   color: var(--muted);
-  line-height: 1.5;
+  font-size: 12.5px;
 }
 
 .caret {
   color: var(--muted);
-  font-size: 11px;
   transition: transform 0.15s ease;
 }
 
@@ -363,35 +324,48 @@ onMounted(() => {
 }
 
 .detail {
-  padding: 0 13px 14px;
-  border-top: 1px dashed var(--border);
+  border-top: 1px solid var(--border);
+  padding: 14px;
+  background: var(--surface-2);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 12px;
 }
 
 .detail-text {
   font-size: 13.5px;
   color: var(--text);
+  line-height: 1.7;
 }
 
-@media (max-width: 820px) {
+.detail-alt {
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+.alt-label {
+  color: var(--warning);
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.detail-alt code {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--primary);
+}
+
+.item.flash {
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+@media (max-width: 760px) {
   .item-row {
-    grid-template-columns: 1fr;
-    gap: 6px;
+    grid-template-columns: 1fr auto;
   }
 
-  .arrow {
-    display: none;
-  }
-
-  .caret {
-    display: none;
-  }
-
-  .item.open .item-row {
-    background: var(--surface-2);
+  .cell.note {
+    grid-column: 1 / -1;
   }
 }
 </style>

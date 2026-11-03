@@ -6,7 +6,7 @@
         ref="inputRef"
         v-model="keyword"
         type="text"
-        placeholder="搜索 Python 知识点…（装饰器 / async / dict / FastAPI）"
+        placeholder="搜索 Python 知识点…（变量 / 列表 / 字典 / 函数）"
         @focus="focused = true"
         @keydown.down.prevent="move(1)"
         @keydown.up.prevent="move(-1)"
@@ -19,7 +19,7 @@
     <div v-if="focused && keyword.trim()" class="results card">
       <div v-if="!results.length" class="empty">
         <div class="empty-title">没有匹配的知识点</div>
-        <div class="empty-sub">试试：装饰器、async、dict、FastAPI、Pydantic</div>
+        <div class="empty-sub">试试：变量、列表、字典、读文件、装饰器</div>
       </div>
       <button
         v-for="(item, i) in results"

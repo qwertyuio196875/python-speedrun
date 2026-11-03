@@ -17,9 +17,8 @@
       </h1>
 
       <div class="meta">
-        <span class="meta-item"><StarRating label="Python 难度" :value="lesson.rating.python" /></span>
-        <span class="meta-item"><StarRating label="Java 开发者难度" :value="lesson.rating.java" /></span>
-        <span class="meta-item"><StarRating label="AI 开发重要度" :value="lesson.rating.ai" /></span>
+        <span class="meta-item"><StarRating label="难度" :value="lesson.rating.level" /></span>
+        <span class="meta-item"><StarRating label="重要度" :value="lesson.rating.must" /></span>
         <span class="meta-item badge">⏱ 预计 {{ lesson.minutes }} 分钟</span>
         <span class="meta-item badge">🏷 {{ lesson.keywords.slice(0, 3).join(' · ') }}</span>
       </div>
@@ -27,7 +26,7 @@
       <div class="summary"><RichText :text="lesson.summary" /></div>
 
       <div class="tip">
-        <span class="tip-label">Java 开发者提示</span>
+        <span class="tip-label">零基础提示</span>
         <span class="tip-body"><RichText :text="lesson.tip" /></span>
       </div>
     </header>
@@ -38,25 +37,37 @@
       <p class="p"><RichText :text="lesson.what" /></p>
     </section>
 
-    <!-- 2. Java 对比 -->
-    <section v-if="sec.java" class="section">
-      <h2 class="h2"><span class="idx">{{ sec.java }}</span> Java 对比</h2>
-      <div v-for="(cmp, i) in lesson.javaCompare" :key="i" class="compare">
-        <div class="compare-title">{{ cmp.title }}</div>
-        <div class="compare-grid">
-          <CodeBlock :code="cmp.java" lang="java" title="Java" :editable="false" :runnable="false" />
-          <CodeBlock :code="cmp.python" lang="python" title="Python" :editable="false" :runnable="false" />
-        </div>
-        <div class="compare-diff">
-          <span class="diff-label">核心区别</span>
-          <RichText :text="cmp.diff" />
+    <!-- 2. 打个比方 -->
+    <section class="section">
+      <h2 class="h2"><span class="idx">{{ sec.analogy }}</span> 打个比方</h2>
+      <p class="p analogy"><RichText :text="lesson.analogy" /></p>
+    </section>
+
+    <!-- 3. 术语卡 -->
+    <section class="section">
+      <h2 class="h2"><span class="idx">{{ sec.terms }}</span> 术语卡</h2>
+      <div class="terms">
+        <div v-for="(t, i) in lesson.terms" :key="i" class="term card">
+          <div class="term-head">
+            <code>{{ t.term }}</code>
+            <span class="term-zh">{{ t.zh }}</span>
+          </div>
+          <div class="term-note"><RichText :text="t.note" /></div>
         </div>
       </div>
     </section>
 
-    <!-- 3. Python 写法 -->
+    <!-- 4. 跟着做（可选） -->
+    <section v-if="sec.steps" class="section">
+      <h2 class="h2"><span class="idx">{{ sec.steps }}</span> 跟着做</h2>
+      <ol class="steps">
+        <li v-for="(s, i) in lesson.steps" :key="i"><RichText :text="s" /></li>
+      </ol>
+    </section>
+
+    <!-- 5. 代码示例 -->
     <section class="section">
-      <h2 class="h2"><span class="idx">{{ sec.python }}</span> Python 写法</h2>
+      <h2 class="h2"><span class="idx">{{ sec.examples }}</span> 代码示例</h2>
       <div class="examples">
         <div v-for="(ex, i) in lesson.examples" :key="`${lesson.id}-ex-${i}`" class="example">
           <div class="ex-title">{{ ex.title }}</div>
@@ -72,7 +83,7 @@
       </div>
     </section>
 
-    <!-- 4. 常见坑 -->
+    <!-- 6. 常见坑 -->
     <section class="section">
       <h2 class="h2"><span class="idx">{{ sec.pitfalls }}</span> 常见坑</h2>
       <div class="pitfalls">
@@ -93,7 +104,7 @@
       </div>
     </section>
 
-    <!-- 5. 小练习 -->
+    <!-- 7. 小练习 -->
     <section class="section">
       <h2 class="h2"><span class="idx">{{ sec.practice }}</span> 小练习</h2>
       <div class="practices">
@@ -125,16 +136,16 @@
       </div>
     </section>
 
-    <!-- 6. 自测 -->
+    <!-- 8. 自测 -->
     <QuizSection :lesson="lesson" :index="sec.quiz" />
 
-    <!-- 7. 掌握情况 -->
+    <!-- 9. 掌握情况 -->
     <section class="section">
       <h2 class="h2"><span class="idx">{{ sec.mastery }}</span> 掌握情况</h2>
       <div class="mastery card">
         <div class="mastery-left">
           <div class="ms-title">
-            {{ store.isDone(lesson.id) ? '你已标记该知识点为已掌握' : '学会了就把这一节标记为已掌握' }}
+            {{ store.isDone(lesson.id) ? '你已经学会了这一节' : '学会了就把这一节标记为已掌握' }}
           </div>
           <div class="ms-sub muted">
             <template v-if="quiz">
@@ -190,13 +201,15 @@ const sec = computed(() => {
   if (!item) return {}
   let i = 0
   const what = ++i
-  const java = (item.javaCompare || []).length ? ++i : null
-  const python = ++i
+  const analogy = ++i
+  const terms = ++i
+  const steps = (item.steps || []).length ? ++i : null
+  const examples = ++i
   const pitfalls = ++i
   const practice = ++i
   const quizNo = ++i
   const mastery = ++i
-  return { what, java, python, pitfalls, practice, quiz: quizNo, mastery }
+  return { what, analogy, terms, steps, examples, pitfalls, practice, quiz: quizNo, mastery }
 })
 
 function toggleAnswer(i) {
@@ -331,6 +344,74 @@ watch(
   font-size: 14.5px;
 }
 
+.analogy {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  border-left: 3px solid var(--warning);
+}
+
+.terms {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.term {
+  padding: 11px 13px;
+}
+
+.term-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.term-head code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--primary);
+  background: var(--primary-weak);
+  padding: 1px 7px;
+  border-radius: 6px;
+}
+
+.term-zh {
+  font-weight: 600;
+  color: var(--text-strong);
+  font-size: 14px;
+}
+
+.term-note {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.steps {
+  padding-left: 22px;
+  list-style: decimal;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.examples,
+.practices {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ex-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-strong);
+  margin-bottom: 7px;
+}
+
 .compare + .compare {
   margin-top: 18px;
 }
@@ -362,21 +443,6 @@ watch(
   color: var(--warning);
   font-weight: 600;
   margin-right: 6px;
-}
-
-.examples,
-.practices {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.ex-title,
-.example-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-strong);
-  margin-bottom: 7px;
 }
 
 .pitfalls {

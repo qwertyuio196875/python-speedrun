@@ -1,481 +1,605 @@
-/**
- * 第三阶段：工程基础（约 1 小时）
- * 内容规范见 docs/content-schema.md
- */
+// 阶段 3：组织代码（把能复用的逻辑抽成函数和模块）
+// 面向从未写过代码的零基础读者，用生活化的比喻解释 Python 3.10+ 语法。
+// 每个知识点负责一类概念，examples / practice 的输出均为真实运行结果。
+
 export default [
   {
-    id: 'modules-imports',
-    title: 'import / 模块 / 包',
+    id: 'functions-advanced',
+    title: '函数进阶：默认参数与返回值',
     phase: 3,
     order: 1,
-    minutes: 12,
-    rating: { python: 2, java: 2, ai: 4 },
-    summary: '一个 .py 文件就是模块，目录加 __init__.py 就是包；掌握四种导入写法与 __main__ 保护。',
-    keywords: ['import', 'from', 'module', 'package', '__init__', '__main__', '模块'],
-    tip: 'Java 开发者提示：没有 package 声明，模块路径由文件位置决定；import 是"导入对象"而不是"导入类名"。',
-    what: '模块就是一个 .py 文件，包是包含 __init__.py 的目录。导入有四种常见写法：import module、from module import name、import module as alias、from module import *（不推荐）。用 if __name__ == "__main__": 判断脚本是否被直接运行，这是 Python 工程里最常见的一行。',
-    javaCompare: [
-      {
-        title: '导入方式',
-        java: 'import java.util.List;   // 导入类',
-        python: 'from os.path import join   # 导入的是模块里的对象（函数/类/变量）',
-        diff: 'Java 导入的是"类名"，Python 导入的是模块中的任意对象；也没有包声明，靠目录结构。'
-      },
-      {
-        title: '入口方法',
-        java: 'public static void main(String[] args) { }',
-        python: 'if __name__ == "__main__":\n    main()',
-        diff: 'Python 没有强制入口，用 __name__ 判断当前文件是被直接运行还是被 import。'
-      }
+    minutes: 25,
+    rating: { level: 3, must: 5 },
+    summary: '学习函数怎么用默认参数偷懒，并让 return 把计算结果交回给调用处。',
+    keywords: ['函数', '默认参数', 'return', '返回值', '函数定义'],
+    tip: '零基础提示：记住一句话——函数是"把动作打包"，return 是"把答案递出来"。暂时看不懂没关系，照着例子敲一遍最有感觉。',
+    what: '函数就是用 `def` 打包好的一小段动作，可以反复调用。默认参数是给某个参数预先定一个值，调用时你不传它就自动用这个值。`return` 会把计算好的结果交回给调用它的地方，而不是只打印在屏幕上。想让自己写的代码能被到处复用，这三个概念是基础。',
+    analogy: '打个比方：默认参数像餐厅菜单上的"默认微辣"，你不特殊说明就按微辣做，说了才换辣度。return 则像后厨把做好的菜端到你桌上，而不是只在后厨给自己看一眼。',
+    terms: [
+      { term: 'def', zh: '函数定义关键字', note: '写在函数名字前面，声明"从这里开始定义一个函数"时用它。' },
+      { term: 'default parameter', zh: '默认参数', note: '参数列表里直接给了等号默认值，调用时可省略不传。' },
+      { term: 'return', zh: '返回语句', note: '把函数里的计算结果交回给调用处，函数执行到此结束。' },
+      { term: 'return value', zh: '返回值', note: 'return 后面那个数值，调用处能接着拿它继续算。' },
+    ],
+    steps: [
+      '打开文本文档或代码编辑器，新建一个 .py 文件。',
+      '用 def 关键字定义一个函数，给它起个看得懂的名字。',
+      '在参数里写默认值，例如 name="朋友"。',
+      '函数体里用 return 把结果交出去。',
+      '在函数外调用它，并观察返回的结果。',
     ],
     examples: [
       {
-        title: '标准库导入的几种姿势',
-        code: 'import json\nimport os.path as path\nfrom datetime import datetime\n\nprint(json.dumps({"a": 1}))\nprint(path.basename("C:/data/a.txt"))\nprint(type(datetime.now()).__name__)',
-        output: '{"a": 1}\na.txt\ndatetime',
-        note: 'as 起别名可以避免长名字，也让 import 意图更清楚。'
+        title: '默认参数',
+        code: `def greet(name="朋友"):
+    return "你好，" + name + "！"
+
+print(greet())
+print(greet("小明"))`,
+        output: `你好，朋友！
+你好，小明！`,
+        note: '第一次调用没传名字，用了默认值"朋友"；第二次传了"小明"，就换成了小明。',
       },
       {
-        title: '脚本入口保护',
-        code: 'def main():\n    print("作为程序运行")\n\nprint("模块被加载了")\n\nif __name__ == "__main__":\n    main()',
-        output: '模块被加载了\n作为程序运行',
-        note: '被别的文件 import 时，只有第一行会执行，main() 不会运行。'
-      }
+        title: 'return 传回结果后继续计算',
+        code: `def square(num):
+    return num * num
+
+result = square(5)
+print("5 的平方是", result)
+print("再乘 2 是", result * 2)`,
+        output: `5 的平方是 25
+再乘 2 是 50`,
+        note: 'square(5) 通过 return 把 25 交回来，赋给 result 之后还能继续参与计算。',
+      },
+      {
+        title: '多个默认参数',
+        code: `def make_salad(fruit1, fruit2, dressing="沙拉酱"):
+    return fruit1 + "和" + fruit2 + "，搭配" + dressing
+
+print(make_salad("苹果", "香蕉"))
+print(make_salad("苹果", "香蕉", "蜂蜜"))`,
+        output: `苹果和香蕉，搭配沙拉酱
+苹果和香蕉，搭配蜂蜜`,
+        note: '缺省的第三个参数自动用"沙拉酱"，想换口味就显式传新值。',
+      },
     ],
     pitfalls: [
       {
-        title: '文件名与标准库重名',
-        bad: '自己建一个 json.py 或 typing.py',
-        good: '换成 my_json_utils.py 这类明确的名字',
-        note: '同目录文件优先于标准库，重名会让 import json 直接导入你的文件，引发莫名其妙的错误。'
+        title: '忘了写 return',
+        bad: `def add(a, b):
+    a + b
+
+result = add(2, 3)
+print(result)`,
+        good: `def add(a, b):
+    return a + b
+
+print(add(2, 3))`,
+        note: '第一种写法里 a+b 算了但没交出去，result 拿到的是空值 None；加上 return 才能拿到 5。',
       },
       {
-        title: '循环导入',
-        bad: 'a.py 顶部 import b，b.py 顶部又 import a',
-        good: '把公共部分抽到 c.py，或在函数内部延迟导入',
-        note: '循环导入常见报 ImportError: cannot import name，通常靠抽公共模块解决。'
+        title: '默认参数放错位置',
+        bad: `def greet(name="朋友", greeting):
+    return greeting + "，" + name`,
+        good: `def greet(greeting, name="朋友"):
+    return greeting + "，" + name`,
+        note: '默认参数必须放在没有默认值的参数后面，否则程序直接报语法错误。',
       },
-      {
-        title: '使用 from x import *',
-        bad: 'from utils import *',
-        good: 'from utils import load_config, call_llm',
-        note: '星号导入会污染命名空间、掩盖来源，静态检查工具也会报错。'
-      }
     ],
     practice: [
       {
-        prompt: '导入 json 模块的 dumps 函数，打印 {"ok": true}（键值用 Python 写法）。',
-        starter: '# TODO: 导入 dumps 并打印\n',
-        answer: 'from json import dumps\nprint(dumps({"ok": True}))',
-        output: '{"ok": true}',
-        hint: 'Python 的 True 会被 json 序列化成小写 true。'
-      }
+        prompt: '写一个函数 welcome，第二个参数带默认值，第二次调用时换一句不同的开场白。',
+        starter: `def welcome(name, message="欢迎来玩"):
+    return message + "，" + name + "！"`,
+        answer: `def welcome(name, message="欢迎来玩"):
+    return message + "，" + name + "！"
+
+print(welcome("小红"))
+print(welcome("小红", "好久不见"))`,
+        output: `欢迎来玩，小红！
+好久不见，小红！`,
+        hint: '第一次调用省略 message，用默认值；第二次显式传入"好久不见"。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'if __name__ == "__main__": 的作用是？',
-        options: ['声明主函数', '判断文件是被直接运行还是被导入', '设置程序入口类', '强制初始化包'],
+        question: '函数里的 `return 5` 会把什么结果交给调用它的地方？',
+        options: ['把 5 打印到屏幕上', '把 5 作为返回值交给调用处', '把函数一口气删掉', '什么都不发生'],
         answer: 1,
-        explain: '直接运行时 __name__ 是 "__main__"，被导入时是模块名。'
+        explain: 'return 把结果交回调用处，继续在后面用；想在调用时看到它，还得自己 print。',
       },
       {
         type: 'judge',
-        question: 'Python 包（package）通常是一个包含 __init__.py 的目录。',
+        question: '定义 `def hi(name="小红"):` 之后，调用 hi() 时 name 会等于"小红"。',
         answer: true,
-        explain: '目录 + __init__.py 构成包，模块之间用点号表示层级。'
-      }
-    ]
+        explain: '没传参数时 name 就用默认值"小红"，传了别的值才会被覆盖。',
+      },
+    ],
   },
   {
-    id: 'pip',
-    title: 'pip 与依赖管理',
+    id: 'errors-try',
+    title: '错误处理：try/except 让程序不崩',
     phase: 3,
     order: 2,
-    minutes: 8,
-    rating: { python: 2, java: 2, ai: 4 },
-    summary: 'pip install / list / show，以及国内镜像加速；相当于 Maven 拉包，但没有 XML。',
-    keywords: ['pip', 'install', '镜像', 'uv', '依赖', 'Maven'],
-    tip: 'Java 开发者提示：pip ≈ Maven 的依赖下载能力，但没有坐标体系，直接写包名和版本号。',
-    what: 'pip 是 Python 官方包管理工具，命令很少：install 安装、list 查看已装包、show 看包信息、uninstall 卸载、freeze 导出当前版本。默认从 PyPI 下载，国内可加 -i 参数换镜像源加速。安装依赖永远先激活虚拟环境，避免污染全局 Python。',
-    javaCompare: [
-      {
-        title: '依赖来源',
-        java: '<dependency>\n  <groupId>org.springframework.boot</groupId>\n  <artifactId>spring-boot-starter-web</artifactId>\n</dependency>',
-        python: 'pip install fastapi==0.115.0',
-        diff: 'Python 直接写分发包名和版本，不需要 groupId/artifactId，也没有约定 scope。'
-      }
+    minutes: 25,
+    rating: { level: 3, must: 5 },
+    summary: '用 try/except 把可能出错的动作包起来，出错时走备用分支而不是直接崩溃。',
+    keywords: ['异常', 'try', 'except', '错误处理', 'ZeroDivisionError', 'ValueError'],
+    tip: '零基础提示：把 try 想成"试试看"，except 想成"万一出事就怎么处理"。先照抄例子，出错类型以后见多了自然认得出。',
+    what: '程序跑着跑着可能遇到错误，比如除以 0、把不是数字的文字转成数字。这种"意外状况"叫异常。用 `try` 把可能出错的那段包起来，再用 `except` 写"出事时怎么办"，程序就不会眼睁睁崩掉，而是按你安排的方式继续走下去。',
+    analogy: '打个比方：try/except 像走路时兜里揣的防护网。脚下不小心踩空，网把你接住而不是让你直直摔下去；接住之后你还能接着正常走路。',
+    terms: [
+      { term: 'exception', zh: '异常', note: '程序运行中出现的意外状况，若不接住就会中断整个程序。' },
+      { term: 'try', zh: '尝试块', note: '把可能出错的代码放进这里，程序会先正常执行一遍。' },
+      { term: 'except', zh: '捕获块', note: '写着"出了哪种异常就怎么处理"的备用分支。' },
+      { term: 'ZeroDivisionError', zh: '除零错误', note: '除以 0 时抛出的异常类型。' },
+      { term: 'ValueError', zh: '值错误', note: '值本身不合法时抛出的异常，例如把"abc"转成整数。' },
+    ],
+    steps: [
+      '找出程序里可能出错的一小段代码。',
+      '用 try 把这段代码包起来、整体缩进。',
+      '后面写 except，括号里写可能出现的异常类型。',
+      '在 except 里写"出错时你要做的事"。',
+      '运行程序，试试让它出错，确认它没有崩掉。',
     ],
     examples: [
       {
-        title: '安装与查看',
-        code: 'pip install fastapi\npip install "httpx>=0.27"\npip show fastapi',
-        output: 'Successfully installed fastapi-0.115.0 starlette-0.38.6 pydantic-2.9.2\nSuccessfully installed httpx-0.27.2\nName: fastapi\nVersion: 0.115.0\nSummary: FastAPI framework, high performance, easy to learn\nRequires: pydantic, starlette, typing-extensions',
-        note: 'install 会自动带上依赖；包名不区分大小写。'
+        title: 'catch 除零错误',
+        code: `try:
+    result = 10 / 0
+except ZeroDivisionError:
+    print("不能除以 0 哦")`,
+        output: `不能除以 0 哦`,
+        note: '除以 0 会抛 ZeroDivisionError，被 except 接住后打印提示，程序没有中断。',
       },
       {
-        title: '镜像与依赖清单',
-        code: 'pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple\npip list',
-        output: 'Requirement already satisfied: fastapi in ./.venv/Lib/site-packages (0.115.0)\n...\nPackage    Version\n---------- -------\nfastapi    0.115.0\nhttpx      0.27.2',
-        note: '-i 指定镜像源，国内环境能明显提速；-r 按文件批量安装。'
-      }
+        title: 'catch 越界读取',
+        code: `try:
+    fruits = ["苹果", "香蕉"]
+    print(fruits[5])
+except IndexError:
+    print("这个位置没有水果")`,
+        output: `这个位置没有水果`,
+        note: '下标 5 超出了列表长度，抛 IndexError，被接住后给出友好提示。',
+      },
+      {
+        title: '异常之后程序继续跑',
+        code: `print("开始")
+try:
+    print(1 / 0)
+except ZeroDivisionError:
+    print("除数为 0，程序没有崩")
+print("结束")`,
+        output: `开始
+除数为 0，程序没有崩
+结束`,
+        note: '看出错后 except 执行完毕，最后的"结束"仍然正常打印，整段流程没被打断。',
+      },
     ],
     pitfalls: [
       {
-        title: '在虚拟环境外安装',
-        bad: '直接在系统 Python 里 pip install 一堆包',
-        good: '先激活 .venv 再安装',
-        note: '全局安装会导致不同项目依赖互相冲突，且难以复原。'
+        title: '异常类型写错，捕不到',
+        bad: `try:
+    num = int("abc")
+except ZeroDivisionError:
+    print("会捕到吗")`,
+        good: `try:
+    num = int("abc")
+except ValueError:
+    print("请输入数字")`,
+        note: '把"abc"转整数抛的是 ValueError，跟 ZeroDivisionError 不是一回事；类型写错就接不住。',
       },
       {
-        title: '不锁版本',
-        bad: 'pip install fastapi   # 下次可能装到不兼容版本',
-        good: 'pip install fastapi==0.115.0',
-        note: '生产项目应把版本写进 requirements.txt，避免"昨天能跑今天报错"。'
+        title: '不包 try，程序直接崩',
+        bad: `number = int("abc")
+print("后面还能执行吗")`,
+        good: `try:
+    number = int("abc")
+except ValueError:
+    number = 0
+print("后面还能执行吗", number)`,
+        note: '不包 try，遇错整段程序直接中断，后面的代码全不执行；包上后出错走备用分支，程序继续走。',
       },
-      {
-        title: '包名与 import 名不同',
-        bad: 'pip install python-dotenv 后用 import python-dotenv',
-        good: 'pip 名 python-dotenv，import dotenv',
-        note: '安装名和导入名不一定一致（如 pillow → PIL、scikit-learn → sklearn）。'
-      }
     ],
     practice: [
       {
-        prompt: '写一条命令：用清华镜像安装 fastapi 和 uvicorn。',
-        starter: '# TODO: 写 pip 命令\n',
-        answer: 'pip install fastapi uvicorn -i https://pypi.tuna.tsinghua.edu.cn/simple',
-        output: 'Successfully installed fastapi-0.115.0 uvicorn-0.30.6',
-        hint: '一次可以安装多个包，镜像参数放最后。'
-      }
+        prompt: '写一个 safe_divide：能正常除就除，遇到除 0 就返回一句提示而不是崩溃。',
+        starter: `def safe_divide(a, b):
+    return a / b`,
+        answer: `def safe_divide(a, b):
+    try:
+        return a / b
+    except ZeroDivisionError:
+        return "不能除 0"
+
+print(safe_divide(10, 2))
+print(safe_divide(10, 0))`,
+        output: `5.0
+不能除 0`,
+        hint: '把 return a / b 用 try 包起来，except 里专门接 ZeroDivisionError。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'pip 在 Python 工程中最接近 Java 的哪个工具？',
-        options: ['javac', 'Maven/Gradle 的依赖下载部分', 'JVM', 'JUnit'],
+        question: '运行下面代码会打印什么？\n`try:\n    print(1 / 0)\nexcept ZeroDivisionError:\n    print("接住了")`',
+        options: ['直接崩溃报错', '打印"接住了"', '什么都没打印', '打印 0'],
         answer: 1,
-        explain: 'pip 负责下载、安装、卸载第三方包，相当于依赖管理工具的下载能力。'
+        explain: '1/0 抛 ZeroDivisionError，正好被 except 接住，打印"接住了"，程序继续走。',
       },
       {
         type: 'judge',
-        question: 'pip 安装的包名一定等于代码里 import 的名字。',
-        answer: false,
-        explain: '常见反例：python-dotenv → dotenv，pillow → PIL。'
-      }
-    ]
+        question: 'try 里的代码出错时，except 里的代码会执行。',
+        answer: true,
+        explain: '这正是 try/except 的作用：出错的异常被 except 捕获并处理。',
+      },
+    ],
   },
   {
-    id: 'venv',
-    title: 'venv 虚拟环境',
+    id: 'modules-import',
+    title: '模块：拆开文件与 import 导入',
     phase: 3,
     order: 3,
-    minutes: 8,
-    rating: { python: 2, java: 2, ai: 4 },
-    summary: '每个项目一个隔离的依赖环境，等价于给每个项目配一份独立的 classpath。',
-    keywords: ['venv', 'virtualenv', 'virtual environment', '隔离', 'activate'],
-    tip: 'Java 开发者提示：venv 隔离的是依赖，不是 JVM；每个项目一套包，互不影响。',
-    what: '虚拟环境是一份独立的 Python 运行目录（包含解释器副本和 site-packages）。每个项目建一个 .venv 目录，激活后 pip 安装的包只进这个环境。这样项目 A 用 pydantic v1、项目 B 用 pydantic v2 也不会互相破坏。',
-    javaCompare: [
-      {
-        title: '隔离依赖',
-        java: '// 每个项目在 pom.xml / build.gradle 里声明自己的依赖',
-        python: 'python -m venv .venv\n.venv\\Scripts\\activate     # Windows\nsource .venv/bin/activate  # macOS / Linux',
-        diff: 'Java 由构建工具下载到统一仓库并按项目解析；Python 靠每个项目自己的虚拟环境目录。'
-      }
+    minutes: 25,
+    rating: { level: 3, must: 5 },
+    summary: '把代码拆到多个 .py 文件，用 import 把别的文件里的函数搬进来复用。',
+    keywords: ['模块', 'import', 'from', 'math', 'random', '拆分文件'],
+    tip: '零基础提示：import 就像跟别人借东西——只需说"我要用 math"，就能用里面现成的数学函数，不用自己从头写。',
+    what: '模块就是一个 .py 文件，里面装着别人（或你自己）写好的函数和值，方便大家一起用。`import` 可以把整个模块拿进来，`from ... import` 则只挑其中一两样。标准库自带的 `math`、`random`、`datetime` 都是现成模块，你也能把自己的计算函数拆进单独文件再引进来。',
+    analogy: '打个比方：模块像工具箱里分门别类的抽屉，螺丝刀放一个抽屉、扳手放另一个。要用哪个打开哪个抽屉，不用每次都翻一个大混装箱。',
+    terms: [
+      { term: 'module', zh: '模块', note: '一个 .py 文件就称为一个模块，里面放着可复用的函数或值。' },
+      { term: 'import', zh: '导入语句', note: '把整个模块拿进来使用，关键字是 import。' },
+      { term: 'from', zh: '从...导入', note: '跟 import 配合，只从模块里挑出你需要的部分。' },
+      { term: 'standard library', zh: '标准库', note: '程序自带的一批现成模块，如 math、random，不用额外安装。' },
+    ],
+    steps: [
+      '新建一个 .py 文件，起个简短易懂的名字，例如 calc.py。',
+      '在文件里定义几个打算复用的函数。',
+      '再新建一个主程序文件，例如 main.py。',
+      '在主程序顶部写 import calc（或 from calc import 函数名）。',
+      '接着像用自带函数一样调用它。',
     ],
     examples: [
       {
-        title: '创建与激活（Windows / macOS）',
-        code: 'python -m venv .venv\n# Windows\n.venv\\Scripts\\activate\n# macOS / Linux\nsource .venv/bin/activate\npython -V\nwhere python',
-        output: '(venv) C:\\proj> python -V\nPython 3.12.4\n(venv) C:\\proj> where python\nC:\\proj\\.venv\\Scripts\\python.exe',
-        note: '命令行前缀出现 (venv) 就说明激活成功；where/which python 应指向项目内的解释器。'
+        title: 'import 整个模块',
+        code: `import math
+
+print(math.sqrt(16))
+print(math.floor(3.7))`,
+        output: `4.0
+3`,
+        note: 'import math 后就能用 math.sqrt 求平方根、math.floor 向下取整，从模块名后面取函数。',
       },
       {
-        title: '退出与清理',
-        code: 'deactivate\n# 想彻底重来\nrm -rf .venv && python -m venv .venv',
-        output: 'C:\\proj>',
-        note: '激活只是修改当前终端的 PATH，退出后回到全局环境。'
-      }
+        title: 'from...import 只挑一部分',
+        code: `from math import pi
+
+print("圆周率约等于", round(pi, 4))`,
+        output: `圆周率约等于 3.1416`,
+        note: '只用 from math import pi，直接把 pi 当作普通变量用，前面不用再写 math.。',
+      },
+      {
+        title: '用 decimal 避免小数误差',
+        code: `import decimal
+
+print(decimal.Decimal("0.1") + decimal.Decimal("0.2"))`,
+        output: `0.3`,
+        note: '用文本形式构造精确小数，相加得到精确的 0.3，避免浮点数误差。',
+      },
     ],
     pitfalls: [
       {
-        title: '把 .venv 提交到 git',
-        bad: 'git add .venv',
-        good: 'echo ".venv/" >> .gitignore',
-        note: '虚拟环境体积大且与本机路径绑定，必须忽略；依赖靠 requirements.txt 复现。'
+        title: '把属性名写错了大小写',
+        bad: `import math
+print(math.PI)`,
+        good: `import math
+print(math.pi)`,
+        note: '模块里的常量属性名是 pi（小写），写成 PI 会报 AttributeError，提示没有这个属性。',
       },
       {
-        title: '没激活就安装依赖',
-        bad: 'python -m venv .venv 之后直接 pip install',
-        good: '先 activate，再用 where python 确认解释器路径',
-        note: '装到全局环境后，项目在别的机器上跑不起来。'
+        title: '只导入了函数却没导入模块',
+        bad: `from math import sqrt
+print(math.sqrt(16))`,
+        good: `from math import sqrt
+print(sqrt(16))`,
+        note: 'from...import 只把 sqrt 拿进来了，模块名 math 本身并不存在，直接写 math.sqrt 会报错。',
       },
-      {
-        title: 'Windows PowerShell 执行策略拦截',
-        bad: '.venv\\Scripts\\activate 报 "无法加载文件，因为在此系统上禁止运行脚本"',
-        good: 'Set-ExecutionPolicy -Scope CurrentUser RemoteSigned\n# 或直接用 .venv\\Scripts\\python.exe 调用',
-        note: '也可以不激活，直接用 .venv\\Scripts\\python -m pip install 的完整路径形式。'
-      }
     ],
     practice: [
       {
-        prompt: '写一条命令创建名为 .venv 的虚拟环境。',
-        starter: '# TODO: 创建虚拟环境\n',
-        answer: 'python -m venv .venv',
-        output: '',
-        hint: '推荐用 python -m venv 而不是依赖全局的 virtualenv 命令。'
-      }
+        prompt: '用 math 模块写一个函数，计算半径为 2 的圆的面积，保留两位小数。',
+        starter: `import math
+
+def circle_area(r):
+    pass`,
+        answer: `import math
+
+def circle_area(r):
+    return round(math.pi * r * r, 2)
+
+print(circle_area(2))`,
+        output: `12.57`,
+        hint: '面积公式是圆周率乘半径平方，用 round(..., 2) 保留两位小数。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: '虚拟环境解决的核心问题是？',
-        options: ['提升运行速度', '隔离项目依赖，避免版本冲突', '替代 git', '编译 Python 代码'],
+        question: '想用 `math.sqrt` 计算平方根，调用前应该先写哪一行？',
+        options: ['import random', 'import math', 'from math import names', 'print(math)'],
         answer: 1,
-        explain: '虚拟环境让每个项目拥有独立的 site-packages，互不干扰。'
+        explain: '要先 import math 把模块导进来，之后才能用 math.sqrt。',
       },
       {
         type: 'judge',
-        question: '.venv 目录应该被提交到 Git 仓库。',
-        answer: false,
-        explain: '应加入 .gitignore，依赖通过 requirements.txt 描述。'
-      }
-    ]
+        question: '执行 `from math import pi` 之后，直接写 `pi` 就能用圆周率。',
+        answer: true,
+        explain: 'from...import 把 pi 直接带进当前作用域，不用再写 math. 前缀。',
+      },
+    ],
   },
   {
-    id: 'requirements-txt',
-    title: 'requirements.txt',
+    id: 'scope',
+    title: '作用域：变量在哪里可见',
     phase: 3,
     order: 4,
-    minutes: 6,
-    rating: { python: 1, java: 2, ai: 3 },
-    summary: '用文本文件记录项目依赖与版本，别人一条命令就能复现环境。',
-    keywords: ['requirements.txt', 'freeze', 'pip', 'pyproject', '版本锁定'],
-    tip: 'Java 开发者提示：requirements.txt 对应 pom.xml 的依赖列表，但没有传递依赖解析与 scope 概念。',
-    what: 'requirements.txt 每行写一个依赖，可用 ==、>= 约束版本。pip freeze > requirements.txt 导出当前环境的精确版本，pip install -r requirements.txt 让别人一键复现。当项目变大（要发到 PyPI 或需要构建配置）时，会转向 pyproject.toml。',
-    javaCompare: [
-      {
-        title: '依赖清单',
-        java: '<dependency>\n  <groupId>fastapi</groupId>...',
-        python: 'fastapi==0.115.0\npydantic==2.9.2\nhttpx==0.27.2',
-        diff: '纯文本、一行一个包，没有坐标和 scope；开发依赖常写进 requirements-dev.txt。'
-      }
+    minutes: 25,
+    rating: { level: 4, must: 4 },
+    summary: '搞清楚函数内外的变量谁能看见谁，避开"改了没生效"和"找不到变量"两类坑。',
+    keywords: ['作用域', '局部变量', '全局变量', 'global', '变量可见性'],
+    tip: '零基础提示：把作用域想成"房间"——函数里的变量像房间里的私人物品，外面看不见；大厅里的公用物品谁都能看。这个比喻能帮你记住八成。',
+    what: '作用域决定了一个变量在程序的哪些地方"看得见"。函数内部定义的变量是局部变量，只在函数里存在；在模块顶层定义的变量是全局变量，函数里默认能读但不能直接改。想在函数里改全局变量，需要先用 `global` 声明。搞清这条，能避开"改了没生效"和"找不到变量"两类最常见的坑。',
+    analogy: '打个比方：作用域就像房间。函数里的变量是"这个房间里的东西"，出了门就看不见；全局变量是摆在客厅里大家都能看到的东西，屋里屋外都认得。',
+    terms: [
+      { term: 'scope', zh: '作用域', note: '变量在程序中可见即可用的范围。' },
+      { term: 'local variable', zh: '局部变量', note: '在函数内部定义的变量，只在函数内有效。' },
+      { term: 'global variable', zh: '全局变量', note: '在模块顶层定义的变量，处处可见（函数内可直接读）。' },
+      { term: 'global', zh: '全局声明关键字', note: '写在函数体开头，声明要用全局的那个变量而不是新建局部的。' },
+    ],
+    steps: [
+      '先分清你在定义变量还是在调用已有的变量。',
+      '在函数体内第一次赋值，通常就是新建局部变量。',
+      '想读全局变量的值，直接写它的名字即可。',
+      '想改全局变量，先写 global 变量名 再赋值。',
+      '运行程序，按结果核对变量到底改没改到。',
     ],
     examples: [
       {
-        title: '生成与安装',
-        code: 'pip freeze > requirements.txt\npip install -r requirements.txt',
-        output: 'annotated-types==0.7.0\nanyio==4.6.2\nfastapi==0.115.0\nhttpx==0.27.2\npydantic==2.9.2\nstarlette==0.38.6\nuvicorn==0.30.6',
-        note: 'freeze 会把间接依赖也导出，保证环境可复现。'
+        title: '函数内新建局部变量',
+        code: `def show():
+    x = 10
+    print("函数内", x)
+
+show()`,
+        output: `函数内 10`,
+        note: 'x 在函数里定义，只在 show 执行期间存在，函数外看不到它。',
       },
       {
-        title: '手写一份简洁清单',
-        code: '# requirements.txt\nfastapi>=0.115,<1.0\nuvicorn[standard]==0.30.6\nhttpx>=0.27\npython-dotenv==1.0.1',
-        output: '',
-        note: '方括号是 extras（附加依赖组），例如 uvicorn[standard] 会带上 uvloop、websockets。'
-      }
+        title: '函数内读取全局变量',
+        code: `age = 25
+
+def show_age():
+    print("年龄是", age)
+
+show_age()`,
+        output: `年龄是 25`,
+        note: 'age 是全局变量，函数里直接读它没问题。',
+      },
+      {
+        title: '用 global 修改全局变量',
+        code: `count = 0
+
+def add_one():
+    global count
+    count = count + 1
+
+add_one()
+add_one()
+print("计数", count)`,
+        output: `计数 2`,
+        note: '因为声明了 global count，两次调用确实把全局的 count 推进到 2。',
+      },
     ],
     pitfalls: [
       {
-        title: '把敏感的 .env 一起提交',
-        bad: 'git add requirements.txt .env',
-        good: 'git add requirements.txt   # .env 写进 .gitignore',
-        note: 'requirements.txt 只写依赖，API Key 放 .env 且永不入库。'
+        title: '想改全局却忘了 global',
+        bad: `score = 0
+
+def plus():
+    score = 100`,
+        good: `score = 0
+
+def plus():
+    global score
+    score = 100`,
+        note: '第一种写法其实在函数里新建了一个局部 score，外面的 score 纹风不动；加 global 才改得到全局的。',
       },
       {
-        title: '只在开发机 freeze，环境里混入垃圾包',
-        bad: '把全局环境 freeze 出的几十个无关包都提交',
-        good: '在干净的虚拟环境里安装并 freeze',
-        note: '混杂的清单会让部署变慢，也容易触发版本冲突。'
-      }
+        title: '在函数外使用局部变量',
+        bad: `def test():
+    n = 5
+
+print(n)`,
+        good: `def test():
+    n = 5
+    return n
+
+print(test())`,
+        note: 'n 是函数内的局部变量，外面直接 print(n) 会报"未定义"；改让函数 return 把值带出来即可。',
+      },
     ],
     practice: [
       {
-        prompt: '写一条命令：把当前虚拟环境依赖导出到 requirements.txt。',
-        starter: '# TODO: 导出依赖清单\n',
-        answer: 'pip freeze > requirements.txt',
-        output: '',
-        hint: '> 是重定向，会把命令输出写入文件。'
-      }
+        prompt: '让全局变量 num 从 1 变成 11，必须用 global 才能改到全局的它。',
+        starter: `num = 1
+
+def change():
+    pass`,
+        answer: `num = 1
+
+def change():
+    global num
+    num = num + 10
+
+change()
+print(num)`,
+        output: `11`,
+        hint: '在 change 函数里先写一行 global num，再执行 num = num + 10。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'pip install -r requirements.txt 的作用是？',
-        options: ['导出依赖', '按文件批量安装依赖', '升级 pip', '删除依赖'],
+        question: '函数内部定义的变量，在函数外面能直接用吗？',
+        options: ['能，所有变量都全局可见', '不能，函数内是局部变量，外面看不见', '要看变量名里有没有字母', '一定能，但只能读'],
         answer: 1,
-        explain: '-r 表示从文件读取依赖列表并安装。'
+        explain: '函数内定义的局部变量只在函数内存在，外面引用会报"未定义"。',
       },
       {
         type: 'judge',
-        question: 'requirements.txt 里可以用 fastapi>=0.115,<1.0 这样的范围约束。',
+        question: '在函数里想修改一个全局变量，需要先用 `global` 声明这个变量。',
         answer: true,
-        explain: 'pip 支持 ==、>=、<=、!=、~= 等版本约束写法。'
-      }
-    ]
+        explain: '不声明 global，函数里的赋值只会新建局部变量，改不到全局的那份。',
+      },
+    ],
   },
   {
-    id: 'type-hints',
-    title: '类型注解',
+    id: 'write-helper',
+    title: '自己写工具函数并用起来',
     phase: 3,
     order: 5,
-    minutes: 12,
-    rating: { python: 3, java: 1, ai: 5 },
-    summary: '给函数和变量标注类型，运行时不做校验，但 IDE、Pydantic、FastAPI 全靠它。',
-    keywords: ['type hints', '类型注解', 'Optional', 'Union', 'TypedDict', 'mypy', 'Pydantic'],
-    tip: 'Java 开发者提示：注解不改变运行行为，Python 仍是动态类型；但它决定了 FastAPI 文档和 Pydantic 校验。',
-    what: '类型注解写成 def f(name: str, age: int = 18) -> dict:。内置泛型从 3.9 起可以直接写 list[str]、dict[str, int]，可选类型写 str | None。注解在运行时会被保存到 __annotations__，但不会强制检查——需要 mypy/pyright 这类工具做静态检查，需要真正校验时用 Pydantic。',
-    javaCompare: [
-      {
-        title: '函数签名',
-        java: 'String greet(String name, int age) { ... }',
-        python: 'def greet(name: str, age: int) -> str:\n    ...',
-        diff: 'Python 注解只是"声明给工具看"，类型写错不会在运行时报错，只有静态检查工具会报警。'
-      }
+    minutes: 25,
+    rating: { level: 3, must: 5 },
+    summary: '把反复用的小逻辑写成自己的工具函数，命名清楚，一次写好多处用。',
+    keywords: ['工具函数', '封装', '复用', '命名', '函数调用'],
+    tip: '零基础提示：凡是你要复制粘贴超过一次的操作，就值得写成函数。给函数起个一看就懂的名字，以后用起来才不迷糊。',
+    what: '工具函数是你在函数基础上自己做的小零件：把一段反复要用的逻辑（比如判断正负、算平均值）写进一个函数，把它存进文件里，之后在别处填空一样调用它。好处是"一处修改、处处生效"：逻辑有变动，只改函数一处，所有用到它的地方跟着变。',
+    analogy: '打个比方：工具函数像家里常备的削皮刀。削苹果用它是它，削土豆还是它，认真洗好收好就行，不用每次买一把新的。',
+    terms: [
+      { term: 'helper function', zh: '工具函数', note: '职责单一、专门做一件事、被反复调用的小函数。' },
+      { term: 'reuse', zh: '复用', note: '同一段逻辑被多处调用，避免重复写一模一样代码的做法。' },
+      { term: 'call', zh: '调用', note: '通过函数名加括号，让函数实际跑一遍的动作。' },
+      { term: 'single responsibility', zh: '单一职责', note: '一个函数只负责做一件清楚的事情，方便看懂和修改。' },
+    ],
+    steps: [
+      '找出重复出现两次以上的操作。',
+      '把它提炼成一个函数，函数名直接说明用途。',
+      '必要时拆成多个更小的工具函数，各管一件事。',
+      '调用它们，并确认每次结果和手算一致。',
+      '以后遇到同样需求，直接调用，不再重写。',
     ],
     examples: [
       {
-        title: '函数与容器注解',
-        code: 'def build_prompt(question: str, docs: list[str], max_len: int | None = None) -> str:\n    text = "\\n".join(docs)\n    return f"{text}\\n{question}"\n\nprint(build_prompt("问题", ["资料1"]))\nprint(build_prompt.__annotations__)',
-        output: "资料1\n问题\n{'question': <class 'str'>, 'docs': list[str], 'max_len': int | None, 'return': <class 'str'>}",
-        note: '注解在运行时确实存在，框架可以读取它们（FastAPI 就是这样生成文档和校验参数的）。'
+        title: '组合工具函数判断正负',
+        code: `def is_positive(num):
+    return num > 0
+
+def check(nums):
+    for n in nums:
+        if is_positive(n):
+            print(n, "是正数")
+        else:
+            print(n, "不是正数")
+
+check([3, -1, 0, 7])`,
+        output: `3 是正数
+-1 不是正数
+0 不是正数
+7 是正数`,
+        note: 'is_positive 只管判断一件事，check 负责遍历并输出，两个工具各司其职再拼到一起。',
       },
       {
-        title: '给结构化数据加注解',
-        code: 'from typing import TypedDict\n\nclass ChatMessage(TypedDict):\n    role: str\n    content: str\n\nmsg: ChatMessage = {"role": "user", "content": "你好"}\nprint(msg["role"], len(msg))',
-        output: 'user 2',
-        note: 'TypedDict 描述"固定键的字典"，写 LLM 消息结构时很常用。'
-      }
+        title: '工具函数计算平均值',
+        code: `def average(nums):
+    total = 0
+    for n in nums:
+        total += n
+    return total / len(nums)
+
+print(average([10, 20, 30]))
+print(average([2, 4]))`,
+        output: `20.0
+3.0`,
+        note: '同一个 average 函数，换不同的列表都能立刻算出平均值，这就是复用的意义。',
+      },
+      {
+        title: '判断偶数的小函数',
+        code: `def is_even(num):
+    return num % 2 == 0
+
+for i in range(1, 6):
+    if is_even(i):
+        print(i, "是偶数")`,
+        output: `2 是偶数
+4 是偶数`,
+        note: 'is_even 判断偶数的逻辑只写一次，被循环里反复调用，改一处就影响所有使用处。',
+      },
     ],
     pitfalls: [
       {
-        title: '以为注解会做运行时校验',
-        bad: 'def add(a: int, b: int) -> int:\n    return a + b\nadd("1", "2")   # 不会报错，返回 "12"',
-        good: '需要运行时校验就用 Pydantic BaseModel 或手动检查',
-        note: '注解只是元数据，真正校验靠 Pydantic / beartype / FastAPI。'
+        title: '在工具函数里 print 而不是 return',
+        bad: `def double(num):
+    print(num * 2)
+
+result = double(4)
+print("结果是", result)`,
+        good: `def double(num):
+    return num * 2
+
+result = double(4)
+print("结果是", result)`,
+        note: '工具函数里 print 只是把结果打到屏幕上，调用处拿不到结果，得到 None；用 return 才能把值交回去继续用。',
       },
       {
-        title: '在旧版本写 list[str]',
-        bad: 'Python 3.8 里直接写 list[str] 会报 TypeError',
-        good: 'from typing import List  然后 List[str]；或升级到 3.9+',
-        note: '本项目按 Python 3.10+ 讲解，现代代码直接用内置泛型即可。'
+        title: '函数名起得太随意',
+        bad: `def f(x):
+    return x + 2
+
+print(f(5))`,
+        good: `def add_two(x):
+    return x + 2
+
+print(add_two(5))`,
+        note: 'add_two 一眼就懂"加 2"，f 这种名字复用时会搞不清功能，也难在代码里再找到它。',
       },
-      {
-        title: '可选参数漏掉 None',
-        bad: 'def f(x: str = None)   # 类型写错，工具会报错',
-        good: 'def f(x: str | None = None)',
-        note: '默认值是 None 时一定要把 None 写进类型，否则 mypy/pyright 会报警告。'
-      }
     ],
     practice: [
       {
-        prompt: '给函数加上类型注解：接收字符串列表，返回拼接结果。',
-        starter: 'def join_all(items):\n    return ",".join(items)\n\nprint(join_all(["a", "b"]))',
-        answer: 'def join_all(items: list[str]) -> str:\n    return ",".join(items)\n\nprint(join_all(["a", "b"]))',
-        output: 'a,b',
-        hint: '参数注解写在参数名后加冒号，返回值注解写在 -> 后。'
-      }
+        prompt: '写一个 is_odd 工具函数，再统计列表 [1,2,3,4,5,6] 里一共有几个奇数。',
+        starter: `def is_odd(num):
+    pass
+
+odd_count = 0`,
+        answer: `def is_odd(num):
+    return num % 2 != 0
+
+odd_count = 0
+for n in [1, 2, 3, 4, 5, 6]:
+    if is_odd(n):
+        odd_count += 1
+
+print("奇数个数", odd_count)`,
+        output: `奇数个数 3`,
+        hint: '奇数是不被 2 整除的数，1、3、5 共 3 个；判断式用 num % 2 != 0。',
+      },
     ],
     quiz: [
       {
         type: 'choice',
-        question: '关于 Python 类型注解，正确的是？',
-        options: ['运行时会强制校验类型', '只是给工具看的元数据', '必须写否则报错', '只能在类里使用'],
-        answer: 1,
-        explain: '注解不影响运行，FastAPI/Pydantic 等框架会读取它做校验与文档。'
+        question: '函数 `def double(n): return n * 2` 执行 `print(double(3))` 会打印什么？',
+        options: ['2', '3', '6', '程序报错'],
+        answer: 2,
+        explain: 'double(3) 通过 return 交回 3*2=6，print 把它打印出来。',
       },
       {
         type: 'judge',
-        question: 'str | None 表示"字符串或 None"。',
+        question: '好的工具函数通常职责单一，一个函数只做一件事。',
         answer: true,
-        explain: '这是 Python 3.10+ 的联合类型写法，等价于 Optional[str]。'
+        explain: '职责单一让函数容易看懂、容易测试，也方便在一处修改而处处生效。',
       },
-      {
-        type: 'code',
-        question: '补全返回值注解，函数返回字符串。',
-        code: 'def name()__________:\n    return "张三"',
-        answer: '-> str',
-        explain: '返回值注解固定写成 -> 类型，写在参数列表的右括号之后。'
-      }
-    ]
+    ],
   },
-  {
-    id: 'dotenv',
-    title: '环境变量与 .env',
-    phase: 3,
-    order: 6,
-    minutes: 8,
-    rating: { python: 2, java: 3, ai: 5 },
-    summary: 'API Key、模型名、数据库地址一律走环境变量；.env 只放本地、绝不入库。',
-    keywords: ['dotenv', 'python-dotenv', 'os.environ', 'getenv', 'API Key', '配置', 'pydantic-settings'],
-    tip: 'Java 开发者提示：相当于 application.yml + 环境变量覆盖，但 Python 侧通常直接读 os.environ。',
-    what: '配置通过环境变量注入：os.environ 是进程环境字典，os.getenv("KEY", default) 安全取值。本地开发把变量写在项目根目录的 .env 文件里，用 python-dotenv 的 load_dotenv() 载入。生产中由容器/平台注入真实环境变量，.env 必须写进 .gitignore，因为它通常存放 LLM 的 API Key。',
-    javaCompare: [
-      {
-        title: '读取配置',
-        java: '@Value("${llm.api-key}")  // 由 application.yml / 环境变量提供',
-        python: 'api_key = os.getenv("LLM_API_KEY")',
-        diff: 'Python 直接读进程环境，没有集中的 application.yml；需要结构化管理时用 pydantic-settings。'
-      }
-    ],
-    examples: [
-      {
-        title: '读取环境变量',
-        code: 'import os\n\nmodel = os.getenv("LLM_MODEL", "deepseek-chat")\nkey = os.getenv("LLM_API_KEY")\nprint(model)\nprint("已配置" if key else "未配置 API Key")',
-        output: 'deepseek-chat\n未配置 API Key',
-        note: '给默认值可以让本地开发不写 .env 也能跑通非关键配置。'
-      },
-      {
-        title: '用 .env 载入本地配置',
-        code: 'from dotenv import load_dotenv\nimport os\n\nload_dotenv()   # 读取项目根目录的 .env\nprint(os.getenv("LLM_MODEL"))\nprint(os.environ["LLM_API_KEY"][:6] + "****")',
-        output: 'deepseek-chat\nsk-abc****',
-        note: '# .env 文件内容：\n# LLM_MODEL=deepseek-chat\n# LLM_API_KEY=sk-abcdef...'
-      }
-    ],
-    pitfalls: [
-      {
-        title: '把 API Key 写进代码或提交 .env',
-        bad: 'client = OpenAI(api_key="sk-real-key-123")',
-        good: 'client = OpenAI(api_key=os.environ["LLM_API_KEY"])',
-        note: 'Key 一旦进入 git 历史就会泄露，必须立刻作废重发。'
-      },
-      {
-        title: '用 os.environ 取不存在的键',
-        bad: 'key = os.environ["LLM_API_KEY"]   # 未配置时抛 KeyError',
-        good: 'key = os.getenv("LLM_API_KEY")\nif not key:\n    raise RuntimeError("请先配置 LLM_API_KEY")',
-        note: '关键配置建议"显式取 + 明确报错"，避免后面出现难查的 401。'
-      },
-      {
-        title: '.env 位置与加载时机',
-        bad: 'load_dotenv() 写在某个函数内部，且 .env 放错目录',
-        good: '在程序入口（main.py 顶部）第一时间 load_dotenv()',
-        note: 'load_dotenv 默认从当前工作目录向上找 .env，启动目录不同会读不到。'
-      }
-    ],
-    practice: [
-      {
-        prompt: '用 getenv 读取 OPENAI_BASE_URL，未配置时使用 https://api.deepseek.com，并打印结果。',
-        starter: 'import os\n# TODO: 读取并打印\n',
-        answer: 'import os\nprint(os.getenv("OPENAI_BASE_URL", "https://api.deepseek.com"))',
-        output: 'https://api.deepseek.com',
-        hint: 'os.getenv(key, default) 的第二个参数是缺省值。'
-      }
-    ],
-    quiz: [
-      {
-        type: 'choice',
-        question: '.env 文件在项目里应该怎么处理？',
-        options: ['提交到仓库方便同事', '加入 .gitignore，只留 .env.example', '编译进打包产物', '写进 requirements.txt'],
-        answer: 1,
-        explain: '.env 通常包含密钥，必须忽略；提供 .env.example 说明需要哪些变量。'
-      },
-      {
-        type: 'judge',
-        question: 'os.environ["KEY"] 在变量不存在时会抛 KeyError。',
-        answer: true,
-        explain: '想安全取值用 os.getenv("KEY")，它返回 None 而不是抛异常。'
-      }
-    ]
-  }
 ]

@@ -58,7 +58,7 @@ const props = defineProps({
   storageKey: { type: String, default: '' },
 })
 
-const LANG_LABEL = { python: 'Python', java: 'Java', json: 'JSON', bash: 'Shell', text: 'Text' }
+const LANG_LABEL = { python: 'Python', json: 'JSON', bash: 'Shell', text: 'Text' }
 const langLabel = computed(() => LANG_LABEL[props.lang] || props.lang)
 
 const draft = ref(props.code)

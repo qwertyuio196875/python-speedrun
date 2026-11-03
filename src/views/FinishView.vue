@@ -59,8 +59,8 @@
     <!-- 下一阶段路线 -->
     <section class="block">
       <div class="block-head">
-        <h2 class="block-title">下一阶段：AI 应用开发</h2>
-        <span class="muted small">Python 只是入口，接下来才是主战场</span>
+        <h2 class="block-title">下一站：把 AI 应用做完整</h2>
+        <span class="muted small">从会调用模型，到模型、资料、工具和工程化都接起来</span>
       </div>
 
       <div class="roadmap card">
@@ -75,9 +75,9 @@
         <div class="prep-title">开始之前，先准备好这些</div>
         <ul class="prep-list">
           <li>一个可用的模型 API Key（放到 <code class="inline-code">.env</code>，不要写进代码）</li>
-          <li>一个能跑通的 FastAPI 骨架（综合实战里已经完成）</li>
-          <li>会看 JSON 请求/响应，会读接口文档（第八阶段成果）</li>
-          <li>会写 async 并发调用（第六阶段成果）</li>
+          <li>听懂"用户发来请求 → 服务返回回应"这一环（综合实战的进阶选修已经帮你跑通）</li>
+          <li>装好一个 HTTP 客户端（requests / httpx），会用代码发请求拿回应（进阶选修成果）</li>
+          <li>熟悉基础语法，能读懂一个接口的 JSON 请求与响应。</li>
         </ul>
         <div class="prep-cmd">
           <CodeBlock
@@ -115,12 +115,13 @@ const aiRoadmap = [
   'LLM API',
   'Prompt 工程',
   'Structured Output',
+  'FastAPI 分层与部署',
   'RAG',
   'Embedding',
   'Vector Database',
   'Tool Calling',
-  'Agent',
-  'LangGraph',
+  'LangChain / LlamaIndex',
+  'Agent / LangGraph',
   '完整 AI Agent 项目',
 ]
 
@@ -167,7 +168,7 @@ async function startAi() {
       '5. Tool Calling：把函数交给模型调用，并校验参数',
       '6. Agent / LangGraph：把工具与流程编排成可循环的智能体',
       '',
-      '这四步都用得上你已经学到的：async / await、httpx、Pydantic、FastAPI、类型注解。',
+      '这四条都会用到你已经学到的：HTTP 请求、JSON、函数、异常处理。别急着一次懂完，先从"发出一次请求、读回结果"开始。',
     ].join('\n'),
     'AI 应用开发路线',
     { confirmButtonText: '知道了' },

@@ -18,7 +18,7 @@
           <RouterView />
         </div>
         <footer class="site-foot">
-          <span>Python 速通 · 面向 Java 开发者的 5~10 小时过关路线</span>
+          <span>Python 零基础教程 · 从第一行代码开始 · 约 30 小时</span>
           <span class="muted">进度保存在浏览器本地（localStorage），不会上传</span>
         </footer>
       </main>

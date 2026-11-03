@@ -1,5 +1,6 @@
 /**
- * 内容自检：校验所有知识点与速查表条目的结构与题型是否合法。
+ * 内容自检：校验所有知识点、速查表条目与两条实战线的结构与题型是否合法。
+ * 会额外扫描所有文案字段，确保没有出现其它编程语言。
  * 运行：npm run validate
  */
 import { lessons, PHASES, CHEATSHEET, practice, totalLessons } from '../src/data/curriculum.js'
@@ -7,9 +8,18 @@ import { lessons, PHASES, CHEATSHEET, practice, totalLessons } from '../src/data
 const errors = []
 const warnings = []
 
-const REQUIRED = ['id', 'title', 'phase', 'order', 'minutes', 'rating', 'summary', 'keywords', 'tip', 'what', 'examples', 'pitfalls', 'practice', 'quiz']
+const REQUIRED = [
+  'id', 'title', 'phase', 'order', 'minutes', 'rating', 'summary', 'keywords', 'tip', 'what',
+  'analogy', 'terms', 'examples', 'pitfalls', 'practice', 'quiz',
+]
+
+/** 文案字段：禁止出现其它编程语言名称 */
+const TEXT_FIELDS = ['summary', 'tip', 'what', 'analogy', 'note', 'explain', 'question', 'prompt', 'detail', 'hint']
+const BANNED = /\b(Java|Spring|Maven|Gradle|JVM|Servlet|JUnit|JavaScript|TypeScript|C\+\+|C#|Rust|Go|Kotlin|Swift|PHP|Ruby)\b/
+const bannedWord = /(Java|Maven|JVM|Spring Boot|JUnit)/
 
 const seenIds = new Set()
+let bannedCount = 0
 
 for (const lesson of lessons) {
   const where = `${lesson.phase}·${lesson.order} ${lesson.title}`
@@ -25,11 +35,25 @@ for (const lesson of lessons) {
 
   if (!PHASES.some((p) => p.id === lesson.phase)) errors.push(`${where}: phase ${lesson.phase} 不存在`)
 
-  for (const key of ['python', 'java', 'ai']) {
+  for (const key of ['level', 'must']) {
     const value = lesson.rating?.[key]
     if (!Number.isInteger(value) || value < 1 || value > 5) {
       errors.push(`${where}: rating.${key} 必须是 1~5 的整数，当前为 ${value}`)
     }
+  }
+
+  // 零基础专属字段
+  if (!lesson.tip?.includes('零基础提示')) errors.push(`${where}: tip 必须以「零基础提示：」开头`)
+  if (!lesson.analogy) errors.push(`${where}: 缺少类比 analogy`)
+  if (!Array.isArray(lesson.terms) || lesson.terms.length < 2 || lesson.terms.length > 5) {
+    errors.push(`${where}: terms 必须是 2~5 条`)
+  } else {
+    lesson.terms.forEach((t, i) => {
+      if (!t.term || !t.zh || !t.note) errors.push(`${where}: terms[${i}] 需要 term/zh/note`)
+    })
+  }
+  if (lesson.steps !== undefined && (!Array.isArray(lesson.steps) || lesson.steps.length < 2)) {
+    errors.push(`${where}: steps（可选）必须是至少 2 条的数组`)
   }
 
   if (!Array.isArray(lesson.examples) || lesson.examples.length === 0) {
@@ -59,6 +83,7 @@ for (const lesson of lessons) {
       if (!p.prompt) errors.push(`${where}: practice[${i}] 缺少 prompt`)
       if (!p.starter) errors.push(`${where}: practice[${i}] 缺少 starter`)
       if (!p.answer) errors.push(`${where}: practice[${i}] 缺少 answer`)
+      if (p.output === undefined) warnings.push(`${where}: practice[${i}] 没有 output`)
     })
   }
 
@@ -85,13 +110,29 @@ for (const lesson of lessons) {
       }
     })
   }
-
-  if (!Array.isArray(lesson.javaCompare)) {
-    warnings.push(`${where}: javaCompare 不是数组（建议至少给 1 组 Java 对照）`)
-  } else if (lesson.javaCompare.length === 0) {
-    warnings.push(`${where}: 没有 Java 对照`)
-  }
 }
+
+// 禁用其它编程语言扫描（只扫文案字段）
+function isText(field) {
+  return TEXT_FIELDS.includes(field)
+}
+function walkText(obj, where) {
+  if (!obj || typeof obj !== 'object') {
+    if (typeof obj === 'string' && isText(where) && bannedWord.test(obj)) {
+      errors.push(`${where}: 文案中出现其它语言关键词「${obj.match(bannedWord)?.[0]}」`)
+      bannedCount++
+    }
+    return
+  }
+  if (Array.isArray(obj)) {
+    obj.forEach((v, i) => walkText(v, `${where}`))
+    return
+  }
+  for (const [k, v] of Object.entries(obj)) walkText(v, isText(k) ? k : '')
+}
+lessons.forEach((l) => walkText(l, l.title))
+practice && walkText(practice, 'practice')
+CHEATSHEET.categories.forEach((cat) => walkText(cat, cat.name))
 
 // 阶段内 order 必须从 1 连续递增
 for (const phase of PHASES) {
@@ -107,21 +148,31 @@ for (const phase of PHASES) {
   }
 }
 
-// 实战步骤
-const stepIds = new Set()
-practice.steps.forEach((step, i) => {
-  if (stepIds.has(step.id)) errors.push(`实战 Step id 重复：${step.id}`)
-  stepIds.add(step.id)
-  if (!step.title || !step.goal) errors.push(`实战 Step ${i + 1} 缺少 title/goal`)
-  if (!Array.isArray(step.tasks) || !step.tasks.length) errors.push(`实战 Step ${step.id} 缺少 tasks`)
-  if (!Array.isArray(step.snippets) || !step.snippets.length) errors.push(`实战 Step ${step.id} 缺少 snippets`)
-  else
-    step.snippets.forEach((s, si) => {
-      if (!s.code) errors.push(`实战 Step ${step.id} snippets[${si}] 缺少 code`)
-      if (!s.title) warnings.push(`实战 Step ${step.id} snippets[${si}] 缺少 title`)
-    })
-  if (!step.check) warnings.push(`实战 Step ${step.id} 缺少 check`)
-})
+// 实战步骤（主线 + 进阶）
+function validateSteps(steps, label) {
+  const stepIds = new Set()
+  steps.forEach((step, i) => {
+    if (stepIds.has(step.id)) errors.push(`实战 Step id 重复：${step.id}（${label}）`)
+    stepIds.add(step.id)
+    if (!step.title || !step.goal) errors.push(`实战 Step ${i + 1}（${label}）缺少 title/goal`)
+    if (!Array.isArray(step.tasks) || !step.tasks.length) errors.push(`实战 Step ${step.id} 缺少 tasks`)
+    if (!Array.isArray(step.snippets) || !step.snippets.length) errors.push(`实战 Step ${step.id} 缺少 snippets`)
+    else
+      step.snippets.forEach((s, si) => {
+        if (!s.code) errors.push(`实战 Step ${step.id} snippets[${si}] 缺少 code`)
+        if (!s.title) warnings.push(`实战 Step ${step.id} snippets[${si}] 缺少 title`)
+      })
+    if (!step.check) warnings.push(`实战 Step ${step.id} 缺少 check`)
+  })
+}
+if (practice?.steps) validateSteps(practice.steps, '主线')
+if (practice?.advanced?.steps) validateSteps(practice.advanced.steps, '进阶')
+if (practice) {
+  if (!practice.advanced) warnings.push('没有进阶实战 advanced，选修线缺失')
+  if (!Array.isArray(practice.acceptance) || !practice.acceptance.length) {
+    warnings.push('缺少实践验收清单 acceptance')
+  }
+}
 
 // 速查表
 if (!CHEATSHEET.categories?.length) errors.push('速查表没有分类')
@@ -129,7 +180,8 @@ CHEATSHEET.categories.forEach((cat, ci) => {
   if (!cat.name) errors.push(`速查表第 ${ci + 1} 个分类缺少 name`)
   if (!cat.items?.length) errors.push(`速查表分类 ${cat.name} 没有条目`)
   cat.items.forEach((item, ii) => {
-    if (!item.java || !item.python) errors.push(`速查表 ${cat.name}[${ii}] 缺少 java/python 对照`)
+    if (!item.task || !item.code) errors.push(`速查表 ${cat.name}[${ii}] 缺少 task/code`)
+    if (!item.note) warnings.push(`速查表 ${cat.name}[${ii}] 缺少 note`)
     if (!item.detail) warnings.push(`速查表 ${cat.name}[${ii}] 缺少 detail 详细解释`)
   })
 })
@@ -140,9 +192,10 @@ PHASES.forEach((p) => {
   const count = lessons.filter((l) => l.phaseId === p.id).length
   console.log(`  阶段 ${p.id} ${p.name}：${count} 个`)
 })
-console.log(`综合实战 Step：${practice.steps.length} 个`)
-console.log(`速查表：${CHEATSHEET.categories.length} 个分类 / ${CHEATSHEET.categories.reduce((s, c) => s + c.items.length, 0)} 条对照`)
-console.log(`警告：${warnings.length} 条，错误：${errors.length} 条`)
+console.log(`综合实战主线 Step：${practice?.steps?.length || 0} 个`)
+console.log(`综合实战进阶 Step：${practice?.advanced?.steps?.length || 0} 个`)
+console.log(`速查表：${CHEATSHEET.categories.length} 个分类 / ${CHEATSHEET.categories.reduce((s, c) => s + c.items.length, 0)} 条`)
+console.log(`警告：${warnings.length} 条，错误：${errors.length} 条${bannedCount ? `（其中禁用语命中 ${bannedCount} 条）` : ''}`)
 
 if (warnings.length) {
   console.log('\n--- 警告 ---')

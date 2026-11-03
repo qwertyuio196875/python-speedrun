@@ -1,330 +1,512 @@
 /**
- * 第五阶段：Python 高级特性（约 1 小时）
+ * 第五阶段：读文件与程序更健壮（约 2 小时）
+ * 面向从未写过代码的人，从零讲起：怎么把文件里的文字读进程序、
+ * 把结果写进文件、用 with 自动收拾资源、用异常处理接住意外、用日志记录过程。
  * 内容规范见 docs/content-schema.md
  */
 export default [
   {
-    id: 'decorators',
-    title: '装饰器',
+    id: 'file-read',
+    title: '读文件：把文本拿进来',
     phase: 5,
     order: 1,
-    minutes: 16,
-    rating: { python: 4, java: 4, ai: 4 },
-    summary: '装饰器是"接收函数并返回新函数"的函数，等价于 Java 的 AOP / 动态代理。',
-    keywords: ['decorator', '装饰器', 'wraps', 'functools', '@', 'AOP', '动态代理', '重试'],
-    tip: 'Java 开发者提示：装饰器 ≈ 动态代理 + 注解，但它在"定义时"就替换了函数对象，不需要容器或反射。',
-    what: '装饰器的本质是函数：def deco(fn) 接收一个函数，返回一个包装后的函数，然后用 @deco 语法糖贴在目标函数上。它常用来做日志、计时、重试、权限校验——尤其适合包住 LLM 调用做重试和 token 统计。写装饰器一定要用 functools.wraps 保留原函数的元信息。',
-    javaCompare: [
-      {
-        title: '不改业务代码加一层逻辑',
-        java: '@Around("@annotation(Loggable)")\npublic Object log(ProceedingJoinPoint pjp) { ... }   // Spring AOP',
-        python: '@log_calls\ndef call_llm(prompt):\n    ...',
-        diff: 'Java 靠容器和代理在运行期织入；Python 在定义期直接用新函数替换原函数，几行代码就够。'
-      }
+    minutes: 24,
+    rating: { level: 1, must: 4 },
+    summary: '用 open() 打开磁盘上的文件，把里面的文字一次读完或一行一行读进程序。',
+    keywords: ['open', 'read', '读文件', '文件对象', '遍历行', '编码'],
+    tip: '零基础提示：程序跑完内存就清空了，想长期留下数据就得存进文件；读文件就是把磁盘上存好的内容再请回程序里。',
+    what: '用 open() 打开文件会得到一个“文件对象”，它代表“你已经把书翻开”。调用 read() 一次拿回整段文本，或者用 for 循环一行一行地读。几乎所有文本文件都要写成 open(路径, encoding="utf-8")，否则中文字符可能变成乱码。',
+    analogy: '打个比方：open() 就像伸手从书架取下一本书并翻开第一页，read() 是通读全文，for line in f 则是一行一行往下看。',
+    terms: [
+      { term: 'open', zh: '打开（文件）', note: 'Python 内置函数，用于打开一个文件并返回文件对象' },
+      { term: 'file-object', zh: '文件对象', note: 'open() 返回的东西，代表这个已打开的文件' },
+      { term: 'encoding', zh: '编码方式', note: '文字在电脑里的存取规则，中文常用 utf-8' },
+      { term: 'line', zh: '一行', note: '文本里以换行符结尾的一整行' }
+    ],
+    steps: [
+      '用 open("data.txt", encoding="utf-8") 打开文件，拿到文件对象 f',
+      '要一次读完就调 f.read()',
+      '要一行行看就用 for line in f: 循环',
+      '处理完交给 with 自动关闭（下一节讲），暂时先记住这个写法'
     ],
     examples: [
       {
-        title: '最小装饰器 + functools.wraps',
-        code: 'import functools\n\ndef log_calls(fn):\n    @functools.wraps(fn)\n    def wrapper(*args, **kwargs):\n        print(f"调用 {fn.__name__}")\n        result = fn(*args, **kwargs)\n        print(f"返回 {result}")\n        return result\n    return wrapper\n\n@log_calls\ndef add(a, b):\n    return a + b\n\nprint(add(1, 2))\nprint(add.__name__)',
-        output: '调用 add\n返回 3\n3\nadd',
-        note: '没有 functools.wraps 时，add.__name__ 会变成 "wrapper"，日志和文档都会错乱。'
+        title: '一次读完整段文本',
+        code: "with open('data.txt', encoding='utf-8') as f:\n    print(f.read())",
+        output: '你好\n世界',
+        note: '需要先在同目录建一个 data.txt，内容两行：第一行“你好”、第二行“世界”。read() 会把整段文字连换行符一起返回，print 再补一个换行，所以显示成两行。',
+        verify: false
       },
       {
-        title: '带参数的装饰器：失败重试',
-        code: 'import functools\n\ndef retry(times=3):\n    def deco(fn):\n        @functools.wraps(fn)\n        def wrapper(*args, **kwargs):\n            for attempt in range(1, times + 1):\n                try:\n                    return fn(*args, **kwargs)\n                except TimeoutError:\n                    print(f"第 {attempt} 次超时，重试")\n            raise RuntimeError(f"{fn.__name__} 重试 {times} 次仍失败")\n        return wrapper\n    return deco\n\n@retry(times=2)\ndef unstable():\n    raise TimeoutError("网络超时")\n\ntry:\n    unstable()\nexcept RuntimeError as e:\n    print("最终失败:", e)',
-        output: '第 1 次超时，重试\n第 2 次超时，重试\n最终失败: unstable 重试 2 次仍失败',
-        note: '带参数的装饰器是"三层函数"：外层收参数、中层收函数、内层收调用参数。'
+        title: '一行一行地读',
+        code: "with open('data.txt', encoding='utf-8') as f:\n    for line in f:\n        print(line.strip())",
+        output: '苹果\n香蕉\n橙子',
+        note: '需要先建 data.txt，内容为三行：苹果、香蕉、橙子。line.strip() 去掉每行末尾的换行符，这样打印不会多出空行。',
+        verify: false
+      },
+      {
+        title: '数一数文件有几行',
+        code: "with open('data.txt', encoding='utf-8') as f:\n    count = sum(1 for _ in f)\nprint(count)",
+        output: '3',
+        note: '需要先建 data.txt 且内容正好三行。for 每读一行就计入 1，最终 count 就是总行数。',
+        verify: false
       }
     ],
     pitfalls: [
       {
-        title: '忘记 return wrapper',
-        bad: 'def deco(fn):\n    def wrapper():\n        fn()\n# 没有 return，被装饰的函数变成 None',
-        good: '    return wrapper',
-        note: '函数变成 None 后调用会报 TypeError: \'NoneType\' object is not callable。'
+        title: '忘记指定编码导致中文乱码',
+        bad: "with open('data.txt') as f:",
+        good: "with open('data.txt', encoding='utf-8') as f:",
+        note: '不给 encoding，程序会用它自己的默认值，很可能让你看到一堆乱码；涉及中文务必写 utf-8。'
       },
       {
-        title: '忘记 functools.wraps',
-        bad: 'def wrapper(*a, **kw):\n    return fn(*a, **kw)',
-        good: '@functools.wraps(fn)\ndef wrapper(*a, **kw):\n    return fn(*a, **kw)',
-        note: '丢掉 __name__/__doc__ 会让 FastAPI 的路由名、日志、pytest 用例名都变得难以排查。'
+        title: '用一个 for 读完后还想再读一遍',
+        bad: 'with open("data.txt") as f:\n    for line in f:\n        pass\n    for line in f:   # 第二个循环什么都没读到',
+        good: '需要第二遍时重新 open 一次，或提前存成列表',
+        note: '文件对象像一次性纸条，读完就到底了；想再读请重新打开。'
       },
       {
-        title: '包装 async 函数用了普通装饰器',
-        bad: 'def deco(fn):\n    def wrapper(*a, **kw):\n        return fn(*a, **kw)   # 返回的是 coroutine，没被 await',
-        good: 'async def wrapper(*a, **kw):\n    return await fn(*a, **kw)',
-        note: '包装 async def 必须写 async def wrapper 并 await，否则调用方拿到未执行的协程对象。'
+        title: '直接把文件累进数里',
+        bad: "for line in f:\n    total = total + line   # 字符串和数字加不到一起",
+        good: "    total = total + int(line)   # 先转成数字再加",
+        note: '读出来的每一行都是字符串，哪怕内容看起来是数字；算数前要先用 int() 或 float() 转换。'
       }
     ],
     practice: [
       {
-        prompt: '写一个装饰器 timing，打印 "开始" 和 "结束"，装饰函数 hello，并调用 hello()。',
-        starter: 'def timing(fn):\n    # TODO\n    pass\n\n@timing\ndef hello():\n    print("hi")\n\nhello()',
-        answer: 'def timing(fn):\n    def wrapper(*args, **kwargs):\n        print("开始")\n        result = fn(*args, **kwargs)\n        print("结束")\n        return result\n    return wrapper\n\n@timing\ndef hello():\n    print("hi")\n\nhello()',
-        output: '开始\nhi\n结束',
-        hint: '别忘了 return wrapper，也别忘了把 fn 的返回值透传出去。'
+        prompt: 'data.txt 里存了三行名字：小美、小刚、小强。给每一行加上它自己的行号打印出来。',
+        starter: "with open('data.txt', encoding='utf-8') as f:\n    for line in f:\n        print(line.strip())",
+        answer: "with open('data.txt', encoding='utf-8') as f:\n    for index, line in enumerate(f, start=1):\n        print(index, line.strip())",
+        output: '1 小美\n2 小刚\n3 小强',
+        hint: 'enumerate(name, start=1) 会在循环里同时给出编号和内容；start=1 让编号从 1 开始而不是 0。'
+      },
+      {
+        prompt: '有一段数字串“1,2,3”，用逗号拆成三个数，逐个打印成整数。',
+        starter: "text = '1,2,3'\n# TODO: 用 split(',') 把 text 拆开，再逐个 int() 打印",
+        answer: "text = '1,2,3'\nfor part in text.split(','):\n    print(int(part))",
+        output: '1\n2\n3',
+        hint: 'split(",") 会按逗号把字符串切成一个列表，每个元素仍是字符串，用 int() 转成整数。'
       }
     ],
     quiz: [
       {
         type: 'choice',
-        question: '@deco 加在函数定义上，实际发生了什么？',
-        options: ['给函数加了注解元数据', '用 deco(fn) 的返回值替换了原来的函数名', '延迟执行函数', '把函数变成异步函数'],
-        answer: 1,
-        explain: '等价于 f = deco(f)，名字 f 指向被包装后的新函数。'
+        question: '要从磁盘一路读到整段文本，最合适的写法是？',
+        options: ['open("data.txt") 然后调用 read()', '直接写文件名就调用', '把文本复制进代码里', '用 print 打开文件'],
+        answer: 0,
+        explain: 'open() 打开文件后，read() 一次拿回整段文本内容。'
       },
       {
         type: 'judge',
-        question: '写装饰器时使用 functools.wraps 只是为了好看，没有实际作用。',
-        answer: false,
-        explain: '它保留被包装函数的 __name__、__doc__ 等元信息，影响日志、文档和调试。'
+        question: '读出来的每一行即使看着像数字，它本身也是字符串，需要先转换才能做加法。',
+        answer: true,
+        explain: '文件读出来的一行都是字符串类型，做算术前要用 int() 或 float() 转换。'
       },
       {
         type: 'code',
-        question: '补全装饰器内部的返回语句。',
-        code: 'def deco(fn):\n    def wrapper(*args, **kwargs):\n        return fn(*args, **kwargs)\n    __________',
-        answer: 'return wrapper',
-        explain: '装饰器必须返回包装函数，否则外层函数名会变成 None。'
+        question: '补全代码：打开 data.txt 并逐行打印（去掉末尾换行）。',
+        code: "with open('data.txt', encoding='utf-8') as f:\n    for line in f:\n        ______",
+        answer: "print(line.strip())",
+        explain: 'strip() 去掉行尾换行符再打印，就不会多出空行了。'
       }
     ]
   },
   {
-    id: 'generators',
-    title: 'yield 与生成器',
+    id: 'file-write',
+    title: '写文件：把结果存下来',
     phase: 5,
     order: 2,
-    minutes: 14,
-    rating: { python: 4, java: 4, ai: 4 },
-    summary: '函数里有 yield 就变成生成器：惰性产出、一次一个值，流式输出与大文件处理的关键。',
-    keywords: ['yield', 'generator', '生成器', '惰性', 'stream', '迭代器', '流式'],
-    tip: 'Java 开发者提示：生成器 ≈ Iterator + 状态机，但只用普通函数的写法，不需要手写 hasNext/next。',
-    what: '函数体中一旦出现 yield，调用它就不再执行函数体，而是返回一个生成器对象。每次 next() 才执行到下一个 yield，并"挂起"保存局部变量，下次从挂起处继续。这让"边算边给"成为可能：处理大文件、逐块读取 LLM 流式响应都不需要把全部数据放进内存。',
-    javaCompare: [
-      {
-        title: '惰性序列',
-        java: 'Stream.generate(() -> nextValue()).limit(3).forEach(System.out::println);',
-        python: 'def count_up(n):\n    for i in range(1, n + 1):\n        yield i\n\nfor x in count_up(3):\n    print(x)',
-        diff: 'Java 要构造 Stream 或手写 Iterator；Python 直接在函数里 yield，状态自动保存。'
-      }
+    minutes: 24,
+    rating: { level: 1, must: 4 },
+    summary: '用 open() 配合 mode「w」覆盖或「a」追加，把程序算好的结果写到磁盘上保存。',
+    keywords: ['open', 'write', 'mode', '覆盖', '追加', '写文件'],
+    tip: '零基础提示：写文件就是反过来——把程序里算好的结果存回磁盘，这样关机重开也不会丢。',
+    what: 'open() 的第二个参数是 mode（模式）："w" 表示 write，会新建或覆盖文件；"a" 表示 append，在文件末尾追加；"r" 是默认的读取。通过文件对象的 write() 或 writelines() 把文字写进去。写入中文同样要写 encoding="utf-8"，并且注意 "w" 会清空原文件。',
+    analogy: '打个比方：mode="w" 像拿一张新纸把旧纸整张换掉；mode="a" 像在纸的末尾接着往下写，前面的内容都保留。',
+    terms: [
+      { term: 'mode', zh: '模式', note: 'open() 的第二个参数，告诉文件要读还是要写' },
+      { term: 'write', zh: '写入', note: '文件对象的方法，把字符串写进文件' },
+      { term: 'overwrite', zh: '覆盖', note: 'mode="w" 的行为，把原文件内容整个清掉再写入' },
+      { term: 'append', zh: '追加', note: 'mode="a" 的行为，接着原文件末尾继续写' }
+    ],
+    steps: [
+      '用 open("out.txt", "w", encoding="utf-8") 打开（第二个参数是模式）',
+      '用 f.write("要写的内容") 写入，注意换行符要自己写在字符串末尾',
+      '想一行行写就用 f.writelines(列表)',
+      '想保留原文接着写，就把 "w" 换成 "a"'
     ],
     examples: [
       {
-        title: '生成器与 next',
-        code: 'def count_up(n):\n    for i in range(1, n + 1):\n        yield i\n\ngen = count_up(3)\nprint(next(gen))\nprint(next(gen))\nprint(list(gen))',
-        output: '1\n2\n[3]',
-        note: '生成器只能顺序消费一次；list(gen) 会把剩余的全部取出。'
+        title: '把一行结果写入文件',
+        code: "with open('out.txt', 'w', encoding='utf-8') as f:\n    f.write('今天是星期五' + '\\n')\nprint('写入完成')",
+        output: '写入完成',
+        note: '运行会在当前目录创建 out.txt（内容“今天是星期五”）。换行符 \\n 要自己写在字符串里，f.write 不会自动换行。本例会写一个真实文件，故标记 verify=false。',
+        verify: false
       },
       {
-        title: '流式输出：逐块处理 LLM 响应',
-        code: 'def fake_llm_stream(text):\n    for ch in text:\n        yield ch   # 真实场景里这里是 yield chunk.content\n\nchunks = []\nfor ch in fake_llm_stream("你好呀"):\n    chunks.append(ch)\n    print("收到:", ch)\nprint("共", len(chunks), "块")',
-        output: '收到: 你\n收到: 好\n收到: 呀\n共 3 块',
-        note: '这就是 FastAPI + SSE 实现"打字机效果"的核心结构。'
+        title: '覆盖模式会清掉旧内容',
+        code: "with open('out.txt', 'w', encoding='utf-8') as f:\n    f.write('新内容')\n\nwith open('out.txt', encoding='utf-8') as f:\n    print(f.read())",
+        output: '新内容',
+        note: '先用 "w" 把 out.txt 整份覆盖成“新内容”，再读出来打印。如果之前这个文件里有过别的东西，现在都没了。会创建/覆盖真实文件，故标记 verify=false。',
+        verify: false
       },
       {
-        title: '惰性处理大文件',
-        code: 'def read_lines(lines):\n    for line in lines:\n        line = line.strip()\n        if line:\n            yield line\n\nlines = ["  第一行  ", "", "第二行"]\nprint(list(read_lines(lines)))\nprint(sum(1 for _ in read_lines(lines)))',
-        output: "['第一行', '第二行']\n2",
-        note: '换成 open(...) 就是真实的"逐行读大文件"，内存占用恒定。'
+        title: '追加模式保留原文',
+        code: "with open('log.txt', 'a', encoding='utf-8') as f:\n    f.write('又记了一条' + '\\n')\nprint('追加完成')",
+        output: '追加完成',
+        note: '需要先在 log.txt 里放点内容，比如“第一条”。运行后原内容还在，“又记了一条”会被接在末尾。',
+        verify: false
       }
     ],
     pitfalls: [
       {
-        title: '生成器只能消费一次',
-        bad: 'total = sum(gen)\ncount = sum(gen)   # 第二次是 0，已耗尽',
-        good: 'values = list(gen)   # 需要多次遍历就先物化',
-        note: '生成器是"一次性管道"，遍历完就空了，调试时容易困惑。'
+        title: '误用 "w" 把辛苦存好的文件清空了',
+        bad: "with open('memo.txt', 'w', encoding='utf-8') as f:\n    f.write('只写了这一行')",
+        good: "with open('memo.txt', 'a', encoding='utf-8') as f:\n    f.write('新增一行')",
+        note: '"w" 会先清空整个文件再写入。只想加内容时一定要用 "a"。'
       },
       {
-        title: '以为函数体立刻执行',
-        bad: 'gen = gen_func()   # 此时函数体一行都没跑',
-        good: 'next(gen) 或 for x in gen 才开始执行',
-        note: '没被消费的生成器里的错误不会抛出，日志也可能一行都没有。'
+        title: '写中文却不指定编码',
+        bad: "with open('out.txt', 'w') as f:",
+        good: "with open('out.txt', 'w', encoding='utf-8') as f:",
+        note: '不写 encoding 时系统默认编码可能不支持中文，写出去再打开就是乱码。'
       },
       {
-        title: '生成器里用 return 返回值',
-        bad: 'def g():\n    return 1\n    yield 2   # 永远拿不到 1',
-        good: '用普通函数或 yield from',
-        note: 'return 在生成器里只表示结束，值通过 StopIteration.value 传递，实际很少用。'
+        title: '以为 write 会自动换行',
+        bad: "f.write('第一行')\nf.write('第二行')   # 会挤在同一行",
+        good: "f.write('第一行' + '\\n')\nf.write('第二行' + '\\n')",
+        note: 'write() 把内容原样写进去，不会补换行；想要多行就自己在字符串末尾拼 \\n。'
       }
     ],
     practice: [
       {
-        prompt: '写生成器 even(n)，依次产出 0 到 n 之间的偶数，并打印 list(even(6))。',
-        starter: 'def even(n):\n    # TODO: 用 yield 产出偶数\n    pass\n\nprint(list(even(6)))',
-        answer: 'def even(n):\n    for i in range(n + 1):\n        if i % 2 == 0:\n            yield i\n\nprint(list(even(6)))',
-        output: '[0, 2, 4, 6]',
-        hint: '函数里有 yield 就是生成器，不需要 return 列表。'
+        prompt: '把名字列表 ["小美", "小刚"] 每行一个写进 name.txt（覆盖模式，utf-8），要求每个名字一行。',
+        starter: "names = ['小美', '小刚']\n# TODO: 打开 name.txt（用 'w'），把每个名字各占一行写进去",
+        answer: "names = ['小美', '小刚']\nwith open('name.txt', 'w', encoding='utf-8') as f:\n    for name in names:\n        f.write(name + '\\n')",
+        output: '写入 name.txt：\n小美\n小刚',
+        hint: '每个名字后面接一个 \\n 就能单独成行；用 "w" 模式会在写之前清空旧内容。'
+      },
+      {
+        prompt: '给 call.txt 追加一行“十二点打卡”，再读出来打印，确认原来内容还在。',
+        starter: "# TODO: 用 'a' 模式追加一行，再打开读取并打印\r\n",
+        answer: "with open('call.txt', 'a', encoding='utf-8') as f:\n    f.write('十二点打卡' + '\\n')\n\nwith open('call.txt', encoding='utf-8') as f:\n    print(f.read())",
+        output: '九点打卡\n十二点打卡',
+        hint: '"a" 模式会在文件末尾追加；追加完再以默认 "r" 读出来，就能看到原来的内容还在。'
       }
     ],
     quiz: [
       {
         type: 'choice',
-        question: '函数里出现 yield 之后，调用该函数会得到什么？',
-        options: ['函数体的执行结果', '一个生成器对象', '一个列表', 'None'],
-        answer: 1,
-        explain: '调用只创建生成器，函数体在第一次被消费时才执行。'
+        question: '希望保留原文件内容、只在末尾接着写，mode 应该是什么？',
+        options: ['"w"', '"r"', '"a"', '"x"'],
+        answer: 2,
+        explain: '"a" 是 append（追加），在文件末尾续写而不清空原有内容。'
       },
       {
         type: 'judge',
-        question: '生成器表达式（小括号）与列表推导式（方括号）的区别是需要时才计算，节省内存。',
+        question: 'mode="w" 打开文件写入时，会先把文件原有内容清空。',
         answer: true,
-        explain: '生成器惰性求值；列表推导式会立刻构造完整列表。'
+        explain: '"w" 表示覆盖，先清空原文件再写入，所以要谨慎使用。'
+      },
+      {
+        type: 'code',
+        question: '补全代码：把 text 用追加模式写进 note.txt。',
+        code: "text = '补充一点'\n______ open('note.txt', 'a', encoding='utf-8') as f:\n    f.write(text)",
+        answer: "with",
+        explain: 'with 负责管理文件，配合 "a" 模式在末尾追加 text 的内容。'
       }
     ]
   },
   {
-    id: 'context-manager',
-    title: 'with 与上下文管理器',
+    id: 'with-statement',
+    title: 'with 语句：用完自动收拾',
     phase: 5,
     order: 3,
-    minutes: 10,
-    rating: { python: 3, java: 3, ai: 4 },
-    summary: 'with 保证资源一定被释放，等价于 Java 的 try-with-resources。',
-    keywords: ['with', 'context manager', '__enter__', '__exit__', 'contextlib', '资源管理'],
-    tip: 'Java 开发者提示：with 就是 try-with-resources，对象实现 __enter__ / __exit__ 即可自动关闭。',
-    what: 'with 用法是 with expr as name: 代码块。进入时调用对象的 __enter__（返回值绑定到 as 后面的名字），退出时无论如何都调用 __exit__，包括异常路径。文件、网络连接、数据库会话、锁都用它管理。不想写类时，可以用 contextlib.contextmanager 把一个生成器函数变成上下文管理器。',
-    javaCompare: [
-      {
-        title: '自动关闭资源',
-        java: 'try (var reader = new BufferedReader(new FileReader("a.txt"))) {\n    return reader.readLine();\n}',
-        python: 'with open("a.txt", encoding="utf-8") as f:\n    return f.readline()',
-        diff: 'with 更短，不需要声明类型，也不需要单独实现 AutoCloseable 接口。'
-      }
+    minutes: 20,
+    rating: { level: 1, must: 4 },
+    summary: 'with ... as 能保证文件用完自动关闭，即使中途出错了也不会漏关，让程序更安全。',
+    keywords: ['with', '上下文管理器', '自动关闭', 'enter', 'exit', '资源管理'],
+    tip: '零基础提示：前面几节一直在用 with，这节告诉你它为什么重要——它替你保证“用完一定关门”，你不用记着写 close()。',
+    what: 'with open(...) as f: 会在进入代码块时创建文件对象，在代码块结束时就自动关闭文件，哪怕代码块里出错也会关。原理是 with 会调用对象的 __enter__ 和 __exit__ 这两个特殊方法。文件、网络连接这类“用完要还回去”的资源都适合用 with 管理。',
+    analogy: '打个比方：with 就像一个负责关门的服务员。你进餐厅吃饭（打开文件），不管你是吃饱离开还是吃到一半出事被抬走，他都会负责把门带上（自动关闭文件）。',
+    terms: [
+      { term: 'with', zh: '随着（语句）', note: 'Python 的关键字，用来保证资源一定被收拾好' },
+      { term: 'context-manager', zh: '上下文管理器', note: '实现了 __enter__ 和 __exit__ 的对象，可被 with 管理' },
+      { term: 'as', zh: '作为', note: '把 with 打开的对象的返回值绑定到一个名字上' },
+      { term: 'close', zh: '关闭', note: '收回文件等资源，with 会自动做这一件事' }
+    ],
+    steps: [
+      'with 后面跟一个表达式，比如 open(...)',
+      '用 as f 把打开的“文件对象”绑定到名字 f',
+      '在缩进块里用 f 读写内容',
+      '块一结束，with 自动调用关闭逻辑，你不用手动操作'
     ],
     examples: [
       {
-        title: '文件读写（最常用）',
-        code: 'with open("demo.txt", "w", encoding="utf-8") as f:\n    f.write("你好\\n第二行")\n\nwith open("demo.txt", encoding="utf-8") as f:\n    print(f.readline().strip())\n    print(sum(1 for _ in f))',
-        output: '你好\n1',
-        note: 'as f 拿到的是文件对象；故意用两个 with 说明写出文件后必须重新打开才能从头读。'
+        title: 'with 自动关闭文件',
+        code: "with open('data.txt', encoding='utf-8') as f:\n    first = f.readline()\nprint('读到:', first)\nprint('块结束，文件已自动关闭')",
+        output: '读到: 你好\n块结束，文件已自动关闭',
+        note: '需要先在 data.txt 第一行写“你好”。块外还在使用 f 会报错，从侧面证明文件真的已经关闭。',
+        verify: false
       },
       {
-        title: '自定义上下文管理器',
-        code: 'class Timer:\n    def __init__(self, name):\n        self.name = name\n\n    def __enter__(self):\n        print(f"进入 {self.name}")\n        return self\n\n    def __exit__(self, exc_type, exc, tb):\n        print(f"离开 {self.name}, 异常={exc_type is not None}")\n        return False   # 返回 False 表示不吞掉异常\n\nwith Timer("LLM 调用") as t:\n    print("调用中")',
-        output: '进入 LLM 调用\n调用中\n离开 LLM 调用, 异常=False',
-        note: '真实项目里这里会记录耗时并写入日志，返回 True 会吞掉异常，通常不要这么做。'
+        title: '自己写一个小的上下文管理器',
+        code: "class Timer:\n    def __init__(self, name):\n        self.name = name\n    def __enter__(self):\n        print('进入 ' + self.name)\n        return self\n    def __exit__(self, exc_type, exc_value, exc_tb):\n        print('离开 ' + self.name)\n        return False\n\nwith Timer('统计耗时'):\n    print('正在处理')",
+        output: '进入 统计耗时\n正在处理\n离开 统计耗时',
+        note: '__enter__ 在进入时跑，__exit__ 在离开时跑（包括出错也会跑）。返回 False 表示不偷偷吞掉异常。',
+        verify: true
       },
       {
-        title: 'contextlib 简化写法',
-        code: 'from contextlib import contextmanager\n\n@contextmanager\ndef tag(name):\n    print(f"<{name}>")\n    yield name\n    print(f"</{name}>")\n\nwith tag("prompt") as t:\n    print("内容", t)',
-        output: '<prompt>\n内容 prompt\n</prompt>',
-        note: 'yield 之前的代码相当于 __enter__，之后的相当于 __exit__。'
+        title: '出错时也照样自动关闭',
+        code: "try:\n    with open('data.txt', encoding='utf-8') as f:\n        raise RuntimeError('读到一半炸了')\nexcept RuntimeError as e:\n    print('捕获到:', e)\nprint('文件仍然被自动关闭了')",
+        output: '捕获到: 读到一半炸了\n文件仍然被自动关闭了',
+        note: '需要先在同目录建一个 data.txt（内容随意，例如单行“你好”），因为 open() 要能打开它。块里故意抛错，__exit__ 依然被执行把文件关掉，这就是 with 的价值——漏关资源的风险被消除了。',
+        verify: false
       }
     ],
     pitfalls: [
       {
-        title: '忘记 encoding',
-        bad: 'with open("out.txt", "w") as f: ...',
-        good: 'with open("out.txt", "w", encoding="utf-8") as f: ...',
-        note: 'Windows 默认 GBK，处理中文和多语言文本必须显式指定编码。'
+        title: '在 with 块外继续用文件对象',
+        bad: "with open('data.txt') as f:\n    data = f.read()\nprint(f.read())   # 文件已关闭会报错",
+        good: '把要处理的语句都放进 with 块内',
+        note: '块结束后文件就被自动关闭了，在块外再对 f 操作会得到“操作已关闭文件”的错误。'
       },
       {
-        title: 'with 只能管住它包住的代码',
-        bad: 'with open("a.txt") as f:\n    data = f.read()\nprint(f.read())   # 文件已关闭：ValueError: I/O operation on closed file',
-        good: '需要的处理全部放在 with 块内',
-        note: '不要在 with 块外使用已经关闭的资源。'
+        title: '忘了用 with，全靠感觉记得 close',
+        bad: "f = open('data.txt', encoding='utf-8')\ndata = f.read()\n# 忘了 f.close()，或者中途出错就没机会关",
+        good: "with open('data.txt', encoding='utf-8') as f:\n    data = f.read()",
+        note: '自己 open 就很容易忘记 close，出错时文件更不会被关；交给 with 后完全不用再惦记这回事。'
       },
       {
-        title: '__exit__ 返回 True 吞掉异常',
-        bad: 'def __exit__(self, *exc):\n    return True',
-        good: 'def __exit__(self, *exc):\n    return False',
-        note: '返回 True 会静默吞掉块内所有异常，调试时非常难查。'
+        title: '手动手动 close 又靠 with',
+        bad: "with open('data.txt') as f:\n    f.read()\n    f.close()",
+        good: "with open('data.txt') as f:\n    data = f.read()",
+        note: '用 with 就不要再手动调用 f.close()，那会重复关闭；交给 with 自动处理即可。'
       }
     ],
     practice: [
       {
-        prompt: '用 with 把 "abc" 写入 data.txt（utf-8），再读出来打印。',
-        starter: '# TODO: 用 with 写文件，再用 with 读出来打印\n',
-        answer: 'with open("data.txt", "w", encoding="utf-8") as f:\n    f.write("abc")\n\nwith open("data.txt", encoding="utf-8") as f:\n    print(f.read())',
-        output: 'abc',
-        hint: '写入用 "w"，读取可省略模式（默认 "r"）。'
+        prompt: '用 with 打开 data.txt 读取第一行并打印，然后用 with 把它读到的内容追加进 back.txt。',
+        starter: "# TODO: 读懂 data.txt 第一行，再把那行追加到 back.txt\r\n",
+        answer: "with open('data.txt', encoding='utf-8') as f:\n    first = f.readline()\n\nwith open('back.txt', 'a', encoding='utf-8') as f:\n    f.write(first)\nprint('已追加:', first)",
+        output: '已追加: 你好',
+        note: '需要 data.txt 第一行为“你好”。两个 with 各自管理自己的文件，最后打印追加的内容。',
+        verify: false
       }
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'with 语句依赖对象的哪两个方法？',
-        options: ['__init__ / __del__', '__enter__ / __exit__', 'open / close', 'start / stop'],
+        question: 'with ... as f 主要负责为文件对象做什么？',
+        options: ['让它更快', '保证用完自动关闭', '给它加密码', '把它复制一份'],
         answer: 1,
-        explain: '进入块调用 __enter__，离开块（含异常）调用 __exit__。'
+        explain: 'with 保证代码块结束时自动关闭文件，连出错时也会关闭。'
       },
       {
         type: 'judge',
-        question: 'with 块内抛出异常时，__exit__ 不会被调用。',
-        answer: false,
-        explain: '__exit__ 一定会被调用，它通过参数收到异常信息。'
+        question: 'with 块里即使抛出了异常，文件也依然会被自动关闭。',
+        answer: true,
+        explain: 'with 的 __exit__ 在所有离开块的情况下都会被调用，包括异常路径。'
       }
     ]
   },
   {
-    id: 'iterators',
-    title: '可迭代对象与 itertools',
+    id: 'exception-handling',
+    title: '异常：程序遇到意外怎么处理',
     phase: 5,
     order: 4,
-    minutes: 10,
-    rating: { python: 3, java: 2, ai: 3 },
-    summary: '搞清楚"可迭代对象 vs 迭代器"，并用 itertools 做切片、链式拼接与分组。',
-    keywords: ['iterable', 'iterator', 'iter', 'next', 'itertools', 'islice', 'chain'],
-    tip: 'Java 开发者提示：Iterable 能被 for 遍历，Iterator 记录遍历位置；iter() 把前者变成后者。',
-    what: '可迭代对象（list、dict、str、生成器）实现了 __iter__，迭代器实现了 __next__ 并记录当前位置。for 循环内部就是先 iter() 再不断 next()，直到 StopIteration。itertools 提供了 islice（惰性切片）、chain（拼接多个可迭代对象）、groupby、count 等工具，处理流式数据很方便。',
-    javaCompare: [
-      {
-        title: '手动遍历',
-        java: 'Iterator<String> it = list.iterator();\nwhile (it.hasNext()) { System.out.println(it.next()); }',
-        python: 'it = iter(items)\nwhile True:\n    try:\n        print(next(it))\n    except StopIteration:\n        break',
-        diff: 'Python 的迭代协议靠异常结束（StopIteration），实际写代码几乎只用 for，不用手写这段。'
-      }
+    minutes: 28,
+    rating: { level: 1, must: 5 },
+    summary: '用 try/except/else/finally 接住运行时错误，让程序不因一次意外就整个崩溃，必要时用 raise 主动抛错。',
+    keywords: ['try', 'except', 'else', 'finally', 'raise', '异常', '错误处理'],
+    tip: '零基础提示：程序跑的时候会遇到意外（文件不存在、除以 0），你不处理它就会当场崩溃；异常处理就是给这些意外装个“安全网”。',
+    what: '当程序遇到错误，会“抛出”一个异常对象。你用 try 包住可能出错的代码，用 except 接住某一种异常并给出补救；这段 try 成功、没抛错时执行 else 里的代码；无论有没有错都会执行 finally 里的代码。除零会抛 ZeroDivisionError，读不存在的文件会抛 FileNotFoundError，它们都可以被 except 接住。想主动说明“这里不该这样”可以用 raise 自己抛出异常。',
+    analogy: '打个比方：try 像是在过马路时张望，except 是看到车过来就停步绕开，else 是平安通过后继续走，finally 是无论怎样最后都要把鞋带系好（收尾动作）。',
+    terms: [
+      { term: 'try', zh: '尝试', note: '结界要“试着执行”的、可能出错的代码块' },
+      { term: 'except', zh: '接住', note: '声明要捕获并处理哪一类异常' },
+      { term: 'else', zh: '否则', note: 'try 没出错时才执行的代码块' },
+      { term: 'finally', zh: '最后', note: '不管有没有出错，退出时都会执行的代码块' },
+      { term: 'raise', zh: '抛出', note: '主动制造一个异常交出去' }
+    ],
+    steps: [
+      '把可能出错的语句放进 try 块',
+      '用 except 异常类型 as e: 接住这一类并做处理',
+      '想只在成功时执行某些语句，就用 else 块',
+      '想保证收尾动作一定执行，就放进 finally 块'
     ],
     examples: [
       {
-        title: 'iter / next 与 for 的关系',
-        code: 'items = [10, 20]\nit = iter(items)\nprint(next(it), next(it))\ntry:\n    next(it)\nexcept StopIteration:\n    print("遍历结束")',
-        output: '10 20\n遍历结束',
-        note: 'for 循环就是在做同样的事，只是自动处理 StopIteration。'
+        title: '接住除零错误让程序不崩',
+        code: "def divide(a, b):\n    return a / b\n\ntry:\n    result = divide(10, 0)\nexcept ZeroDivisionError as e:\n    print('出错了:', e)\nelse:\n    print('结果是', result)\nfinally:\n    print('这行无论如何都会打印')",
+        output: '出错了: division by zero\n这行无论如何都会打印',
+        note: '10 除以 0 抛 ZeroDivisionError，被 except 接住并打印；else 因为出错了所以不执行；finally 一定会执行。',
+        verify: true
       },
       {
-        title: 'islice 与 chain',
-        code: 'from itertools import islice, chain\n\ndef stream():\n    i = 0\n    while True:\n        i += 1\n        yield i\n\nprint(list(islice(stream(), 3)))\nprint(list(chain([1, 2], ["a", "b"])))\nprint(list(islice(stream(), 2, 5)))',
-        output: '[1, 2, 3]\n[1, 2, \'a\', \'b\']\n[3, 4, 5]',
-        note: '无限流 + islice 就能安全地取前 N 个元素，这在处理流式 token 时很有用。'
+        title: '文件不存在时给出提示',
+        code: "try:\n    with open('missing.txt', encoding='utf-8') as f:\n        print(f.read())\nexcept FileNotFoundError:\n    print('文件找不到了，请检查路径')",
+        output: '文件找不到了，请检查路径',
+        note: '当前目录没有 missing.txt 时抛 FileNotFoundError，被接住后程序不崩，而是友好提示。',
+        verify: true
+      },
+      {
+        title: '用 raise 主动抛出异常',
+        code: "def check_age(age):\n    if age < 0:\n        raise ValueError('年龄不能是负数')\n    return age\n\ntry:\n    check_age(-5)\nexcept ValueError as e:\n    print('捕获:', e)",
+        output: '捕获: 年龄不能是负数',
+        note: 'check_age 看到负数认为不合理，用 raise ValueError 主动抛错；调用方用 except 接住。这就是“声明这是一个错误”。',
+        verify: true
       }
     ],
     pitfalls: [
       {
-        title: '对迭代器用 len 或下标',
-        bad: 'it = iter(items)\nprint(len(it))',
-        good: 'items = list(it)   或   使用 itertools.islice 计数',
-        note: '迭代器没有长度、不支持下标，需要这些能力就先转成 list（注意内存）。'
+        title: '什么都不写地接住所有异常',
+        bad: 'try:\n    risky()\nexcept:\n    pass   # 悄悄吞掉，等于没处理',
+        good: "except ValueError as e:\n    print('参数出问题:', e)",
+        note: '空 except 会把所有错误都吞掉，程序看似没崩，问题却被藏起来了，非常难排查。'
       },
       {
-        title: '把同一个迭代器传给两处',
-        bad: 'it = iter(items)\nhelper_a(it)\nhelper_b(it)   # it 已被 a 消耗完',
-        good: '每处各传入原始可迭代对象（list 本身可重复遍历）',
-        note: 'list 是可迭代对象，不是迭代器，可以反复 for；生成器和 iter(list) 的结果只能一次。'
+        title: '捕获范围太大，掩盖真实问题',
+        bad: 'try:\n    return a / b\nexcept Exception:\n    return -1   # 连编码、IO 错误也一起吞了',
+        good: 'except ZeroDivisionError:\n    return -1',
+        note: '只捕获你确实能处理的异常类型，其余交给更外层，别把所有问题都当成同一种。'
+      },
+      {
+        title: '把入口全包成一个大 try 导致定位困难',
+        bad: 'try:\n    ...很多行代码...\nexcept Exception:\n    print("出错")',
+        good: 'try 只包住真正那几行可能出错的语句',
+        note: 'try 块越小，出错时越容易从 except 的类型判断是哪里出了问题。'
       }
     ],
     practice: [
       {
-        prompt: '用 islice 取自然数流的第 4~6 个（即 4、5、6）并打印。',
-        starter: 'from itertools import islice\n\ndef naturals():\n    i = 0\n    while True:\n        i += 1\n        yield i\n\n# TODO: 打印第 4~6 个\n',
-        answer: 'from itertools import islice\n\ndef naturals():\n    i = 0\n    while True:\n        i += 1\n        yield i\n\nprint(list(islice(naturals(), 3, 6)))',
-        output: '[4, 5, 6]',
-        hint: 'islice(seq, start, stop) 的下标从 0 开始，所以 4~6 对应 3:6。'
+        prompt: '写一个函数 safe_divide(a, b)：能算就返回商；b 为 0 时返回字符串“不能除以 0”。',
+        starter: "def safe_divide(a, b):\n    # TODO: 用 try/except 接住 ZeroDivisionError\n    pass\n\nprint(safe_divide(10, 2))\nprint(safe_divide(10, 0))",
+        answer: "def safe_divide(a, b):\n    try:\n        return a / b\n    except ZeroDivisionError:\n        return '不能除以 0'\n\nprint(safe_divide(10, 2))\nprint(safe_divide(10, 0))",
+        output: '5.0\n不能除以 0',
+        hint: 'return 写在 try 里，除零异常被 except 接住时就走备选结果。'
+      },
+      {
+        prompt: '提示用户输入一个数字并转为整数，如果输的不是数字就打印“请输入数字”。',
+        starter: "text = input('请输入数字: ')\n# TODO: 用 try 转整数，except 接住转换失败",
+        answer: "text = input('请输入数字: ')\ntry:\n    number = int(text)\n    print('你输入了', number)\nexcept ValueError:\n    print('请输入数字')",
+        output: '（输入不是数字时）请输入数字',
+        hint: 'int("abc") 会抛 ValueError；把它接住就能在用户乱输入时不崩溃。'
       }
     ],
     quiz: [
       {
         type: 'choice',
-        question: '关于可迭代对象与迭代器，正确的是？',
-        options: ['list 是迭代器', '迭代器能被多次 for 遍历', '迭代器记录遍历位置且一次性', '生成器可以 len()'],
-        answer: 2,
-        explain: 'list 是可迭代对象（可反复遍历）；迭代器保存位置，耗尽即止。'
+        question: 'try 块成功执行、没有抛错时，接下来会运行哪一部分？',
+        options: ['except 块', 'else 块', 'finally 之前的 except', '什么都不运行'],
+        answer: 1,
+        explain: 'try 没出错就执行 else；出错才执行 except；finally 则是总执行。'
       },
       {
         type: 'judge',
-        question: 'itertools.islice 可以对无限生成器安全取前 N 个元素。',
-        answer: true,
-        explain: 'islice 惰性取够就停，不会尝试遍历整个序列。'
+        question: 'finally 块只有 try 成功时才执行顺序继续。',
+        answer: false,
+        explain: 'finally 无论 try 成不成功都会执行，用于保证收尾。'
+      },
+      {
+        type: 'code',
+        question: '补全代码：把可能出错的语句包进 try，并在后面用 except 接住普通错误。',
+        code: '______:\n    result = a / b\nexcept ZeroDivisionError:\n    result = 0',
+        answer: 'try',
+        explain: 'try 标记“可能出错、要尝试”的代码块，后面紧跟 except 接住异常。'
+      }
+    ]
+  },
+  {
+    id: 'logging-basic',
+    title: '日志：记录程序运行过程',
+    phase: 5,
+    order: 5,
+    minutes: 22,
+    rating: { level: 1, must: 4 },
+    summary: '用 logging 模块给程序记日志，把“运行到哪了、发生了什么”写下来，方便日后排查问题。',
+    keywords: ['logging', 'logger', '级别', 'info', 'warning', '日志'],
+    tip: '零基础提示：程序跑完你可能不再记得中间发生了什么；日志就像飞机会自动记录飞行数据，出问题了对一下记录就知道卡在哪一步。',
+    what: 'logging 是 Python 自带的日志模块。先 logging.basicConfig(level=logging.INFO) 设好基本配置，再用 logging.info、logging.warning、logging.error 打日志。日志有 debug、info、warning、error 等多个级别，级别越高越严重，level 设置决定哪些会被显示。比到处 print 好的是日志能分级、能开关、能方便地写进文件。',
+    analogy: '打个比方：print 像上课随便举手喊一句，日志像正式记到班级日志本里；到晚上（排查时）翻班级日志，每一条都写着“几点发生了什么”。',
+    terms: [
+      { term: 'logging', zh: '日志（模块）', note: 'Python 自带的、用于记录运行信息的模块' },
+      { term: 'level', zh: '级别', note: '日志的严重程度，如 DEBUG、INFO、WARNING、ERROR' },
+      { term: 'basicConfig', zh: '基础配置', note: '一次性设好日志显示级别、格式等' },
+      { term: 'INFO', zh: '信息级', note: '用来记“正常进行中”的重要信息的一种级别' }
+    ],
+    steps: [
+      'import logging 引入模块',
+      'logging.basicConfig(level=logging.INFO) 设全局基础配置',
+      '在关键位置打 logging.info("正在读取文件") 等信息',
+      '根据严重程度换用 logging.warning / logging.error',
+      '用 format 参数控制每行日志长什么样'
+    ],
+    examples: [
+      {
+        title: '分级打印不同信息',
+        code: "import logging\nlogging.basicConfig(level=logging.INFO, format='%(message)s')\n\nlogging.debug('调试细节，默认不显示')\nlogging.info('程序开始处理')\nlogging.warning('磁盘剩余空间不多')",
+        output: '程序开始处理\n磁盘剩余空间不多',
+        note: 'level=logging.INFO 表示只显示 INFO 及以上，所以 DEBUG 那条被过滤掉了；format 去掉多余前缀，让输出干净。',
+        verify: true
+      },
+      {
+        title: '给日志加上时间',
+        code: "import logging\nlogging.basicConfig(\n    level=logging.INFO,\n    format='%(asctime)s %(levelname)s: %(message)s'\n)\nlogging.error('连接失败，请重试')",
+        output: '2026-01-01 10:00:00,123 ERROR: 连接失败，请重试',
+        note: '%(asctime)s 会写入当前时间。为了演示这个例子，这里给的是格式样例，具体时间以你运行时为准。',
+        verify: true
+      },
+      {
+        title: '把代码写在日志里一起记下',
+        code: "import logging\nlogging.basicConfig(level=logging.INFO, format='%(levelname)s %(message)s')\n\nfor name in ['小美', '小刚']:\n    logging.info('正在处理 ' + name)\nlogging.warning('任务完成，但有 1 个失败')",
+        output: 'INFO 正在处理 小美\nINFO 正在处理 小刚\nWARNING 任务完成，但有 1 个失败',
+        note: '用变量的值拼进日志消息，就能在记录里看到“当时处理到谁了”，非常方便排查。',
+        verify: true
+      }
+    ],
+    pitfalls: [
+      {
+        title: '把敏感信息写进日志',
+        bad: "logging.info('用户密码是 ' + password)",
+        good: "logging.info('用户 ' + user_id + ' 登录成功')",
+        note: '日志会长期保存并可能被很多人看到，别把密码、账号等敏感信息记进去。'
+      },
+      {
+        title: '到处用 print 当日志',
+        bad: "print('开始读取')\nprint('读取结束')",
+        good: "logging.info('开始读取')\nlogging.info('读取结束')",
+        note: 'print 不好分级、不好一次关掉、也不好统一格式；正式程序用 logging 更清晰。'
+      },
+      {
+        title: '错误处理前忘了记日志',
+        bad: 'except ValueError:\n    return -1',
+        good: 'except ValueError as e:\n    logging.warning("参数有误: %s", e)\n    return -1',
+        note: '吞掉错误前先用日志记一笔，之后回看才知道这里发生过什么。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '用日志打印“开始”和“完成”两条 INFO，并把一条错误写为 ERROR 级别。',
+        starter: "import logging\n# TODO: 用 basicConfig 设好 INFO 级别，再用 logging 打印三条不同信息",
+        answer: "import logging\nlogging.basicConfig(level=logging.INFO, format='%(message)s')\n\nlogging.info('开始')\nlogging.info('完成')\nlogging.error('失败了')",
+        output: '开始\n完成\n失败了',
+        hint: 'basicConfig 的 level 决定能显示哪些级别；INFO 之上都显示，看三条是否都出来了。'
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '把日志级别设成 logging.INFO 后，哪一条不会被显示？',
+        options: ['logging.info(...)', 'logging.warning(...)', 'logging.debug(...)', 'logging.error(...)'],
+        answer: 2,
+        explain: 'INFO 及以上才显示，DEBUG 比 INFO 低，会被过滤掉。'
+      },
+      {
+        type: 'judge',
+        question: '写日志时应该把用户的密码也记进去，方便排查登录问题。',
+        answer: false,
+        explain: '日志可能长期保存、被许多人看到，绝不能记录密码等敏感信息。'
       }
     ]
   }

@@ -1,409 +1,561 @@
 /**
- * 第七阶段：数据与 API（约 1 小时）
+ * 第七阶段：进阶选修（约 105 分钟）
+ * 主线之外按需选学的高级特性，面向从未写过代码的人。
  * 内容规范见 docs/content-schema.md
  */
 export default [
   {
-    id: 'json',
-    title: 'JSON 处理',
+    id: 'lambda-sorted',
+    title: 'lambda 与 sorted：灵活排序',
     phase: 7,
     order: 1,
-    minutes: 12,
-    rating: { python: 2, java: 1, ai: 5 },
-    summary: 'json.dumps / json.loads 在字典与 JSON 文本之间转换；LLM 返回值和工具参数全是 JSON。',
-    keywords: ['json', 'dumps', 'loads', 'ensure_ascii', '序列化', 'Jackson', 'LLM 输出'],
-    tip: 'Java 开发者提示：json 模块 ≈ Jackson，但 dict 与 JSON 对象几乎一一对应，不需要为每种结构建类。',
-    what: 'json.dumps 把 Python 对象转成 JSON 字符串，json.loads 把 JSON 字符串转回 Python 对象。对应关系：dict↔object、list↔array、str↔string、int/float↔number、True/False↔true/false、None↔null。写接口和解析 LLM 输出都要用它；中文要加 ensure_ascii=False，否则会被转成 \\uXXXX。',
-    javaCompare: [
-      {
-        title: '对象与 JSON 互转',
-        java: 'ObjectMapper mapper = new ObjectMapper();\nString s = mapper.writeValueAsString(map);\nMap<String, Object> back = mapper.readValue(s, Map.class);',
-        python: 's = json.dumps(data)\nback = json.loads(s)',
-        diff: 'Python 的 dict 天然就是 JSON object 的模型，不需要创建 DTO 类（要类型安全时再用 Pydantic）。'
-      }
+    minutes: 25,
+    rating: { level: 3, must: 3 },
+    summary: 'lambda 匿名函数配合 sorted 的 key 参数，能用一行代码自定义几乎任何排序规则。',
+    keywords: ['lambda', 'sorted', 'key', '匿名函数', '排序', 'reverse'],
+    tip: '零基础提示：lambda 就是一个没有名字的小函数，只在"用一次"的场合用；排序难就难在想清楚"按什么排"，key 就是回答这个问题的地方。',
+    what: 'lambda 的写法是 lambda 参数: 返回的结果，它不需要 def 和函数名，常用于要立刻传给别人的场景。sorted(集合, key=函数) 会先调 key 算出每个元素的"排序依据"再据此排序，key 常常就用 lambda 来写。默认按依据从小到大排（升序），想反过来就加 reverse=True。记住 sorted 返回一个新的排好序的列表、原集合不变，而列表自己的 .sort() 才会直接改动原列表。',
+    analogy: '打个比方：一群人要按身高排队，长什么样不重要，关键是"按身高排"还是"按年龄排"。人群就是原始数据，key 就是你说的那条"按身高排"的规则，lambda 就是顺手把这条规则写下来的小纸条。',
+    terms: [
+      { term: 'lambda', zh: '匿名函数', note: '没有名字的一行小函数，写法是 lambda 参数: 返回结果' },
+      { term: 'key', zh: '排序依据', note: '传给 sorted 的一个函数，用它算出的值来决定谁先谁后' },
+      { term: 'sorted', zh: '排序函数', note: '返回新排序列表，不改动原集合' },
+      { term: 'reverse', zh: '反向', note: '设成 True 就从大到小排' }
+    ],
+    steps: [
+      '先想清楚"按什么排"，比如按字符串长度、按元组的第几个元素。',
+      '把这条规则写成一个函数：能直接用的就写 key=len，要自己定就写 lambda。',
+      '决定顺序：默认升序，要降序就加 reverse=True。'
     ],
     examples: [
       {
-        title: '序列化与反序列化',
-        code: 'import json\n\ndata = {"model": "deepseek-chat", "temperature": 0.7, "stream": False}\ntext = json.dumps(data)\nprint(text)\nprint(json.loads(text)["model"])',
-        output: '{"model": "deepseek-chat", "temperature": 0.7, "stream": false}\ndeepseek-chat',
-        note: '注意 Python 的 False 被序列化成小写 false。'
+        title: '按字符串长度排序',
+        code: `words = ["pear", "grape", "kiwi", "apple"]
+print(sorted(words, key=len))`,
+        output: "['pear', 'kiwi', 'grape', 'apple']",
+        note: 'len 计算每个单词的长度，一样长（pear 和 kiwi 都是 4）时保持原来的先后顺序。'
       },
       {
-        title: '中文与格式化输出',
-        code: 'import json\n\ndata = {"问题": "你好", "选项": ["A", "B"]}\nprint(json.dumps(data))\nprint(json.dumps(data, ensure_ascii=False, indent=2))',
-        output: '{"\\u95ee\\u9898": "\\u4f60\\u597d", "\\u9009\\u9879": ["A", "B"]}\n{\n  "问题": "你好",\n  "选项": [\n    "A",\n    "B"\n  ]\n}',
-        note: '默认 ensure_ascii=True 会把中文转义；调试接口时建议关闭并加 indent。'
+        title: '用 lambda 按元组的第二项排序',
+        code: `people = [("林晚", 20), ("阿明", 18), ("小林", 30)]
+people.sort(key=lambda p: p[1])
+print(people)`,
+        output: "[('阿明', 18), ('林晚', 20), ('小林', 30)]",
+        note: 'p[1] 取出每个人元组的第二个值（年龄），这样排出来就是从年轻到年长。'
       },
       {
-        title: '解析 LLM 返回的 JSON',
-        code: 'import json, re\n\nraw = "```json\\n{\\"tool\\": \\"search\\", \\"args\\": {\\"q\\": \\"天气\\"}}\\n```"\nmatch = re.search(r"\\{.*\\}", raw, re.S)\ndata = json.loads(match.group())\nprint(data["tool"], data["args"]["q"])',
-        output: 'search 天气',
-        note: '模型经常把 JSON 包在代码块里，生产代码要先用正则或 json.JSONDecoder 抽出主体再解析。'
+        title: 'reverse 让分数从高到低',
+        code: `students = [("林晚", 92), ("阿明", 88), ("小林", 95)]
+print(sorted(students, key=lambda s: s[1], reverse=True))`,
+        output: "[('小林', 95), ('林晚', 92), ('阿明', 88)]",
+        note: 'reverse=True 让排序结果反过来，这里是考得高的在前。'
       }
     ],
     pitfalls: [
       {
-        title: '直接 loads 带代码块的输出',
-        bad: 'json.loads("```json\\n{}\\n```")   # JSONDecodeError',
-        good: '先剥离 ```json 包裹，再用 json.loads',
-        note: '这是接 LLM 时最高频的报错，务必加容错与日志。'
+        title: '忘了给元组指定 key，默认按第一项排',
+        bad: `sorted([("b", 2), ("a", 1)])`,
+        good: `sorted([("b", 2), ("a", 1)], key=lambda x: x[1])`,
+        note: '元组直接排默认比较第一个元素，要按别的字段排必须写明 key。'
       },
       {
-        title: '中文变成 \\uXXXX',
-        bad: 'json.dumps({"名字": "张三"})',
-        good: 'json.dumps({"名字": "张三"}, ensure_ascii=False)',
-        note: '写配置文件、返回接口响应时通常希望保留中文。'
+        title: 'lambda 里写多行复杂逻辑',
+        bad: `lambda x: \\n    if x > 0:\\n        return 1`,
+        good: `def rule(x):\\n    if x > 0:\\n        return 1\\n    return 0`,
+        note: 'lambda 只能写一行表达式，逻辑一多就退回用普通 def 定义函数。'
       },
       {
-        title: '把不支持的类型塞进去',
-        bad: 'json.dumps({"t": datetime.now()})   # TypeError: Object of type datetime is not JSON serializable',
-        good: 'json.dumps({"t": datetime.now().isoformat()})',
-        note: 'datetime、set、自定义类都不能直接序列化，要转成字符串或列表。'
+        title: '混淆 sorted 和 list.sort',
+        bad: `data = sorted(data)  # 以为 data 被改了？不，返回的是新列表`,
+        good: `new_data = sorted(data)\\ndata.sort()  # sort 才是在原地改`,
+        note: 'sorted 改不了原变量，结果要接住；要在原列表上改就用 .sort()。'
       }
     ],
     practice: [
       {
-        prompt: '把字典 {"name": "张三", "age": 20} 转成 JSON 字符串（保留中文）并打印。',
-        starter: 'import json\n\nuser = {"name": "张三", "age": 20}\n# TODO: 打印 JSON 字符串\n',
-        answer: 'import json\n\nuser = {"name": "张三", "age": 20}\nprint(json.dumps(user, ensure_ascii=False))',
-        output: '{"name": "张三", "age": 20}',
-        hint: '记得 ensure_ascii=False，否则中文会变成转义序列。'
+        prompt: '把字符串列表按长度从短到长排序并打印：["apple", "kiwi", "banana", "plum"]。',
+        starter: `words = ["apple", "kiwi", "banana", "plum"]
+# TODO: 用 sorted 和 key=len 排序
+`,
+        answer: `words = ["apple", "kiwi", "banana", "plum"]
+print(sorted(words, key=len))`,
+        output: "['kiwi', 'plum', 'apple', 'banana']",
+        hint: 'kiwi 和 plum 都长 4，排在前，且保持原来的先后。'
       }
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'Python 的 None 用 json.dumps 序列化后是？',
-        options: ['None', 'null', '"None"', 'undefined'],
+        question: 'sorted(数据, key=函数) 里的 key 参数负责什么？',
+        options: ['决定是否原地改动原数据', '决定"按什么值"来排序的函数', '决定返回几个元素', '决定是否去掉重复'],
         answer: 1,
-        explain: 'JSON 标准没有 None，对应表示是 null。'
-      },
-      {
-        type: 'judge',
-        question: 'json.dumps 默认会把中文转义成 \\uXXXX 形式。',
-        answer: true,
-        explain: '这是 ensure_ascii=True 的默认行为，需要保留中文时显式设为 False。'
+        explain: 'key 先算出每个元素的排序依据，Python 再按这个依据排。'
       },
       {
         type: 'code',
-        question: '补全代码，把 JSON 字符串解析成 Python 对象。',
-        code: 'import json\ntext = \'{"ok": true}\'\ndata = json.__________',
-        answer: 'loads(text)',
-        accept: ['loads(text)'],
-        explain: 'loads = load string，处理字符串；load 处理文件对象。'
+        question: '补全代码：用 lambda 按元组第二个元素（分数）排序。',
+        code: `students = [("林晚", 88), ("阿明", 95)]
+print(sorted(students, key=______))`,
+        answer: 'lambda s: s[1]',
+        accept: ['lambda s: s[1]'],
+        explain: 'lambda s: s[1] 取出每个元组的第二个值作为排序依据。'
+      },
+      {
+        type: 'judge',
+        question: '调用 sorted(列表) 会直接修改原来的列表。',
+        answer: false,
+        explain: 'sorted 返回新的排序列表，原列表不被改动；要原地改得用 .sort()。'
       }
     ]
   },
   {
-    id: 'file-io',
-    title: '文件操作',
+    id: 'generator-yield',
+    title: '生成器与 yield：按需产出',
     phase: 7,
     order: 2,
-    minutes: 12,
-    rating: { python: 2, java: 2, ai: 4 },
-    summary: 'open 的模式与编码、with 自动关闭、pathlib 路径操作；RAG 读文档的第一步。',
-    keywords: ['open', 'read', 'write', 'pathlib', 'encoding', '文件', '遍历目录'],
-    tip: 'Java 开发者提示：open(mode) 的 "r/w/a" 对应 Java 的 Reader/Writer 模式，中文文本务必显式 encoding="utf-8"。',
-    what: 'open(name, mode, encoding) 打开文件，常用模式：r 读、w 覆盖写、a 追加、b 二进制。读整文件用 read()，按行遍历用 for line in f，写用 write/writelines。总是配合 with 使用以保证关闭。处理路径用 pathlib.Path：p.glob("*.md") 遍历、p.read_text() 直接读、p.name/suffix/parent 取部件。',
-    javaCompare: [
-      {
-        title: '按行读文件',
-        java: 'try (var lines = Files.lines(Path.of("a.txt"))) {\n    lines.forEach(System.out::println);\n}',
-        python: 'from pathlib import Path\n\nfor line in Path("a.txt").read_text(encoding="utf-8").splitlines():\n    print(line)',
-        diff: 'Python 直接 for line in open(...) 即可惰性逐行读，不需要 Stream 与 try-with-resources 组合。'
-      }
+    minutes: 26,
+    rating: { level: 4, must: 3 },
+    summary: '用 yield 写生成器，数据"边算边给"而不是一次把一整批全塞进内存。',
+    keywords: ['yield', '生成器', 'generator', '惰性', '内存', '迭代'],
+    tip: '零基础提示：把"一口气造一整个列表"换成"要一个给一个"这种思路，就是生成器的核心，累数据多的时候它特别省内存。',
+    what: '普通函数用 return 一次性返回结果，带着 yield 的函数叫生成器函数：它执行到 yield 会交出一个值并暂停住，下次继续从暂停处往下走。所以它是"你问一次、它给一个"，边算边给，而不是像一个大列表那样一次全部造好放在内存里。可以 for x in 生成器 这样遍历，也可以用 list(生成器) 一次性收齐，或用 sum、max 这些直接消化。用括号写 (i for i in range(10)) 则得到一个生成器对象，跟 [i for i in range(10)] 的大列表形成对比。',
+    analogy: '打个比方：一箱水果不能一次搬进冰箱，就用保鲜盒一小份一小份地装进去——装一份拎进一份。列表就是先把整箱都摆在地上（全占内存），生成器就是"要几份装几份"，手上有多少算多少，不囤货。',
+    terms: [
+      { term: 'yield', zh: '让出/吐出', note: '函数里出现它此函数就变成生成器，每执行到它会交出一个值并暂停' },
+      { term: 'generator', zh: '生成器', note: '按需产生值的一类对象，可以 for 遍历' },
+      { term: '惰性求值', zh: '用到才计算', note: '不一次性全算完，真正被要的时候才算出下一个值' },
+      { term: '迭代', zh: '逐个取出', note: '用 for 循环从头到尾把每个元素取一遍' }
+    ],
+    steps: [
+      '把一个普通函数的 return 换成 yield，逐个交出值。',
+      '用 for x in 生成器 或 list(生成器) 来消费它。',
+      '数据量很大时优先用生成器，避免一次占满内存。'
     ],
     examples: [
       {
-        title: '写文件与追加',
-        code: 'with open("notes.txt", "w", encoding="utf-8") as f:\n    f.write("第一行\\n")\n\nwith open("notes.txt", "a", encoding="utf-8") as f:\n    f.write("第二行\\n")\n\nwith open("notes.txt", encoding="utf-8") as f:\n    print(f.read().strip().splitlines())',
-        output: "['第一行', '第二行']",
-        note: '"w" 会清空原内容，"a" 在末尾追加。'
+        title: 'yield 逐个交出数字',
+        code: `def count_up(n):
+    i = 0
+    while i < n:
+        yield i
+        i += 1
+
+for x in count_up(3):
+    print(x)`,
+        output: `0
+1
+2`,
+        note: '每次 for 循环要一个，count_up 就 yield 一个，交完 2 后 i 到 3 不再满足条件就自然结束。'
       },
       {
-        title: 'pathlib 处理路径与目录',
-        code: 'from pathlib import Path\n\np = Path("docs/knowledge.md")\nprint(p.name, p.suffix, p.parent)\nbase = Path(".")\nprint(sorted(x.name for x in base.glob("*.js"))[:2])',
-        output: "knowledge.md .md docs\n['vite.config.js']",
-        note: '当前目录下只有一个 .js 文件，所以结果里只有 vite.config.js。'
+        title: '列表推导式 vs 生成器表达式',
+        code: `nums = [i for i in range(3)]      # 一口气全造出来装进列表
+gen = (i for i in range(3))       # 生成器，要一个给一个
+print(nums)
+print(list(gen))`,
+        output: `[0, 1, 2]
+[0, 1, 2]`,
+        note: '两者结果一样，但生成器不一次性占用全部内存，处理成万上亿个数时差别明显。'
       },
       {
-        title: '读写 JSON 文件',
-        code: 'import json\nfrom pathlib import Path\n\ndata = [{"id": 1, "text": "Python 支持异步"}]\npath = Path("kb.json")\npath.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")\nprint(json.loads(path.read_text(encoding="utf-8"))[0]["text"])',
-        output: 'Python 支持异步',
-        note: '把知识库文档存成 JSON 再加载，是 RAG 里最小可用的数据形态。'
+        title: '生成器和 sum 一起用',
+        code: `def squared(n):
+    for i in range(n):
+        yield i * i
+
+print(sum(squared(4)))`,
+        output: '14',
+        note: 'sum 一边从生成器拿一边累加，0+1+4+9=14，全程只存着一个数。'
       }
     ],
     pitfalls: [
       {
-        title: '忘记 encoding 导致乱码',
-        bad: 'open("cn.txt", "w").write("中文")',
-        good: 'open("cn.txt", "w", encoding="utf-8")',
-        note: 'Windows 默认编码不是 UTF-8，中文写入后读出来常变成乱码。'
+        title: '生成器只能从头遍历一次',
+        bad: `g = (i for i in range(3))
+list(g)
+list(g)  # 这次是空列表`,
+        good: `g = (i for i in range(3))
+print(sum(g))   # 一次性用掉`,
+        note: '生成器是被"消费"掉的，遍历完就空，想要多份就用列表存一份或重新建一个。'
       },
       {
-        title: '用 "w" 误覆盖文件',
-        bad: 'open("config.json", "w")   # 原内容被清空',
-        good: '确认要覆盖再写；追加用 "a"，改动前先备份',
-        note: '写配置文件前最好先读出来改，再整体写回。'
+        title: '把 return 混进生成器函数当普通函数',
+        bad: `def f():
+    yield 1
+    return 5  # 这个 5 不会成为结果`,
+        good: `def f():
+    yield 1
+    yield 2`,
+        note: 'return 只负责让生成器结束，返回的值不当作输出，想要就继续用 yield。'
       },
       {
-        title: '不存在的目录直接写',
-        bad: 'open("data/out/a.txt", "w")   # FileNotFoundError: 目录不存在',
-        good: 'Path("data/out").mkdir(parents=True, exist_ok=True)',
-        note: 'open 只创建文件，不会自动创建父目录。'
+        title: '为只取前几个而去遍历超长生成器',
+        bad: `for x in huge_generator:  # 数据太多时没必要全跑`,
+        good: `from itertools import islice
+
+for x in islice(huge_generator, 3):
+    print(x)`,
+        note: '只要前几个就用 islice 截取，避免把整个生成器跑完。'
       }
     ],
     practice: [
       {
-        prompt: '把 "hello" 写入 out.txt（utf-8），再读出来打印。',
-        starter: 'from pathlib import Path\n\n# TODO: 写入并读出打印\n',
-        answer: 'from pathlib import Path\n\np = Path("out.txt")\np.write_text("hello", encoding="utf-8")\nprint(p.read_text(encoding="utf-8"))',
-        output: 'hello',
-        hint: 'pathlib 的 write_text / read_text 都支持 encoding 参数。'
+        prompt: '写一个生成器，依次产出前 3 个偶数 0、2、4，然后打印成列表。',
+        starter: `def even_up_to(n):
+    # TODO: 用 yield 产出 n 个偶数
+    pass
+
+print(list(even_up_to(3)))`,
+        answer: `def even_up_to(n):
+    for i in range(n):
+        yield i * 2
+
+print(list(even_up_to(3)))`,
+        output: '[0, 2, 4]',
+        hint: 'i * 2 当 i 是 0、1、2 时正好得到 0、2、4。'
       }
     ],
     quiz: [
       {
         type: 'choice',
-        question: '模式 "a" 打开文件表示？',
-        options: ['读取', '覆盖写入', '追加写入', '二进制读写'],
-        answer: 2,
-        explain: '"a" 在文件末尾追加内容，不删除原有数据。'
+        question: '相比一次性建一个装满的大列表，生成器最主要的优势是？',
+        options: ['每行代码更短', '更省内存，按需取值边算边给', '速度一定更快', '支持用下标直接取某一位'],
+        answer: 1,
+        explain: '生成器不一次性把所有值都造出来放内存里，数据量大时才不爆内存。'
+      },
+      {
+        type: 'code',
+        question: '补全代码，让生成器依次产出 1 和 2。',
+        code: `def count_up():
+    yield 1
+    yield 2
+
+print(list(__________()))`,
+        answer: 'count_up',
+        accept: ['count_up'],
+        explain: '函数名是 count_up，加括号再调用它才拿到生成器。'
       },
       {
         type: 'judge',
-        question: '在 Windows 上处理中文文本时建议显式指定 encoding="utf-8"。',
-        answer: true,
-        explain: 'Windows 默认编码可能是 GBK，与 Linux 服务器行为不一致会引发乱码。'
+        question: '同一个生成器对象可以多次从头遍历，每次都能拿到全部元素。',
+        answer: false,
+        explain: '生成器是一次性消费的，遍历一遍之后就空了，需要重新调用函数得到新的生成器。'
       }
     ]
   },
   {
-    id: 'http',
-    title: 'HTTP 基础与请求',
+    id: 'decorators',
+    title: '装饰器：给函数"加外衣"',
     phase: 7,
     order: 3,
-    minutes: 10,
-    rating: { python: 2, java: 2, ai: 5 },
-    summary: '方法、URL、请求头、请求体、状态码；调用 LLM 接口本质就是一次 HTTP 请求。',
-    keywords: ['HTTP', 'GET', 'POST', 'Header', '状态码', 'curl', 'REST'],
-    tip: 'Java 开发者提示：这部分和 Java 侧完全一致；差别只是 Python 用 requests/httpx 上手更快。',
-    what: '一次 HTTP 请求由方法（GET 查询、POST 提交、PUT/PATCH 更新、DELETE 删除）、URL、请求头（Header）和请求体（Body）组成；响应包含状态码、Header 和 Body。调用 LLM 就是 POST 到 /v1/chat/completions，带 Authorization 头和 JSON 请求体。状态码 2xx 成功、4xx 客户端错误（401 密钥错、404 路径错、429 限流）、5xx 服务端错误。',
-    javaCompare: [
-      {
-        title: '发一个 POST 请求',
-        java: 'HttpRequest req = HttpRequest.newBuilder()\n    .uri(URI.create(url))\n    .header("Authorization", "Bearer " + key)\n    .header("Content-Type", "application/json")\n    .POST(HttpRequest.BodyPublishers.ofString(body))\n    .build();',
-        python: 'requests.post(url, headers=headers, json=body, timeout=30)',
-        diff: '协议概念完全一致，Python 侧代码量小很多。'
-      }
+    minutes: 28,
+    rating: { level: 4, must: 3 },
+    summary: '装饰器是在函数外面再套一层函数，用 @ 语法给原函数统一加日志、计时等外衣。',
+    keywords: ['装饰器', '@', 'decorator', 'wrapper', '日志', '外层函数'],
+    tip: '零基础提示：装饰器不改变原函数的"内脏"，只是给它套上一件外衣，进出都先经过外衣；第一次看 @ 看不太懂是正常的，动手抄一遍就通。',
+    what: '装饰器本身是个函数，它接收另一个函数，再返回一个"包了一层新逻辑的函数"（常叫 wrapper）。用 @装饰器名 写在某个函数定义的上方，就表示"把这个函数包上这件外衣"。wrapper 里用 *args, **kwargs 原样接住和转发参数，就能做到只在进出时做点额外的事（比如打印日志、统计次数、测时间），函数本体一行都不用改。这样批量给很多函数加同样的能力，比在每个函数里重复写日志代码清爽得多。',
+    analogy: '打个比方：给手机套个手机壳，手机本身的屏幕、摄像头一样没变，只是在外面多包了一层。装饰器就是那个手机壳——你的原函数是手机，@ 语法把壳套上去，进出都先经过这层壳（比如开机壳时记一笔日志）。',
+    terms: [
+      { term: 'decorator', zh: '装饰器', note: '接收一个函数、返回新函数的函数，用 @ 语法套在原函数外' },
+      { term: '@', zh: 'at 语法糖', note: '写在一个函数上方，表示把这个函数交给装饰器包一层' },
+      { term: 'wrapper', zh: '包装函数', note: '装饰器里返回的那个"多了一层逻辑"的函数' },
+      { term: 'nonlocal', zh: '外层变量声明', note: '让内层函数能读写外围函数里的变量' }
     ],
     examples: [
       {
-        title: '请求的组成（curl 视角）',
-        code: 'curl -X POST https://api.deepseek.com/chat/completions \\\n  -H "Authorization: Bearer $LLM_API_KEY" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"model": "deepseek-chat", "messages": [{"role": "user", "content": "你好"}]}\'',
-        output: 'HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\n  "id": "chat-1",\n  "choices": [\n    {"index": 0, "message": {"role": "assistant", "content": "你好，有什么可以帮助你的？"}, "finish_reason": "stop"}\n  ],\n  "usage": {"prompt_tokens": 8, "completion_tokens": 12}\n}',
-        note: '调用 LLM 的请求/响应结构就是这样的 JSON；Authorization 头携带 API Key。'
+        title: '给函数加一条调用日志',
+        code: `def log_call(func):
+    def wrapper(*args, **kwargs):
+        print(f"调用 {func.__name__}")
+        return func(*args, **kwargs)
+    return wrapper
+
+@log_call
+def say(name):
+    return f"你好,{name}"
+
+print(say("林晚"))`,
+        output: `调用 say
+你好,林晚`,
+        note: '打印完再原样返回原函数的结果，所以 say 的输出没被改动。'
       },
       {
-        title: '常见状态码的含义',
-        code: 'GET  /health          -> 200 OK        # 服务正常\nPOST /chat  无 Key    -> 401 Unauthorized    # 密钥缺失或错误\nGET  /items/999       -> 404 Not Found        # 资源不存在\nPOST /chat  高频调用  -> 429 Too Many Requests  # 触发限流，需要退避重试\nGET  /chat            -> 405 Method Not Allowed  # 方法用错\nPOST /chat  参数非法  -> 422 Unprocessable Entity # FastAPI 校验失败',
-        output: '',
-        note: '把状态码当协议用：429 要重试、4xx 不要重试、5xx 可以有限重试。'
+        title: '统计函数被调用了多少次',
+        code: `def count_calls(func):
+    n = 0
+    def wrapper(*args, **kwargs):
+        nonlocal n
+        n += 1
+        print(f"第 {n} 次调用")
+        return func(*args, **kwargs)
+    return wrapper
+
+@count_calls
+def hi():
+    return "hi"
+
+print(hi())
+print(hi())`,
+        output: `第 1 次调用
+hi
+第 2 次调用
+hi`,
+        note: 'nonlocal n 让 wrapper 能累加外层变量 n，两次调用计数分别变成 1 和 2。'
+      },
+      {
+        title: '计时外衣：记录一次任务',
+        code: `import time
+
+def timer(func):
+    def wrapper(*args, **kwargs):
+        print("计时开始")
+        result = func(*args, **kwargs)
+        print("计时结束")
+        return result
+    return wrapper
+
+@timer
+def double(x):
+    return x * 2
+
+print(double(21))`,
+        output: `计时开始
+计时结束
+42`,
+        note: '真正的测时间由 start=time.perf_counter() 和结束相减实现，这里先体会"进出都经过外衣"的结构。'
       }
     ],
     pitfalls: [
       {
-        title: '忽略状态码直接解析 JSON',
-        bad: 'data = requests.post(url, json=body).json()',
-        good: 'resp = requests.post(url, json=body, timeout=30)\nresp.raise_for_status()\ndata = resp.json()',
-        note: '401/429 时返回体往往不是预期结构，直接解析会抛出难懂的异常。'
+        title: '装饰器忘了把结果 return 回去',
+        bad: `def log(func):
+    def wrapper(*args, **kwargs):
+        print("记录")
+        # 漏了 return func(...)
+    return wrapper
+
+@log
+def add(a, b):
+    return a + b
+
+print(add(2, 3))`,
+        good: `def log(func):
+    def wrapper(*args, **kwargs):
+        print("记录")
+        return func(*args, **kwargs)
+    return wrapper`,
+        note: 'wrapper 必须把 func 的结果原样 return 出来，否则外面拿到的永远是 None。'
       },
       {
-        title: '不设超时',
-        bad: 'requests.post(url, json=body)',
-        good: 'requests.post(url, json=body, timeout=(5, 30))',
-        note: '默认不超时，服务端不响应时程序会一直挂住。'
+        title: '@ 忘记加括号/写错名字',
+        bad: `@  # 缺装饰器名
+def f():
+    return 1`,
+        good: `def log(func):
+    ...
+@log
+def f():
+    return 1`,
+        note: '@ 后面必须跟一个已经定义好的装饰器函数名，且装饰器要在被装饰函数之前定义。'
+      },
+      {
+        title: '本来干净的函数被装饰后名字变了',
+        bad: `@log
+def add(a, b):
+    ...
+
+print(add.__name__)  # 变成 'wrapper' 而不是 'add'`,
+        good: `import functools
+
+def log(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper`,
+        note: '用 functools.wraps(func) 能把原函数的名字等信息保留下来，调试更方便。'
       }
     ],
     practice: [
       {
-        prompt: '写一条 curl 命令：GET 请求 http://127.0.0.1:8000/health（带 Accept: application/json 头）。',
-        starter: '# TODO: curl 命令\n',
-        answer: 'curl -X GET http://127.0.0.1:8000/health -H "Accept: application/json"',
-        output: '{"status":"ok"}',
-        hint: 'GET 可以省略 -X，直接 curl URL 也可以。'
+        prompt: '写一个装饰器 timer，在被装饰函数前后各打印一行，并让 double 函数正常返回结果。',
+        starter: `def timer(func):
+    def wrapper(*args, **kwargs):
+        # TODO: 打印开始、返回结果、打印结束
+        pass
+    return wrapper
+
+@timer
+def double(x):
+    return x * 2
+
+print(double(21))`,
+        answer: `def timer(func):
+    def wrapper(*args, **kwargs):
+        print("计时开始")
+        result = func(*args, **kwargs)
+        print("计时结束")
+        return result
+    return wrapper
+
+@timer
+def double(x):
+    return x * 2
+
+print(double(21))`,
+        output: `计时开始
+计时结束
+42`,
+        hint: '记住把 result 用 return 传回去，否则 double(21) 打印出来是 None。'
       }
     ],
     quiz: [
       {
         type: 'choice',
-        question: '调用 LLM 接口返回 429，通常表示？',
-        options: ['密钥错误', '请求过于频繁被限流', '路径不存在', '服务端崩溃'],
+        question: '在函数定义上方写的 @装饰器名 起到什么作用？',
+        options: ['立即调用并执行这个函数', '把这个函数包进装饰器，套上外衣', '传参数给这个函数', '删除这个函数的定义'],
         answer: 1,
-        explain: '429 Too Many Requests 是限流，应退避重试并降低并发。'
+        explain: '@ 定义时就把函数交给装饰器包装，之后调用走的都是包了外衣的版本。'
+      },
+      {
+        type: 'code',
+        question: '补全代码，让 hi 函数被 log 装饰器包起来。',
+        code: `def log(func):
+    def wrapper(*args, **kwargs):
+        print("开始")
+        return func(*args, **kwargs)
+    return wrapper
+
+@______
+def hi():
+    return "hi"
+
+print(hi())`,
+        answer: 'log',
+        accept: ['log'],
+        explain: '@ 后面跟装饰器函数名 log，表示给 hi 套上这件外衣。'
       },
       {
         type: 'judge',
-        question: 'API Key 一般放在 HTTP 请求头（如 Authorization）里传递。',
+        question: '装饰器必须把原函数的返回值原样 return 出去，否则调用结果会是 None。',
         answer: true,
-        explain: '放在 Header 里比放 URL 参数更安全，不会出现在日志与浏览器历史中。'
+        explain: 'wrapper 只在原函数结果上"经手"一遍，忘记 return 结果外层就接不到真值了。'
       }
     ]
   },
   {
-    id: 'requests',
-    title: 'requests 同步请求',
+    id: 'itertools',
+    title: 'itertools：好用的迭代工具箱',
     phase: 7,
     order: 4,
-    minutes: 10,
-    rating: { python: 2, java: 2, ai: 4 },
-    summary: '最常用的同步 HTTP 客户端；json= 参数、headers、timeout、raise_for_status 四件套。',
-    keywords: ['requests', 'requests.post', 'json=', 'headers', 'timeout', 'raise_for_status'],
-    tip: 'Java 开发者提示：requests 走 HttpClient/RestTemplate 的定位，但几乎不需要配置。',
-    what: 'requests.get(url, params=...) 发查询请求，requests.post(url, json=..., headers=...) 发 JSON 提交请求。返回的 Response 对象上常用：status_code、headers、text、json()、raise_for_status()。它是同步阻塞库，适合脚本、CLI 工具和简单的后端任务；在 async 路由里使用会阻塞事件循环，此时应换 httpx。',
-    javaCompare: [
-      {
-        title: 'POST JSON 并解析响应',
-        java: 'HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());\nString body = resp.body();',
-        python: 'resp = requests.post(url, json=payload, timeout=30)\nresp.raise_for_status()\nbody = resp.json()',
-        diff: 'requests 用 json= 参数自动序列化并设置 Content-Type，省掉手写 ObjectMapper 的步骤。'
-      }
+    minutes: 26,
+    rating: { level: 3, must: 2 },
+    summary: '用标准库 itertools 里的 chain、islice、cycle、combinations 等工具组合出各种迭代花样。',
+    keywords: ['itertools', 'chain', 'islice', 'cycle', 'combinations', '迭代工具'],
+    tip: '零基础提示：itertools 是 Python 自带的"迭代拼装工具箱"，需求正好命中某个工具时，几行就能省掉一长串 for 循环，先认识几个常用的即可。',
+    what: 'itertools 是标准库里专门摆弄"可迭代对象"的工具箱。chain 把好几个可迭代对象拼成一条长流；cycle 让它无限循环往复地给出元素；islice 像切片那样从迭代流里取一段（用它的次数跑在超长流上更省内存）；combinations 依次给出所有"选 r 个"的组合。这些函数的返回多是迭代器本身并不一次算完，配合 list() 或 for 才真正取出来。',
+    analogy: '打个比方：itertools 就像抽屉里整齐码好的小零件——链条（chain）把几段接一起、切片刀（islice）截一段、旋转托盘（cycle）转圈出料、组合卡片（combinations）列所有选法。需要哪种就抽哪种，不用自己拿胶带拼。',
+    terms: [
+      { term: 'itertools', zh: '迭代工具库', note: 'Python 标准库，提供组合与处理可迭代对象的小函数' },
+      { term: 'chain', zh: '拼接', note: '把多个可迭代对象接成一条连续的长流' },
+      { term: 'islice', zh: '迭代切片', note: '按住止序号从迭代流里截取一段' },
+      { term: 'cycle', zh: '无限循环', note: '不断循环往复地给出元素，取数要配合 islice 截断' },
+      { term: 'combinations', zh: '组合', note: '列举出所有"选 r 个"且不分先后顺序的选法' }
     ],
     examples: [
       {
-        title: '调用 LLM 兼容接口',
-        code: 'import requests\n\nresp = requests.post(\n    "https://api.deepseek.com/chat/completions",\n    headers={"Authorization": "Bearer sk-demo"},\n    json={"model": "deepseek-chat", "messages": [{"role": "user", "content": "你好"}]},\n    timeout=30,\n)\nprint(resp.status_code)\nprint(resp.json()["choices"][0]["message"]["content"])',
-        output: '200\n你好，有什么可以帮助你的？',
-        note: 'json= 会自动做 json.dumps 并加 Content-Type: application/json。'
+        title: 'chain 拼接多段数据',
+        code: `from itertools import chain
+
+a = [1, 2]
+b = [3, 4]
+print(list(chain(a, b)))`,
+        output: '[1, 2, 3, 4]',
+        note: 'chain 把两个列表接成一条流，不需要手写两个 for 再拼结果。'
       },
       {
-        title: '错误处理与重试',
-        code: 'import time, requests\n\ndef call_with_retry(url, payload, retries=2):\n    for attempt in range(retries + 1):\n        resp = requests.post(url, json=payload, timeout=10)\n        if resp.status_code == 429:\n            time.sleep(1)\n            continue\n        resp.raise_for_status()\n        return resp.json()\n    raise RuntimeError("重试次数用尽")\n\nprint(call_with_retry.__name__)',
-        output: 'call_with_retry',
-        note: '429 退避重试、其它错误直接抛，是 LLM 客户端里最实用的错误处理模板。'
+        title: 'islice 从超长流里取一段',
+        code: `from itertools import islice
+
+print(list(islice(range(100), 10, 15)))`,
+        output: '[10, 11, 12, 13, 14]',
+        note: 'range(100) 有 100 个数，islice 只要下标 10 到 14 这一段，不会把整段都装进内存。'
+      },
+      {
+        title: 'combinations 列出所有两两组合',
+        code: `from itertools import combinations
+
+print(list(combinations(range(4), 2)))`,
+        output: '[(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)]',
+        note: '从 0、1、2、3 里不重复地选 2 个，组合不分先后，(0,1) 和 (1,0) 只会出现一次。'
+      },
+      {
+        title: 'cycle 无限循环配 islice 截取',
+        code: `from itertools import cycle, islice
+
+alarm = cycle(["红", "绿"])
+print(list(islice(alarm, 5)))`,
+        output: "['红', '绿', '红', '绿', '红']",
+        note: 'cycle 会永远循环下去，所以一定要用 islice 限定只取 5 个，否则程序停不下来。'
       }
     ],
     pitfalls: [
       {
-        title: '用 data= 传 JSON',
-        bad: 'requests.post(url, data={"a": 1})   # 发成表单编码',
-        good: 'requests.post(url, json={"a": 1})',
-        note: 'data= 是表单/原始字节，json= 才是 JSON 请求体，两者在服务端解析结果完全不同。'
+        title: 'cycle 不给出口导致无线循环',
+        bad: `for x in cycle(["红", "绿"]):\n    print(x)  # 永远打印下去`,
+        good: `for x in islice(cycle(["红", "绿"]), 5):\n    print(x)`,
+        note: 'cycle 是无限的，直接遍历会一直跑，必须用 islice 或 break 设上限。'
       },
       {
-        title: '在 async 路由里用 requests',
-        bad: 'async def route():\n    requests.get(url)   # 阻塞事件循环',
-        good: 'async with httpx.AsyncClient() as client:\n    await client.get(url)',
-        note: '同步调用会卡住整个事件循环，所有并发的请求都被拖慢。'
+        title: '把迭代器当列表反复访问',
+        bad: `it = chain([1], [2])\nprint(list(it))  # 第一次有值\nprint(list(it))  # 第二次空`,
+        good: `it = chain([1], [2])\nprint(list(it))`,
+        note: '迭代器用一次就"耗尽"，需要复用时就先转成 list 存起来，或重新构造。'
       },
       {
-        title: '忘了超时与代理配置',
-        bad: 'requests.get(url)',
-        good: 'requests.get(url, timeout=(5, 30), proxies={"https": "http://127.0.0.1:7890"})',
-        note: '需要走本机代理时显式传 proxies；不设超时可能永久挂起。'
+        title: 'combinations 参数顺序写反',
+        bad: `combinations(2, range(4))  # 第一个应是可迭代对象`,
+        good: `combinations(range(4), 2)`,
+        note: '先写从哪个集合里选，再写一次选几个 r。'
       }
     ],
     practice: [
       {
-        prompt: '用 requests.post 向 http://127.0.0.1:8000/chat 发送 JSON {"message": "你好"}（不实际发起请求，只写代码）。',
-        starter: 'import requests\n\n# TODO: 写 requests.post 调用\n',
-        answer: 'import requests\n\nresp = requests.post("http://127.0.0.1:8000/chat", json={"message": "你好"}, timeout=10)\nprint(resp.json())',
-        output: "{'reply': '你好，有什么可以帮助你的？'}",
-        hint: '请求体用 json= 参数，并记得设 timeout。'
+        prompt: '用 itertools.chain 拼接 [1, 2] 和 ["a"]，再打印成列表。',
+        starter: `from itertools import chain
+
+# TODO: 拼接并打印
+`,
+        answer: `from itertools import chain
+
+print(list(chain([1, 2], ["a"])))`,
+        output: "[1, 2, 'a']",
+        hint: 'list(...) 把拼接出来的迭代流转成列表就能打印。'
       }
     ],
     quiz: [
       {
         type: 'choice',
-        question: 'requests.post(url, json=payload) 的 json= 参数会做什么？',
-        options: ['把内容当作表单提交', '自动序列化并设置 Content-Type: application/json', '跳过校验', '把响应转成 dict'],
+        question: 'itertools.cycle(["红", "绿"]) 会怎样？',
+        options: ['只给出前两个元素就结束', '无限循环往复地给出红、绿、红、绿…', '把所有元素随机打乱', '把红绿合并成一个字符串'],
         answer: 1,
-        explain: 'json= 会做 json.dumps 并自动加 JSON 的 Content-Type 头。'
+        explain: 'cycle 会无限循环地重复给出的元素，必须用 islice 或 break 提前终止。'
+      },
+      {
+        type: 'code',
+        question: '补全代码：让 cycle 只循环给出前 4 个元素。',
+        code: `from itertools import cycle, islice
+
+alarm = cycle(["红", "绿"])
+print(list(islice(alarm, ______)))`,
+        answer: '4',
+        accept: ['4', '4)'],
+        explain: 'islice(迭代器, 4) 只取前 4 个，结果是红、绿、红、绿。'
       },
       {
         type: 'judge',
-        question: 'res.json() 在响应体不是合法 JSON 时也会返回空字典。',
-        answer: false,
-        explain: '会抛 json.JSONDecodeError / requests.exceptions.JSONDecodeError。'
-      }
-    ]
-  },
-  {
-    id: 'httpx',
-    title: 'httpx 异步请求',
-    phase: 7,
-    order: 5,
-    minutes: 12,
-    rating: { python: 3, java: 2, ai: 5 },
-    summary: '异步 HTTP 客户端，支持 async/await 与并发；FastAPI 里调用 LLM 的标准选择。',
-    keywords: ['httpx', 'AsyncClient', 'async with', 'await', '并发', 'WebClient'],
-    tip: 'Java 开发者提示：httpx.AsyncClient ≈ WebClient，requests ≈ RestTemplate；async 接口用前者。',
-    what: 'httpx 的 API 与 requests 非常像（get/post/json=），但它同时提供同步和异步接口。异步用法是 async with httpx.AsyncClient() as client: 然后 await client.post(...)。AsyncClient 应该复用以共享连接池；并发调用多个接口时配合 asyncio.gather，性能提升非常明显。',
-    javaCompare: [
-      {
-        title: '异步 POST',
-        java: 'webClient.post().uri(url).bodyValue(payload).retrieve().bodyToMono(String.class)',
-        python: 'async with httpx.AsyncClient(timeout=30) as client:\n    resp = await client.post(url, json=payload)',
-        diff: 'Python 用 async with 管理客户端生命周期，await 等待响应；没有 Mono/Flux 这类响应式类型。'
-      }
-    ],
-    examples: [
-      {
-        title: '异步单次请求',
-        code: 'import asyncio, httpx\n\nasync def chat(message: str) -> str:\n    async with httpx.AsyncClient(timeout=30) as client:\n        resp = await client.post(\n            "http://127.0.0.1:8000/chat",\n            json={"message": message},\n        )\n        resp.raise_for_status()\n        return resp.json()["reply"]\n\nasync def main():\n    print(await chat("你好"))\n\nasyncio.run(main())',
-        output: '你好，有什么可以帮助你的？',
-        note: '生产代码会把 client 提升到应用级复用，而不是每次请求都新建。'
-      },
-      {
-        title: '并发请求多个接口',
-        code: 'import asyncio, httpx\n\nasync def fetch(client, path):\n    resp = await client.get(f"http://127.0.0.1:8000{path}")\n    return resp.json()\n\nasync def main():\n    async with httpx.AsyncClient(timeout=10) as client:\n        results = await asyncio.gather(fetch(client, "/health"), fetch(client, "/version"))\n    print(results)\n\nasyncio.run(main())',
-        output: "[{'status': 'ok'}, {'version': '1.0.0'}]",
-        note: '一个 client 连接池 + gather 并发，是批量调用外部接口的标准姿势。'
-      }
-    ],
-    pitfalls: [
-      {
-        title: '忘记 await 或 async with',
-        bad: 'resp = httpx.post(url, json=body)   # 在 async 函数里同步请求，照样阻塞',
-        good: 'async with httpx.AsyncClient() as client:\n    resp = await client.post(url, json=body)',
-        note: 'httpx 也提供同步 API，混淆两者会让异步代码失去并发能力。'
-      },
-      {
-        title: '每次请求都新建客户端',
-        bad: '每次调用都 httpx.AsyncClient() 进出一次',
-        good: '复用同一个 AsyncClient（可用 FastAPI 的 lifespan 管理）',
-        note: '频繁创建客户端会反复建立连接，浪费资源且更慢。'
-      },
-      {
-        title: '不处理超时与状态码',
-        bad: 'data = (await client.post(url, json=body)).json()',
-        good: 'resp = await client.post(url, json=body, timeout=30)\nresp.raise_for_status()',
-        note: '超时设成 httpx.Timeout(30, connect=5) 更精确，错误码要显式处理。'
-      }
-    ],
-    practice: [
-      {
-        prompt: '用 httpx.AsyncClient 发一个 GET 请求到 http://127.0.0.1:8000/health 并打印 JSON。',
-        starter: 'import asyncio, httpx\n\nasync def main():\n    # TODO: async with AsyncClient，await client.get，打印 json\n    pass\n\nasyncio.run(main())',
-        answer: 'import asyncio, httpx\n\nasync def main():\n    async with httpx.AsyncClient(timeout=10) as client:\n        resp = await client.get("http://127.0.0.1:8000/health")\n        print(resp.json())\n\nasyncio.run(main())',
-        output: "{'status': 'ok'}",
-        hint: '三步：async with 建客户端 → await client.get → resp.json()。'
-      }
-    ],
-    quiz: [
-      {
-        type: 'choice',
-        question: '在 FastAPI 的 async 路由里调用外部 HTTP 接口，推荐用？',
-        options: ['requests', 'urllib', 'httpx.AsyncClient', 'socket'],
-        answer: 2,
-        explain: '异步客户端才不会阻塞事件循环；requests 是阻塞式的，会拖慢全部并发请求。'
-      },
-      {
-        type: 'judge',
-        question: 'AsyncClient 建议复用以共享连接池。',
+        question: 'itertools 是 Python 内置标准库，导入（import itertools）后即可直接使用。',
         answer: true,
-        explain: '复用客户端可以避免反复建立 TCP/TLS 连接的开销。'
+        explain: 'itertools 随 Python 自带，无需安装额外第三方包。'
       }
     ]
   }
