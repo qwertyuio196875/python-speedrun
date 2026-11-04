@@ -179,7 +179,7 @@ async function onReset() {
   width: 34px;
   height: 34px;
   border-radius: 9px;
-  background: linear-gradient(135deg, var(--primary), #22b8cf);
+  background: var(--primary);
   color: #fff;
   font-family: var(--font-mono);
   font-size: 13px;

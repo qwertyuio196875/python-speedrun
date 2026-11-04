@@ -137,7 +137,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
   width: 26px;
   height: 26px;
   border-radius: 7px;
-  background: linear-gradient(135deg, var(--primary), #22b8cf);
+  background: var(--primary);
   color: #fff;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -199,7 +199,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 .pc-fill {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), #22b8cf);
+  background: var(--primary);
 }
 
 .pc-pct {

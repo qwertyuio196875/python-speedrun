@@ -197,7 +197,7 @@ onMounted(() => {
 
 .hero.done {
   border-color: var(--primary-border);
-  background: linear-gradient(180deg, var(--primary-weak), transparent 70%);
+  background: var(--primary-weak);
 }
 
 .hero-emoji {

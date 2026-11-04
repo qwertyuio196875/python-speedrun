@@ -1,26 +1,26 @@
 /* ============ 设计 Token（浅色 / 深色） ============ */
 :root {
-  --bg: #f4f6f8;
+  --bg: #f6f5f4;
   --surface: #ffffff;
-  --surface-2: #fafbfc;
-  --surface-3: #f0f3f7;
-  --text: #1b2430;
-  --text-strong: #0f1720;
-  --muted: #6a7686;
-  --border: #e2e7ee;
-  --border-strong: #cfd7e2;
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-weak: #e9f0ff;
-  --primary-border: #c7dbff;
-  --success: #15803d;
-  --success-weak: #e6f6ec;
-  --warning: #b45309;
-  --warning-weak: #fdf3e2;
-  --danger: #dc2626;
-  --code-bg: #0f172a;
-  --code-fg: #e6edf3;
-  --code-border: #1e293b;
+  --surface-2: #fbfaf9;
+  --surface-3: #f1efee;
+  --text: #1f2937;
+  --text-strong: #111827;
+  --muted: #6b7280;
+  --border: #e7e5e4;
+  --border-strong: #d6d3d1;
+  --primary: #a4552f;
+  --primary-hover: #8f4626;
+  --primary-weak: #f6ece7;
+  --primary-border: #e3c9ba;
+  --success: #3f7d5c;
+  --success-weak: #eef5f0;
+  --warning: #b4632a;
+  --warning-weak: #fdf1e7;
+  --danger: #b3453a;
+  --code-bg: #161616;
+  --code-fg: #e7e5e4;
+  --code-border: #2b2b2b;
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
   --shadow-md: 0 6px 18px rgba(16, 24, 40, 0.08);
   --radius: 10px;
@@ -34,27 +34,27 @@
 }
 
 html.dark {
-  --bg: #0c1118;
-  --surface: #141a23;
-  --surface-2: #101720;
-  --surface-3: #1b2330;
-  --text: #dfe7f1;
-  --text-strong: #f2f6fb;
-  --muted: #93a1b3;
-  --border: #232c39;
-  --border-strong: #313d4d;
-  --primary: #5b9bff;
-  --primary-hover: #7cb0ff;
-  --primary-weak: #16233a;
-  --primary-border: #2c4570;
-  --success: #4ade80;
-  --success-weak: #12291c;
-  --warning: #fbbf24;
-  --warning-weak: #2b2110;
-  --danger: #f87171;
-  --code-bg: #0a0f17;
-  --code-fg: #e6edf3;
-  --code-border: #1c2532;
+  --bg: #141414;
+  --surface: #1b1b1b;
+  --surface-2: #171717;
+  --surface-3: #232323;
+  --text: #e7e5e4;
+  --text-strong: #f5f5f4;
+  --muted: #a8a29e;
+  --border: #2f2f2f;
+  --border-strong: #4b4b4b;
+  --primary: #c9774b;
+  --primary-hover: #d8895c;
+  --primary-weak: #2a1c16;
+  --primary-border: #583b2c;
+  --success: #7bc99a;
+  --success-weak: #17251d;
+  --warning: #f4b76a;
+  --warning-weak: #2a2118;
+  --danger: #f2796b;
+  --code-bg: #111111;
+  --code-fg: #e7e5e4;
+  --code-border: #262626;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.45);
 }
@@ -295,7 +295,7 @@ html.dark .inline-code {
 .progress-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--primary), #22b8cf);
+  background: var(--primary);
   transition: width 0.35s ease;
 }
 
@@ -320,7 +320,7 @@ html.dark .inline-code {
 .code-title {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: #9fb0c7;
+  color: #a8a29e;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -334,7 +334,7 @@ html.dark .inline-code {
   padding: 1px 6px;
   border-radius: 4px;
   background: rgba(255, 255, 255, 0.08);
-  color: #b9c7db;
+  color: #d6d3d1;
 }
 
 .code-actions {
@@ -351,7 +351,7 @@ html.dark .inline-code {
   border-radius: 5px;
   border: 1px solid transparent;
   background: transparent;
-  color: #93a3b8;
+  color: #a8a29e;
   cursor: pointer;
   font-family: var(--font-sans);
   display: inline-flex;
@@ -427,13 +427,13 @@ html.dark .inline-code {
 
 /* 终端输出 */
 .terminal {
-  background: #070b12;
+  background: #111111;
   border-top: 1px dashed var(--code-border);
   padding: 10px 14px 12px;
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.6;
-  color: #b9f6ca;
+  color: #d6d3d1;
   white-space: pre-wrap;
   word-break: break-word;
 }
