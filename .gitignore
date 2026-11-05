@@ -25,3 +25,7 @@ Thumbs.db
 !.dev.vars.example
 .env*
 !.env.example
+
+# local tool dirs
+.openchamber/
+.openidea/
