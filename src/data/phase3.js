@@ -247,13 +247,14 @@ print(safe_divide(10, 0))`,
     summary: '把代码拆到多个 .py 文件，用 import 把别的文件里的函数搬进来复用。',
     keywords: ['模块', 'import', 'from', 'math', 'random', '拆分文件'],
     tip: '零基础提示：import 就像跟别人借东西——只需说"我要用 math"，就能用里面现成的数学函数，不用自己从头写。',
-    what: '模块就是一个 .py 文件，里面装着别人（或你自己）写好的函数和值，方便大家一起用。`import` 可以把整个模块拿进来，`from ... import` 则只挑其中一两样。标准库自带的 `math`、`random`、`datetime` 都是现成模块，你也能把自己的计算函数拆进单独文件再引进来。',
+    what: '模块就是一个 .py 文件，里面装着别人（或你自己）写好的函数和值，方便大家一起用。`import` 可以把整个模块拿进来，`from ... import` 则只挑其中一两样。标准库自带的 `math`、`random`、`datetime` 都是现成模块，你也能把自己的计算函数拆进单独文件再引进来。文件末尾常见的一段 if __name__ == "__main__": 是"运行身份检查"：直接运行这个文件时，__name__ 的值是 "__main__"，它下面的代码才执行；被 import 时 __name__ 是模块名，这段代码不跑。把演示、测试或启动代码放进这段里，文件被别人借用时就不会乱执行。',
     analogy: '打个比方：模块像工具箱里分门别类的抽屉，螺丝刀放一个抽屉、扳手放另一个。要用哪个打开哪个抽屉，不用每次都翻一个大混装箱。',
     terms: [
       { term: 'module', zh: '模块', note: '一个 .py 文件就称为一个模块，里面放着可复用的函数或值。' },
       { term: 'import', zh: '导入语句', note: '把整个模块拿进来使用，关键字是 import。' },
       { term: 'from', zh: '从...导入', note: '跟 import 配合，只从模块里挑出你需要的部分。' },
       { term: 'standard library', zh: '标准库', note: '程序自带的一批现成模块，如 math、random，不用额外安装。' },
+      { term: '__name__', zh: '运行身份标记', note: '直接运行文件时值为 "__main__"，被 import 时为模块名，用来区分两种场景。' },
     ],
     steps: [
       '新建一个 .py 文件，起个简短易懂的名字，例如 calc.py。',
@@ -307,6 +308,21 @@ print(math.sqrt(16))`,
 print(sqrt(16))`,
         note: 'from...import 只把 sqrt 拿进来了，模块名 math 本身并不存在，直接写 math.sqrt 会报错。',
       },
+      {
+        title: '模块文件里的演示代码被 import 带着跑',
+        bad: `# calc.py
+print("演示：2 + 3 =", 2 + 3)
+
+def add(a, b):
+    return a + b`,
+        good: `# calc.py
+def add(a, b):
+    return a + b
+
+if __name__ == "__main__":
+    print("演示：2 + 3 =", add(2, 3))`,
+        note: '直接写在外面的 print 在被 import 时也会执行；包进 if __name__ == "__main__": 里，只有直接运行本文件时才会跑。',
+      },
     ],
     practice: [
       {
@@ -338,6 +354,13 @@ print(circle_area(2))`,
         question: '执行 `from math import pi` 之后，直接写 `pi` 就能用圆周率。',
         answer: true,
         explain: 'from...import 把 pi 直接带进当前作用域，不用再写 math. 前缀。',
+      },
+      {
+        type: 'choice',
+        question: '直接运行 python calc.py 时，文件里 __name__ 的值是什么？',
+        options: ['"calc"', '"__main__"', '"module"', 'None'],
+        answer: 1,
+        explain: '直接运行时 __name__ 等于 "__main__"；被别的文件 import 时才是模块名 calc。',
       },
     ],
   },
@@ -600,6 +623,116 @@ print("奇数个数", odd_count)`,
         answer: true,
         explain: '职责单一让函数容易看懂、容易测试，也方便在一处修改而处处生效。',
       },
-    ],
+    ]
   },
+  {
+    id: 'git-basics',
+    title: 'Git：给代码存档与分享',
+    phase: 3,
+    order: 6,
+    minutes: 30,
+    rating: { level: 3, must: 4 },
+    summary: '用 Git 给代码拍快照：改坏了能回档，还能推到 GitHub 云端备份、分享给别人。',
+    keywords: ['git', 'github', '提交', '版本管理', '回退', '仓库'],
+    tip: '零基础提示：把 Git 想成游戏存档——每 commit 一次就存一档，改坏了读档回去；GitHub 是放存档的云端，还能让别人和你一起改。命令都在终端里敲，照着做三遍就熟了。',
+    what: 'Git 是版本管理工具。git init 把一个文件夹变成仓库，之后每次改动用 git add . 收进暂存区、再用 git commit -m 说明文字 完成一次存档；git log --oneline 查看全部存档，改坏时能回退到任意一档。写进 .gitignore 的文件（比如密钥、临时文件）不会被存档。仓库还能关联 GitHub 远端：git push 推上云端，换电脑不丢，别人也能下载你的代码。',
+    analogy: '打个比方：commit 是游戏里的存档点，.gitignore 是告诉游戏哪些物品不用保存，GitHub 是云端存档库——就算电脑坏了，存档还在。',
+    terms: [
+      { term: 'repository', zh: '仓库', note: '被 Git 管理的项目文件夹，全部历史都存在里面的 .git 文件夹。' },
+      { term: 'commit', zh: '提交（存档）', note: '一次快照，记录当时所有文件的状态，附一句说明。' },
+      { term: 'gitignore', zh: '忽略清单', note: '列出不参与存档的文件，比如密码文件、临时产物。' },
+      { term: 'remote', zh: '远端', note: '云端仓库的地址，习惯上叫 origin。' },
+      { term: 'push', zh: '推送', note: '把本地的存档上传到 GitHub 这类远端仓库。' }
+    ],
+    steps: [
+      '终端输入 git --version 确认安装；没有就去 git-scm.com 下载安装',
+      '首次使用先报身份：git config --global user.name 你的名字，再 git config --global user.email 你的邮箱',
+      '在项目文件夹输入 git init，这个文件夹从此就是仓库',
+      '新建 .gitignore 文件，写下不想存档的文件名（如 .env、__pycache__/），再输入 git add . 收进暂存区',
+      '输入 git commit -m "第一次存档" 完成提交；之后每做完一小步就存一档',
+      '可选：在 GitHub 建一个空仓库，按页面提示执行 git branch -M main、git remote add origin 仓库地址、git push -u origin main，推上云端',
+    ],
+    examples: [
+      {
+        title: '一键生成 .gitignore',
+        code: `with open(".gitignore", "w", encoding="utf-8") as f:
+    f.write(".env\\n__pycache__/\\n.venv/\\n")
+
+print(open(".gitignore", encoding="utf-8").read())`,
+        output: `.env
+__pycache__/
+.venv/`,
+        note: '用第 5 阶段学的写文件创建 .gitignore：密钥文件 .env、缓存文件夹都不进仓库。以后每个项目开头都可以这么做。'
+      },
+      {
+        title: '确认 Git 装好了',
+        code: `import os
+
+os.system("git --version")`,
+        output: `git version 2.55.0.windows.3`,
+        note: 'os.system 能在 Python 里顺手执行命令行；输出里的版本号随安装版本不同而不同。'
+      }
+    ],
+    pitfalls: [
+      {
+        title: '没报身份就提交',
+        bad: 'git commit -m "第一次存档"   # 报错：Please tell me who you are',
+        good: 'git config --global user.name "你的名字"\ngit config --global user.email "you@example.com"',
+        note: '首次提交前 Git 不知道你是谁，会拒绝并给出提示。按提示设置一次全局身份，之后所有仓库通用。'
+      },
+      {
+        title: '改完文件忘了 add 就 commit',
+        bad: 'git commit -m "改好了"   # 显示 nothing to commit, working tree clean',
+        good: 'git add .\ngit commit -m "改好了"',
+        note: 'commit 只保存暂存区里的内容。add 是把改动放进待存档区，忘了它，Git 会说没什么可提交。'
+      },
+      {
+        title: '把密钥文件提交进仓库',
+        bad: 'git add .env   # API 密钥跟着进了存档历史',
+        good: '.env 写进 .gitignore，再 git add .',
+        note: '密钥一旦提交，以后删除也会留在历史记录里。凡是密码、密钥文件，先写进 .gitignore 再提交。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '写一个 Git 体检脚本：用 os.system 依次执行 git --version 和 git status，确认 Git 可用、并看看当前文件夹的状态。',
+        starter: `import os
+
+# TODO: 依次执行两条命令
+`,
+        answer: `import os
+
+os.system("git --version")
+os.system("git status")`,
+        output: `git version 2.55.0.windows.3
+On branch master
+
+nothing to commit, working tree clean`,
+        hint: 'os.system("命令") 会执行命令并把输出打印出来；在还没有 git init 的文件夹里，第二条会提示还不是仓库。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '把一个文件夹变成 Git 仓库的命令是？',
+        options: ['git start', 'git init', 'git new', 'git create'],
+        answer: 1,
+        explain: 'git init 会在当前文件夹生成 .git 文件夹，从此这里的历史由 Git 管理。'
+      },
+      {
+        type: 'judge',
+        question: '写进 .gitignore 的文件不会被 git add . 收进存档。',
+        answer: true,
+        explain: '忽略清单就是给 add 划出的禁区，密钥和临时文件靠它挡在仓库外面。'
+      },
+      {
+        type: 'code',
+        question: '补全提交命令：git ____ -m "第一次存档"',
+        code: 'git ____ -m "第一次存档"',
+        answer: 'commit',
+        accept: [],
+        explain: 'commit 完成一次存档，-m 后面跟一句说明，方便以后回看每次改了什么。'
+      }
+    ]
+  }
 ]

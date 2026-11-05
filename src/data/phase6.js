@@ -417,5 +417,126 @@ export default [
         explain: '第 0 项是脚本名 采花.py，第 1 项才是参数 玫瑰花，即 sys.argv[1]。'
       }
     ]
+  },
+  {
+    id: 'pip-and-venv',
+    title: 'pip 与虚拟环境：管理外部库',
+    phase: 6,
+    order: 6,
+    minutes: 28,
+    rating: { level: 3, must: 5 },
+    summary: '用 pip 安装外部库，用虚拟环境给每个项目独立的小房间，还会导出清单和加速下载。',
+    keywords: ['pip', 'venv', '虚拟环境', 'requirements', '镜像源', '安装库'],
+    tip: '零基础提示：外部库是别人写好的工具箱，pip 是帮你下载安装的搬运工；虚拟环境像每个项目专属的小房间，装的东西互不打架。从第 8 阶段开始就要装库，先把这一节学会。',
+    what: 'pip 是 Python 的包安装工具，一条 pip install 包名 就能把别人写好的库装进当前环境。虚拟环境（venv）是给单个项目准备的独立空间：在里面安装、升级、卸载库，都只影响这个项目。用 python -m venv .venv 创建，激活后命令行前面会多出 (.venv) 标记。pip freeze > requirements.txt 能把装了哪些包记成清单，换电脑时 pip install -r requirements.txt 一键装齐。',
+    analogy: '打个比方：pip 像外卖平台，说一声就送工具上门；虚拟环境像每个项目单独的储物柜，A 项目的工具不会跑到 B 项目里；requirements.txt 像搬家清单，到新电脑照单全收。',
+    terms: [
+      { term: 'pip', zh: '包安装工具', note: 'Python 自带的安装器，用 pip install 包名 安装外部库。' },
+      { term: 'venv', zh: '虚拟环境', note: 'Python 自带的独立环境，每个项目一套，互不影响。' },
+      { term: 'package', zh: '包', note: '别人打包好的可复用代码，就是 pip 安装的对象。' },
+      { term: 'requirements.txt', zh: '依赖清单', note: '记录项目需要哪些包和版本，方便在别处一键还原。' },
+      { term: 'mirror', zh: '镜像源', note: '国内的下载点，网速慢时用 -i 参数临时切换。' }
+    ],
+    steps: [
+      '在项目文件夹打开终端，输入 python -m venv .venv 创建虚拟环境（首次约十几秒）',
+      '激活：Windows 输入 .venv\\Scripts\\activate，macOS/Linux 终端输入 source .venv/bin/activate',
+      '看到命令行前面多了 (.venv) 标记后，再输入 pip install requests 安装库',
+      '输入 pip list 查看装了哪些包；卸载用 pip uninstall 包名',
+      '输入 pip freeze > requirements.txt，把当前依赖存成清单文件',
+      '下载慢就换国内镜像源：pip install requests -i https://pypi.tuna.tsinghua.edu.cn/simple',
+    ],
+    examples: [
+      {
+        title: '判断自己是否在虚拟环境里',
+        code: `import sys
+
+inside = sys.prefix != sys.base_prefix
+print("在虚拟环境里" if inside else "用的是全局 Python")
+print(sys.prefix)`,
+        output: `在虚拟环境里
+C:\\Users\\33569\\AppData\\Local\\Temp\\opencode\\venv-demo`,
+        note: '在虚拟环境里运行的真实结果：sys.prefix 指向当前解释器，路径末尾就是虚拟环境的文件夹；没激活时它和全局解释器相同，会显示"用的是全局 Python"。',
+      },
+      {
+        title: '看看环境里装了哪些包',
+        code: `from importlib.metadata import distributions
+
+names = sorted(d.metadata["Name"] for d in distributions())
+print("这个环境里装了", len(names), "个包")
+print("\\n".join(names[:5]))`,
+        output: `这个环境里装了 10 个包
+Pygments
+certifi
+charset-normalizer
+idna
+markdown-it-py`,
+        note: '装好 requests 和 rich 后的真实结果；数量和清单随环境不同而变化。importlib.metadata 是标准库，不用联网就能查。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '没激活虚拟环境就安装',
+        bad: 'pip install requests        # 命令行前面没有 (.venv)',
+        good: '(.venv) pip install requests',
+        note: '没激活时包装进全局环境，所有项目共用，容易版本打架。先激活，认准命令行前面的 (.venv) 标记。'
+      },
+      {
+        title: 'PowerShell 提示禁止运行脚本',
+        bad: '.venv\\Scripts\\activate   # 报错：在此系统上禁止运行脚本',
+        good: 'Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser',
+        note: 'Windows 默认禁止运行脚本。上面这条以当前用户身份放开本地脚本，只需设置一次，然后再激活。'
+      },
+      {
+        title: '手写 requirements.txt 漏了依赖',
+        bad: 'requests==2.34.2        # 只写了自己 import 的包',
+        good: 'pip freeze > requirements.txt',
+        note: '你装的库还会自带依赖，手写容易漏。让 pip freeze 自动生成，才不会少东西。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '写一个程序，依次检查 requests、rich、flask 三个包装没装：装了就打印 名字 版本，没装就打印 名字 未安装。',
+        starter: `from importlib.metadata import version, PackageNotFoundError
+
+for name in ["requests", "rich", "flask"]:
+    # TODO: 装了打印 名字 版本，没装打印 名字 未安装
+    pass
+`,
+        answer: `from importlib.metadata import version, PackageNotFoundError
+
+for name in ["requests", "rich", "flask"]:
+    try:
+        print(name, version(name))
+    except PackageNotFoundError:
+        print(name, "未安装")`,
+        output: `requests 2.34.2
+rich 15.0.0
+flask 未安装`,
+        hint: 'version(name) 查版本；包不存在会抛 PackageNotFoundError，用 try/except 接住。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '命令行前面出现 (.venv) 标记说明什么？',
+        options: ['Python 安装失败', '当前命令用的是这个项目的虚拟环境', 'pip 没有安装', '电脑中了病毒'],
+        answer: 1,
+        explain: '(.venv) 是激活成功的标记，之后 pip install 的包都装进这个项目专属的环境里。'
+      },
+      {
+        type: 'judge',
+        question: 'pip freeze > requirements.txt 的作用是把当前环境装了哪些包记进清单文件。',
+        answer: true,
+        explain: 'freeze 列出全部包和版本，> 把结果写进文件；换电脑时用 pip install -r requirements.txt 一键还原。'
+      },
+      {
+        type: 'code',
+        question: '补全创建虚拟环境的命令：python -m ____ .venv',
+        code: 'python -m ____ .venv',
+        answer: 'venv',
+        accept: [],
+        explain: 'venv 是 Python 自带的虚拟环境模块，用 -m 方式运行它就会创建一个名为 .venv 的环境。'
+      }
+    ]
   }
 ]
