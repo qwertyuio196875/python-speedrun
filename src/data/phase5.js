@@ -509,5 +509,130 @@ export default [
         explain: '日志可能长期保存、被许多人看到，绝不能记录密码等敏感信息。'
       }
     ]
+  },
+  {
+    id: 'sqlite-basics',
+    title: 'sqlite3：把数据存进数据库',
+    phase: 5,
+    order: 6,
+    minutes: 30,
+    rating: { level: 3, must: 4 },
+    summary: '不装任何东西，用自带的 sqlite3 建表、插入、查询，把数据稳妥地存进一个文件。',
+    keywords: ['sqlite', 'sqlite3', '数据库', '建表', 'SQL', '存储'],
+    tip: '零基础提示：数据库像一个更靠谱的账本——数据按表存放，增删改查都是现成命令。Python 自带 sqlite3，不用安装，建好的库就是硬盘上的一个文件。',
+    what: 'sqlite3 是 Python 自带的数据库模块，数据存在一个 .db 文件里，比普通文本文件更稳：不怕写一半崩溃，还能按条件快速查询。使用只要三步：connect 连接（文件不存在会自动创建）、execute 执行 SQL 语句（建表、插入、查询）、commit 提交保存后 close 关闭。查询结果用 fetchall 取回，是一行行的元组。',
+    analogy: '打个比方：普通文件像一张纸，写坏了就废了；数据库像一个带保险柜的账本，每笔记账（commit）都稳妥落袋，翻找（查询）也快。',
+    terms: [
+      { term: 'sqlite3', zh: '自带数据库模块', note: 'Python 标准库，无需安装，数据保存在一个 .db 文件里。' },
+      { term: 'table', zh: '表', note: '数据库里放数据的地方，先定好有哪些列，再一行行放数据。' },
+      { term: 'SQL', zh: '数据库查询语言', note: '操作数据库的固定句式，如 CREATE TABLE、INSERT、SELECT。' },
+      { term: 'cursor', zh: '游标', note: '执行 SQL 和取回结果的"操作手"，由连接对象创建。' },
+      { term: 'commit', zh: '提交', note: '把改动真正写进数据库文件，不提交就等于白改。' }
+    ],
+    steps: [
+      'import sqlite3 并连接：conn = sqlite3.connect("score.db")，文件不存在会自动创建',
+      '建游标：cur = conn.cursor()',
+      '建表：cur.execute("CREATE TABLE IF NOT EXISTS student (name TEXT, score INT)")，IF NOT EXISTS 防止重复建表报错',
+      '插入：cur.execute("INSERT INTO student VALUES (?, ?)", (值1, 值2))，然后 conn.commit()',
+      '查询：cur.execute("SELECT ...")，再用 cur.fetchall() 取回全部结果',
+      '用完 conn.close() 关闭连接',
+    ],
+    examples: [
+      {
+        title: '建表、插入、查询三步走',
+        code: `import sqlite3
+
+conn = sqlite3.connect("score.db")
+cur = conn.cursor()
+cur.execute("CREATE TABLE IF NOT EXISTS student (name TEXT, score INT)")
+cur.execute("INSERT INTO student VALUES ('小明', 92)")
+conn.commit()
+cur.execute("SELECT * FROM student WHERE score >= 90")
+print(cur.fetchall())
+conn.close()`,
+        output: `[('小明', 92)]`,
+        note: 'SELECT * 取所有列，WHERE score >= 90 是筛选条件；fetchall 把匹配的行装进列表返回。',
+      },
+      {
+        title: '批量插入与排序查询',
+        code: `import sqlite3
+
+conn = sqlite3.connect("score.db")
+cur = conn.cursor()
+rows = [("小红", 88), ("小刚", 95)]
+cur.executemany("INSERT INTO student VALUES (?, ?)", rows)
+conn.commit()
+cur.execute("SELECT name FROM student ORDER BY score DESC")
+print(cur.fetchall())
+conn.close()`,
+        output: `[('小刚',), ('小明',), ('小红',)]`,
+        note: 'executemany 一次插多行，? 占位符自动处理引号和转义；单元素元组末尾的逗号是 Python 的固定写法，别漏。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '忘了 conn.commit()',
+        bad: 'cur.execute("INSERT INTO student VALUES (\'小明\', 92)")\n# 没有 commit 就关了连接',
+        good: 'cur.execute("INSERT INTO student VALUES (?, ?)", ("小明", 92))\nconn.commit()',
+        note: '不提交，改动只在内存里，重新打开数据库会发现数据根本没写进去。'
+      },
+      {
+        title: '用字符串拼接拼 SQL',
+        bad: `name = "小明'"
+cur.execute("INSERT INTO student VALUES ('" + name + "', 90)")`,
+        good: `cur.execute("INSERT INTO student VALUES (?, ?)", (name, 90))`,
+        note: '拼接会撞上引号转义问题，还容易被恶意输入钻空子；问号占位符让 sqlite3 替你安全处理。'
+      },
+      {
+        title: '重复建表导致报错',
+        bad: 'cur.execute("CREATE TABLE student (name TEXT, score INT)")   # 第二次运行报错',
+        good: 'cur.execute("CREATE TABLE IF NOT EXISTS student (name TEXT, score INT)")',
+        note: '表已存在再 CREATE 会报 table already exists；加上 IF NOT EXISTS 就能放心重复运行。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '接着上面建好的 score.db，写程序计算 student 表里所有分数的平均分，保留一位小数。',
+        starter: `import sqlite3
+
+conn = sqlite3.connect("score.db")
+cur = conn.cursor()
+# TODO: 查询平均分并打印
+conn.close()
+`,
+        answer: `import sqlite3
+
+conn = sqlite3.connect("score.db")
+cur = conn.cursor()
+cur.execute("SELECT AVG(score) FROM student")
+print("平均分", round(cur.fetchone()[0], 1))
+conn.close()`,
+        output: `平均分 91.7`,
+        hint: 'AVG(score) 是求平均的 SQL 函数；fetchone() 取一行结果，[0] 取出里面的数字。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: 'cur.fetchall() 返回的查询结果是什么形式？',
+        options: ['一整段字符串', '由元组组成的列表，每个元组是一行', '一个数字', '字典组成的列表'],
+        answer: 1,
+        explain: '每一行数据是一个元组，fetchall 把所有行装进列表返回。'
+      },
+      {
+        type: 'judge',
+        question: '执行完 INSERT 后只要 close 了连接，数据就自动保存进数据库文件。',
+        answer: false,
+        explain: '必须先 conn.commit() 提交，改动才会真正写入文件，否则一关连接就丢了。'
+      },
+      {
+        type: 'code',
+        question: '补全真正把改动写入数据库的一行：conn.____()',
+        code: 'cur.execute("INSERT INTO student VALUES (?, ?)", ("小明", 92))\nconn.____()',
+        answer: 'commit',
+        accept: [],
+        explain: 'commit 是"落账"动作，执行后改动才写进 .db 文件。'
+      }
+    ]
   }
 ]

@@ -538,5 +538,137 @@ flask 未安装`,
         explain: 'venv 是 Python 自带的虚拟环境模块，用 -m 方式运行它就会创建一个名为 .venv 的环境。'
       }
     ]
+  },
+  {
+    id: 'argparse-cli',
+    title: 'argparse：给脚本配正式的参数',
+    phase: 6,
+    order: 7,
+    minutes: 25,
+    rating: { level: 3, must: 3 },
+    summary: '用标准库 argparse 处理命令行参数：参数有名字、有类型、有默认值，还自动生成 --help。',
+    keywords: ['argparse', '命令行', '参数', '选项', 'help'],
+    tip: '零基础提示：上一节用 sys.argv[1] 取参数，像按排队位置认人；argparse 给每个参数起名字，还免费送一份自动生成的使用说明书（--help）。',
+    what: 'argparse 是标准库，三步走：创建 ArgumentParser、用 add_argument 逐个声明参数、parse_args() 解析出结果。参数分两种：直接按位置传的位置参数（如名字），和带 -- 前缀的选项（如 --count，可设类型 type=int 和默认值 default）。写好后再运行 python 脚本.py --help，argparse 会自动打印用法说明——这是它比 sys.argv 省心最多的地方。',
+    analogy: '打个比方：sys.argv 像"第三个来的就是 3 号桌"；argparse 像一张点菜单——份数、辣度都写清栏目，填错了它还会把菜单递给你看。',
+    terms: [
+      { term: 'argparse', zh: '参数解析库', note: 'Python 标准库，把命令行参数解析成有名字的变量。' },
+      { term: 'positional argument', zh: '位置参数', note: '按顺序必须提供的参数，如脚本名后直接跟的名字。' },
+      { term: 'option', zh: '选项', note: '带 -- 前缀的可选参数，如 --count，可配默认值。' },
+      { term: 'default', zh: '默认值', note: '用户没传这个参数时使用的值。' }
+    ],
+    steps: [
+      'import argparse，创建 parser = argparse.ArgumentParser(description="一句话说明")',
+      '声明位置参数：parser.add_argument("name", help="说明")',
+      '声明选项：parser.add_argument("--count", type=int, default=1, help="说明")',
+      '解析：args = parser.parse_args()，之后用 args.name、args.count 取值',
+      '在终端运行 python 脚本.py --help，检查自动生成的说明书',
+    ],
+    examples: [
+      {
+        title: '一个会打招呼的命令行脚本',
+        code: `import argparse
+
+parser = argparse.ArgumentParser(description="跟指定的人打招呼")
+parser.add_argument("name", help="要打招呼的名字")
+parser.add_argument("--count", type=int, default=1, help="重复次数")
+args = parser.parse_args()
+
+for _ in range(args.count):
+    print("你好,", args.name)`,
+        output: `你好, 小明
+你好, 小明`,
+        note: '真实运行 python greet.py 小明 --count 2 的结果；--count 没传时按 default 用 1。',
+      },
+      {
+        title: '--help 自动生成的说明书',
+        code: `# 在终端运行：
+# python greet.py --help
+# argparse 自动输出下面的说明，不用自己写`,
+        output: `usage: greet.py [-h] [--count COUNT] name
+
+跟指定的人打招呼
+
+positional arguments:
+  name           要打招呼的名字
+
+options:
+  -h, --help     show this help message and exit
+  --count COUNT  重复次数`,
+        note: '真实运行结果：usage 是用法摘要，下面分列位置参数和选项；对齐会随终端宽度略有变化。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '漏写必填的位置参数',
+        bad: 'python greet.py   # 没给 name',
+        good: 'python greet.py 小明',
+        note: '位置参数默认必填，漏了会报 the following arguments are required: name，并提示去看 --help。'
+      },
+      {
+        title: '选项的值类型不对',
+        bad: 'python greet.py 小明 --count abc   # type=int 时报错',
+        good: 'python greet.py 小明 --count 2',
+        note: '声明 type=int 后，argparse 自动把字符串转整数并检查；传 abc 会报 invalid int value。'
+      },
+      {
+        title: '解析后还按 sys.argv 取值',
+        bad: 'name = sys.argv[1]   # 用了 argparse 就别这样',
+        good: 'args = parser.parse_args()\nname = args.name',
+        note: 'parse_args() 的结果是有名字的：用 args.name、args.count 取，不再关心第几个位置。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '写一个两数计算器脚本：位置参数 x、y（小数），选项 --op 只允许 +、-、*，默认 +，打印运算结果。',
+        starter: `import argparse
+
+parser = argparse.ArgumentParser(description="两数计算器")
+parser.add_argument("x", type=float)
+parser.add_argument("y", type=float)
+# TODO: 声明 --op 并完成运算
+args = parser.parse_args()
+`,
+        answer: `import argparse
+
+parser = argparse.ArgumentParser(description="两数计算器")
+parser.add_argument("x", type=float)
+parser.add_argument("y", type=float)
+parser.add_argument("--op", default="+", choices=["+", "-", "*"])
+args = parser.parse_args()
+
+if args.op == "+":
+    print(args.x + args.y)
+elif args.op == "-":
+    print(args.x - args.y)
+else:
+    print(args.x * args.y)`,
+        output: `8.0`,
+        hint: 'choices 限制 --op 只能取列表里的值；运行 python calc.py 3 5 得到 8.0。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '运行 python greet.py --help 时会发生什么？',
+        options: ['报语法错误', '打印 argparse 自动生成的用法说明', '静默退出', '把 --help 当成名字打招呼'],
+        answer: 1,
+        explain: '-h/--help 是免费功能：argparse 汇总所有参数的 help 文案，自动生成说明书。'
+      },
+      {
+        type: 'judge',
+        question: '位置参数必须按声明顺序提供，选项 --count 则可以放在任意位置。',
+        answer: true,
+        explain: '位置参数认位置，选项认名字，所以 --count 放前放后都可以。'
+      },
+      {
+        type: 'code',
+        question: '补全声明：让 --times 接收整数，默认 3 次：parser.add_argument("--times", ____=int, default=3)',
+        code: 'parser.add_argument("--times", ____=int, default=3)',
+        answer: 'type',
+        accept: [],
+        explain: 'type=int 让 argparse 自动把命令行里的字符串转成整数。'
+      }
+    ]
   }
 ]

@@ -785,5 +785,219 @@ print(add(2, 3))`,
         explain: 'yield from source 等价于把 source 里每个元素依次 yield 出去。'
       },
     ]
+  },
+  {
+    id: 'regex-basics',
+    title: '正则表达式：文本查找的万能模板',
+    phase: 7,
+    order: 6,
+    minutes: 30,
+    rating: { level: 4, must: 3 },
+    summary: '用标准库 re 按模式批量提取手机号、邮箱、数字：写一个模板，处处匹配。',
+    keywords: ['正则', 're', 'findall', '匹配', '提取', '模式'],
+    tip: '零基础提示：正则像"填空模板"——\\d\\d\\d 的意思是"连续三个数字"，正则引擎拿着模板去文本里挨个比对，对上就捞出来。先学会 \\d、+、[] 三个零件就能干很多活。',
+    what: 're 是标准库里的正则模块。re.findall(r"模式", 文本) 返回所有匹配组成的列表。常用零件：\\d 表示一个数字、\\w 表示字母数字下划线、+ 表示前一个至少一次、{n} 表示恰好 n 次、[abc] 表示方括号里任意一个。模式字符串前面加 r（原始字符串），防止反斜杠被转义处理。',
+    analogy: '打个比方：正则像海关的查验模板。你说"放所有长得像 11 位数字的过来"，它就把整篇文本里符合特征的一个不漏地挑出来。',
+    terms: [
+      { term: 're', zh: '正则模块', note: 'Python 标准库，提供按模式查找、提取文本的能力。' },
+      { term: 'pattern', zh: '模式', note: '描述文本特征的模板字符串，如 r"1\\d{10}" 表示 1 开头共 11 位数字。' },
+      { term: 'raw string', zh: '原始字符串', note: '引号前加 r 的字符串，反斜杠不当转义符处理，写正则必用。' },
+      { term: 'findall', zh: '找出全部', note: 're.findall(模式, 文本) 返回所有匹配组成的列表。' }
+    ],
+    steps: [
+      'import re 导入模块',
+      '想清楚要提取的内容有什么特征（几位数字、什么开头）',
+      '写出模式字符串，引号前记得加 r，如 r"1\\d{10}"',
+      '用 re.findall(r"模式", 文本) 试跑，看返回的列表对不对',
+      '按需加量词：+ 至少一次、{n} 恰好 n 次、[abc] 任选其一',
+    ],
+    examples: [
+      {
+        title: '从文本里捞手机号',
+        code: `import re
+
+text = "联系张三：13812345678，办公室 010-12345678"
+print(re.findall(r"1\\d{10}", text))`,
+        output: `['13812345678']`,
+        note: '1\\d{10} 表示"1 开头、后面正好 10 个数字"；座机号 010 开头不符合特征，被自动排除。',
+      },
+      {
+        title: '批量提取邮箱',
+        code: `import re
+
+text = "发到 a@demo.com 或 b@test.org.cn，都行"
+print(re.findall(r"[\\w.]+@[\\w.]+", text))`,
+        output: `['a@demo.com', 'b@test.org.cn']`,
+        note: '[\\w.]+ 表示"字母数字下划线点号至少一个"，前后用 @ 连起来，就是一个简单的邮箱模板。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '模式字符串忘了加 r 前缀',
+        bad: 're.findall("\\d+", text)   # 会有转义警告，行为不可靠',
+        good: 're.findall(r"\\d+", text)',
+        note: '普通字符串里 \\d 不是合法转义，Python 会给警告且容易埋坑；正则模式一律加 r。'
+      },
+      {
+        title: '贪婪匹配吃掉太多内容',
+        bad: 're.findall(r"<.+>", "<a>和<b>")   # 结果整段被吃掉',
+        good: 're.findall(r"<.+?>", "<a>和<b>")',
+        note: '默认"能吃多少吃多少"，.+ 会一直吃到最后一处；加 ? 变成"够吃就走"的非贪婪匹配。'
+      },
+      {
+        title: '以为 findall 只找第一个',
+        bad: 're.findall(r"\\d+", "A1 B22")   # 以为返回 "1"',
+        good: 're.search(r"\\d+", "A1 B22").group()   # 只要第一个用 search',
+        note: 'findall 返回全部匹配组成的列表；只想要第一个，用 re.search 再取 group()。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '从成绩行"小明 92 分, 小红 88 分, 小刚 95 分"里提取所有分数，转成整数列表并打印。',
+        starter: `import re
+
+line = "小明 92 分, 小红 88 分, 小刚 95 分"
+# TODO: 提取所有数字并转成 int
+`,
+        answer: `import re
+
+line = "小明 92 分, 小红 88 分, 小刚 95 分"
+scores = re.findall(r"\\d+", line)
+print([int(s) for s in scores])`,
+        output: `[92, 88, 95]`,
+        hint: 're.findall(r"\\d+", line) 得到字符串列表，再用 int(s) 逐个转换。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '正则模式里的 \\d 代表什么？',
+        options: ['任意字符', '一个数字', '字母 d', '一个空格'],
+        answer: 1,
+        explain: '\\d 是 digit（数字）的缩写，匹配 0 到 9 中的一个字符。'
+      },
+      {
+        type: 'judge',
+        question: '写正则模式时，引号前加 r 可以让反斜杠不被转义处理。',
+        answer: true,
+        explain: 'r"\\d" 是原始字符串，\\d 原样交给正则引擎；不加 r 容易和字符串转义打架。'
+      },
+      {
+        type: 'code',
+        question: '补全模式，找出文本里所有连续 3 位数字：re.findall(r"\\d{____}", text)',
+        code: 're.findall(r"\\d{____}", text)',
+        answer: '3',
+        accept: [],
+        explain: '{3} 表示前面的 \\d 恰好重复 3 次，匹配所有连续三位数字。'
+      }
+    ]
+  },
+  {
+    id: 'type-hints',
+    title: '类型注解：给代码写说明书',
+    phase: 7,
+    order: 7,
+    minutes: 25,
+    rating: { level: 3, must: 4 },
+    summary: '给函数参数和返回值标注类型：编辑器会提前提醒，Pydantic 等库靠它自动校验。',
+    keywords: ['类型注解', 'type hint', '标注', 'list', '返回类型'],
+    tip: '零基础提示：类型注解像菜单上的"微辣/中辣"标记——不改变菜的味道，但点单的人一眼明白。Python 不会因为注解报错，它主要写给人看、给编辑器和工具看。',
+    what: '在参数后面写 : 类型，括号后写 -> 返回类型：def add(a: int, b: int) -> int。Python 本身不强制注解（传错类型不会立刻报错），但好处很多：编辑器能提前提醒写错的地方；第 8 阶段的 Pydantic、FastAPI 靠注解自动校验数据；大项目里读代码更快。容器也能标：list[int] 表示整数列表，dict[str, int] 表示键是字符串、值是整数的字典。',
+    analogy: '打个比方：注解像快递箱上的"易碎品、向上"标签——不影响里面装什么，但让每个经手的人和机器都知道该怎么对待它。',
+    terms: [
+      { term: 'type hint', zh: '类型注解', note: '标注变量、参数、返回值类型的写法，如 name: str。' },
+      { term: 'return annotation', zh: '返回值注解', note: '括号后用 -> 类型 说明函数交回什么类型。' },
+      { term: 'generic', zh: '容器注解', note: 'list[int]、dict[str, int] 这类带内部类型的写法。' },
+      { term: 'static check', zh: '静态检查', note: '不运行代码就检查注解是否一致，编辑器和 mypy 都能做。' }
+    ],
+    steps: [
+      '给函数每个参数补上 : 类型，如 def repeat(text: str, times: int)',
+      '括号后加 -> 类型，说明返回值是什么',
+      '容器参数用 list[int]、dict[str, int] 这类写法',
+      '有默认值的参数照常写：bonus: float = 0',
+      '运行一遍确认程序正常（注解本身不改变行为）',
+      '选修：pip install mypy 后运行 mypy 文件名，让工具帮你检查类型',
+    ],
+    examples: [
+      {
+        title: '基本注解：参数与返回值',
+        code: `def repeat(text: str, times: int) -> str:
+    return text * times
+
+print(repeat("ab", 3))`,
+        output: `ababab`,
+        note: 'text: str 说明要传字符串，-> str 说明交回字符串；编辑器把鼠标放上去就能看到这些信息。',
+      },
+      {
+        title: '容器注解与默认值',
+        code: `def average(scores: list[float], bonus: float = 0) -> float:
+    return round(sum(scores) / len(scores) + bonus, 1)
+
+print(average([92, 88, 95]))
+print(average([92, 88, 95], bonus=0.5))`,
+        output: `91.7
+92.2`,
+        note: 'list[float] 说明传的是小数列表；bonus: float = 0 既有注解也有默认值，不传就按 0 算。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '类型名大小写写错',
+        bad: 'def add(a: Int, b: Int) -> Int:',
+        good: 'def add(a: int, b: int) -> int:',
+        note: '基本类型是小写的 int、str、float、bool；写成 Int 会在定义时就报 NameError。'
+      },
+      {
+        title: '以为注解会强制类型',
+        bad: 'def repeat(text: str, times: int) -> str: ...\nrepeat(3, "ab")   # 不会立刻报错，运算时才炸',
+        good: 'repeat("ab", 3)',
+        note: '注解是"说明书"不是"门卫"，Python 不因传错类型而拦截；想自动校验要靠 Pydantic 这类库或 mypy 检查。'
+      },
+      {
+        title: '返回值注解的箭头写错',
+        bad: 'def f() : int:',
+        good: 'def f() -> int:',
+        note: '返回值注解用 ->（减号加大于号），写在括号后面、冒号前面；位置写错直接语法错误。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '给下面的函数补上类型注解：text 是字符串，返回值是整数，然后运行确认。',
+        starter: `def count_vowels(text):
+    return sum(1 for ch in text.lower() if ch in "aeiou")
+
+print(count_vowels("Beautiful Day"))
+`,
+        answer: `def count_vowels(text: str) -> int:
+    return sum(1 for ch in text.lower() if ch in "aeiou")
+
+print(count_vowels("Beautiful Day"))`,
+        output: `6`,
+        hint: '参数 text: str，括号后 -> int；注解不影响计算结果。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '给参数写了 : int 但运行时传了字符串，Python 会怎样？',
+        options: ['立刻报错拦截', '静默把字符串转成整数', '不会拦截，运算时才可能出错', '自动改成正确类型'],
+        answer: 2,
+        explain: '注解本身不做强制检查；传错类型要到真正运算时才可能报错，强制校验要靠 Pydantic 或 mypy。'
+      },
+      {
+        type: 'judge',
+        question: 'def average(scores: list[float]) -> float: 表示传入小数列表、返回一个小数。',
+        answer: true,
+        explain: 'list[float] 是容器注解，-> float 是返回值注解，读函数签名就知道怎么调用。'
+      },
+      {
+        type: 'code',
+        question: '补全函数签名，说明 name 是字符串：def greet(name: ____) -> str:',
+        code: 'def greet(name: ____) -> str:\n    return "你好, " + name',
+        answer: 'str',
+        accept: [],
+        explain: '字符串类型写作小写的 str。'
+      }
+    ]
   }
 ]
