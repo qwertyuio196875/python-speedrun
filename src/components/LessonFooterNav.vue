@@ -42,9 +42,6 @@ function go(target) {
 
 <style scoped>
 .lesson-footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 20;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -54,8 +51,7 @@ function go(target) {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(6px);
+  box-shadow: var(--shadow-sm);
 }
 
 .cur {

@@ -653,5 +653,180 @@ False`,
         explain: '名字不对通常只是让它不生效，并不会明显报错，因此要仔细检查方法名。'
       }
     ]
+  },
+  {
+    id: 'magic-methods-overview',
+    title: '魔法方法全景：还有哪些咒语',
+    phase: 4,
+    order: 6,
+    minutes: 25,
+    rating: { level: 4, must: 3 },
+    summary: '一张表认全常见魔法方法：让对象会相加、能取元素、能放进 with，还能像函数一样被调用。',
+    keywords: ['魔法方法', '__repr__', '__getitem__', '__add__', '__call__', '全景'],
+    tip: '零基础提示：这一节是"认脸"课，不求全记住。先记住一张全景表，等你想让对象支持某个动作时，回来查表找到对应方法名即可。日常最常用的仍是 __str__、__len__、__eq__、__repr__ 这几个。',
+    what: '上一节认识了 __str__、__len__、__eq__ 三个魔法方法。同一家族还有很多成员，规律都一样：Python 执行某个内置动作时，会自动调用对象里对应名字的方法。想让对象用 + 号相加就写 __add__，想用中括号取元素就写 __getitem__，想让对象像函数一样加括号调用就写 __call__。记住"内置动作对应方法名"这张表，你的对象就能用起来像列表、数字一样顺手。',
+    analogy: '打个比方：上一节你学会了三句常用咒语，这一节是整本咒语书的目录。不用全会念，需要时翻开目录找到那一句即可。',
+    terms: [
+      { term: '__repr__', zh: '调试表示', note: '调试和 repr(对象) 时调用；类里没写 __str__ 时，print 也会用它' },
+      { term: '__getitem__', zh: '取元素', note: '写 对象[下标] 时调用，让对象像列表一样取值' },
+      { term: '__add__', zh: '相加', note: '写 对象A + 对象B 时调用' },
+      { term: '__call__', zh: '可调用', note: '写 对象() 时调用，让对象能像函数一样使用' },
+      { term: '__enter__', zh: '进入', note: '进入 with 代码块时调用，离开时对应 __exit__' }
+    ],
+    steps: [
+      '浏览全景表，记住"内置动作 -> 方法名"的对应关系',
+      '想支持哪个动作，就在类里写上同名的魔法方法，名字前后各两个下划线',
+      '每个魔法方法都要 return 一个合适的结果：文字、数字或新对象',
+      '写完后用对应的内置动作（+、中括号、with）实际跑一遍验证'
+    ],
+    examples: [
+      {
+        title: '全景表与容器协议：让对象像列表',
+        code: `# 魔法方法全景表：内置动作 -> 自动调用的方法
+# print(对象)        -> __str__
+# repr(对象)/调试    -> __repr__
+# len(对象)          -> __len__
+# 对象A == 对象B     -> __eq__
+# 对象A < 对象B      -> __lt__
+# 对象[下标]         -> __getitem__（存元素用 __setitem__）
+# 元素 in 对象       -> __contains__
+# for 元素 in 对象   -> __iter__
+# 对象A + 对象B      -> __add__
+# with 对象:         -> __enter__ 进入 / __exit__ 离开
+# 对象()             -> __call__
+# if 对象:           -> __bool__
+# 放进 dict/集合     -> __hash__
+# 访问不存在的属性   -> __getattr__
+
+class Bag:
+    def __init__(self, items):
+        self.items = list(items)
+
+    def __len__(self):
+        return len(self.items)
+
+    def __getitem__(self, index):
+        return self.items[index]
+
+    def __contains__(self, item):
+        return item in self.items
+
+bag = Bag(["苹果", "香蕉", "梨"])
+print(len(bag))
+print(bag[1])
+print("苹果" in bag)`,
+        output: `3
+香蕉
+True`,
+        note: 'Bag 写上 __len__、__getitem__、__contains__ 后，len、中括号、in 三个动作都认识了它。'
+      },
+      {
+        title: '__repr__ 与 __add__：会相加的对象',
+        code: `class Money:
+    def __init__(self, yuan):
+        self.yuan = yuan
+
+    def __repr__(self):
+        return "Money(" + str(self.yuan) + ")"
+
+    def __add__(self, other):
+        return Money(self.yuan + other.yuan)
+
+a = Money(10)
+b = Money(25)
+print(a + b)
+print(a)`,
+        output: `Money(35)
+Money(10)`,
+        note: '__add__ 里返回一个新的 Money 对象；类里没写 __str__ 时，print 会改用 __repr__。'
+      },
+      {
+        title: '__call__：让对象能像函数一样调用',
+        code: `class Greeter:
+    def __init__(self, name):
+        self.name = name
+
+    def __call__(self):
+        return "你好，" + self.name
+
+g = Greeter("小明")
+print(g())`,
+        output: `你好，小明`,
+        note: '写了 __call__ 后，g() 就像调用函数；第 5 阶段 with 语句用到的 __enter__ 和 __exit__ 也是同一套道理。'
+      }
+    ],
+    pitfalls: [
+      {
+        title: '__repr__ 忘了返回字符串',
+        bad: 'class Money:\n    def __repr__(self):\n        return self.yuan',
+        good: 'class Money:\n    def __repr__(self):\n        return "Money(" + str(self.yuan) + ")"',
+        note: '__repr__ 必须返回文字，返回数字会报 TypeError: __repr__ returned non-string (type int)。'
+      },
+      {
+        title: '__getitem__ 里错把 self.items 写成 self',
+        bad: 'def __getitem__(self, index):\n    return self[index]',
+        good: 'def __getitem__(self, index):\n    return self.items[index]',
+        note: '取数据要用 self.items；写成 self[index] 会不停地调用自己，最后报 RecursionError。'
+      },
+      {
+        title: '__add__ 假设右边也是同种对象',
+        bad: 'Money(1) + "x"',
+        good: 'Money(1) + Money(2)',
+        note: '加号右边的对象没有 yuan 属性时会报 AttributeError，初学阶段先保证两边都是同一种对象。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '给 Playlist 补上 __len__ 和 __getitem__：让 len(p) 打印 2，p[0] 打印第一首歌名。',
+        starter: `class Playlist:
+    def __init__(self, songs):
+        self.songs = list(songs)
+
+# TODO: 添加 __len__ 和 __getitem__
+
+p = Playlist(["晴天", "稻香"])
+print(len(p))
+print(p[0])`,
+        answer: `class Playlist:
+    def __init__(self, songs):
+        self.songs = list(songs)
+
+    def __len__(self):
+        return len(self.songs)
+
+    def __getitem__(self, index):
+        return self.songs[index]
+
+p = Playlist(["晴天", "稻香"])
+print(len(p))
+print(p[0])`,
+        output: `2
+晴天`,
+        hint: '__len__ 返回 len(self.songs)；__getitem__ 返回 self.songs[index]。'
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '写 对象[0] 取元素时，Python 会自动调用哪个方法？',
+        options: ['__getitem__', '__len__', '__call__', '__repr__'],
+        answer: 0,
+        explain: '中括号取元素对应 __getitem__，名字对上了才会被自动调用。'
+      },
+      {
+        type: 'judge',
+        question: '只要在类里写 def add(self, other):，对象就能用 + 号相加。',
+        answer: false,
+        explain: '+ 对应的是 __add__，前后各两个下划线，写成 add 不会被自动调用。'
+      },
+      {
+        type: 'code',
+        question: '下面代码会打印什么？',
+        code: 'class Box:\n    def __getitem__(self, i):\n        return i * 2\n\nbox = Box()\nprint(box[3])',
+        answer: '6',
+        accept: [],
+        explain: 'box[3] 触发 __getitem__，返回 3 * 2，所以打印 6。'
+      }
+    ]
   }
 ]
