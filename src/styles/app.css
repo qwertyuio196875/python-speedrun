@@ -18,9 +18,9 @@
   --warning: #b4632a;
   --warning-weak: #fdf1e7;
   --danger: #b3453a;
-  --code-bg: #161616;
-  --code-fg: #e7e5e4;
-  --code-border: #2b2b2b;
+  --code-bg: #ffffff;
+  --code-fg: #1f2937;
+  --code-border: #e7e5e4;
   --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
   --shadow-md: 0 6px 18px rgba(16, 24, 40, 0.08);
   --radius: 10px;
@@ -52,9 +52,9 @@ html.dark {
   --warning: #f4b76a;
   --warning-weak: #2a2118;
   --danger: #f2796b;
-  --code-bg: #111111;
-  --code-fg: #e7e5e4;
-  --code-border: #262626;
+  --code-bg: #ffffff;
+  --code-fg: #1f2937;
+  --code-border: #d6d3d1;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.45);
 }
@@ -299,7 +299,7 @@ html.dark .inline-code {
   transition: width 0.35s ease;
 }
 
-/* 代码块（始终深色，突出代码区域） */
+/* 代码块（白底深字，深浅主题一致） */
 .code-shell {
   background: var(--code-bg);
   border: 1px solid var(--code-border);
@@ -313,14 +313,14 @@ html.dark .inline-code {
   justify-content: space-between;
   gap: 8px;
   padding: 7px 10px 7px 12px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.03);
   border-bottom: 1px solid var(--code-border);
 }
 
 .code-title {
   font-family: var(--font-mono);
   font-size: 12px;
-  color: #a8a29e;
+  color: #78716c;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -333,8 +333,8 @@ html.dark .inline-code {
   letter-spacing: 0.06em;
   padding: 1px 6px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #d6d3d1;
+  background: rgba(0, 0, 0, 0.06);
+  color: #57534e;
 }
 
 .code-actions {
@@ -351,7 +351,7 @@ html.dark .inline-code {
   border-radius: 5px;
   border: 1px solid transparent;
   background: transparent;
-  color: #a8a29e;
+  color: #78716c;
   cursor: pointer;
   font-family: var(--font-sans);
   display: inline-flex;
@@ -361,12 +361,12 @@ html.dark .inline-code {
 }
 
 .code-btn:hover {
-  background: rgba(255, 255, 255, 0.09);
-  color: #fff;
+  background: rgba(0, 0, 0, 0.06);
+  color: #1f2937;
 }
 
 .code-btn.run {
-  color: #7ee2a8;
+  color: #2f9e63;
 }
 
 .code-body {
@@ -398,54 +398,54 @@ html.dark .inline-code {
   tab-size: 4;
 }
 
-/* 语法高亮 */
+/* 语法高亮（白底配色） */
 .tok-kw {
-  color: #ff7bb0;
+  color: #d6336c;
 }
 .tok-str {
-  color: #a5e075;
+  color: #2e7d32;
 }
 .tok-num {
-  color: #ffb86c;
+  color: #b45309;
 }
 .tok-com {
-  color: #6b7c93;
+  color: #6e7781;
   font-style: italic;
 }
 .tok-fn {
-  color: #66d9ef;
+  color: #0b7285;
 }
 .tok-bi {
-  color: #8ab4ff;
+  color: #1d4ed8;
 }
 .tok-dec {
-  color: #f6c177;
+  color: #8250df;
 }
 .tok-self {
-  color: #ff9d9d;
+  color: #c92a2a;
 }
 
 /* 终端输出 */
 .terminal {
-  background: #111111;
+  background: #f6f5f4;
   border-top: 1px dashed var(--code-border);
   padding: 10px 14px 12px;
   font-family: var(--font-mono);
   font-size: 12.5px;
   line-height: 1.6;
-  color: #d6d3d1;
+  color: #3f3f46;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .terminal .term-label {
   display: block;
-  color: #6f8299;
+  color: #8a94a6;
   margin-bottom: 4px;
 }
 
 .terminal .term-out {
-  color: #d7e5f5;
+  color: #334155;
 }
 
 /* Element Plus 微调 */

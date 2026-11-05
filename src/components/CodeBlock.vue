@@ -162,15 +162,15 @@ function run() {
 .code-note {
   padding: 8px 14px 10px;
   border-top: 1px solid var(--code-border);
-  background: rgba(255, 255, 255, 0.03);
-  color: #93a3b8;
+  background: rgba(0, 0, 0, 0.03);
+  color: #64748b;
   font-size: 12.5px;
   line-height: 1.65;
 }
 
 .code-note :deep(.inline-code) {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.06);
   border-color: transparent;
-  color: #dbe6f5;
+  color: #1f2937;
 }
 </style>
