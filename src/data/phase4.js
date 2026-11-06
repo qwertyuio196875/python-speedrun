@@ -19,7 +19,9 @@ export default [
     terms: [
       { term: 'class', zh: '类', note: '一份描述数据和行为的模板，用 class 关键字来写' },
       { term: 'instance', zh: '实例', note: '照着类的模板做出来的一个具体对象' },
-      { term: 'object', zh: '对象', note: '在运行程序时真实存在、能装数据的那个东西' }
+      { term: 'object', zh: '对象', note: '在运行程序时真实存在、能装数据的那个东西' },
+      { term: 'instantiate', zh: '实例化', note: '用 类名() 制造一个实例的动作。' },
+      { term: 'PascalCase', zh: '大驼峰命名', note: '类名每个单词首字母大写，如 Pet、BankAccount。' }
     ],
     steps: [
       '用 class 加一个以大写字母开头的名字，例如 class Pet:',
@@ -79,6 +81,12 @@ print(b.items)`,
         bad: '只做了一个对象，就以为模板用完不能再做了',
         good: 'class Fruit:\n    def __init__(self, name):\n        self.name = name\n\nprint(Fruit("苹果").name)\nprint(Fruit("梨").name)',
         note: '一个类能做出很多独立的实例，每个实例各管各的数据。'
+      },
+      {
+        title: '方法体忘了缩进，跑到类外面去了',
+        bad: 'class Pet:\n    def say(self):\n    return "hi"   # 没缩进',
+        good: 'class Pet:\n    def say(self):\n        return "hi"',
+        note: 'def 要缩进在 class 里、方法体再缩进在 def 里；少一层它就变成类外的普通函数。'
       }
     ],
     practice: [
@@ -150,7 +158,9 @@ print(apple.describe())`,
     terms: [
       { term: '__init__', zh: '初始化方法', note: '创建对象时自动运行的准备工作，两边各两个下划线' },
       { term: 'self', zh: '自身', note: '方法里指"正在干活的这个对象自己"，写在第一个参数位置' },
-      { term: 'attribute', zh: '属性', note: '挂在对象上、跟着对象一起存取的数据' }
+      { term: 'attribute', zh: '属性', note: '挂在对象上、跟着对象一起存取的数据' },
+      { term: 'constructor', zh: '构造方法', note: '__init__ 的通用叫法：对象出生时自动执行的初始化。' },
+      { term: 'state', zh: '状态', note: '对象此刻所有属性值的总称，会随方法调用而变化。' }
     ],
     steps: [
       '在类里写 def __init__(self, ...) 来规定新对象的"开房登记"要接收什么',
@@ -200,6 +210,18 @@ print(cat.greet())`,
         bad: 'class Student:\n    def __init__(self, name):\n        name = name  # 只改了一个临时变量',
         good: 'class Student:\n    def __init__(self, name):\n        self.name = name',
         note: '想让数据跟着对象走，就必须写成 self.name；不写 self 它只是个用完就丢的局部东西。'
+      },
+      {
+        title: '在 __init__ 里写 return',
+        bad: 'class Cat:\n    def __init__(self, name):\n        return "建好了"',
+        good: 'class Cat:\n    def __init__(self, name):\n        self.name = name',
+        note: '__init__ 只能返回 None，写 return 值会直接报 TypeError；要交数据就挂到 self 上。'
+      },
+      {
+        title: '重新创建对象，把旧数据弄丢',
+        bad: 'stu = Student("小明")\nstu = Student("小红")   # 小明的数据没了',
+        good: 'stu = Student("小明")\nstu2 = Student("小红")',
+        note: '同一个变量名再次赋值会指向新对象，旧对象被丢弃；想都留着就起不同名字或装进列表。'
       }
     ],
     practice: [
@@ -271,7 +293,9 @@ print(s.introduce())`,
     terms: [
       { term: 'method', zh: '方法', note: '写在类里、跟着对象走的一串动作，用 def 定义' },
       { term: 'call', zh: '调用', note: '让方法真正跑起来，写法是在名字后面加括号 ()' },
-      { term: 'return', zh: '返回', note: '方法干完活后把结果交给调用它的那一行' }
+      { term: 'return', zh: '返回', note: '方法干完活后把结果交给调用它的那一行' },
+      { term: 'instance method', zh: '实例方法', note: '第一个参数是 self、属于具体对象的方法，最常见的一种。' },
+      { term: 'parameter', zh: '参数', note: '方法名括号里声明的变量，调用时传入具体值。' }
     ],
     steps: [
       '在 class 里用 def 方法名(self, ...) 定义这个方法',
@@ -327,6 +351,18 @@ print(s.total())`,
         bad: 'def add(self, n):\n    total = total + n',
         good: 'def add(self, n):\n    self.total = self.total + n\n    return self.total',
         note: '只有挂到 self 上的数据才会跟着对象一直保留，method 里临时写的变量会丢失。'
+      },
+      {
+        title: '方法之间互相调用忘了 self',
+        bad: 'class Score:\n    def add(self, n):\n        return n\n    def total(self):\n        return add(3)   # 找不到 add',
+        good: '    def total(self):\n        return self.add(3)',
+        note: '在方法里调用同类的其他方法也要写 self.方法名()，否则被当成外部函数。'
+      },
+      {
+        title: '属性名和方法名重名',
+        bad: 'class Score:\n    def __init__(self):\n        self.total = 0\n    def total(self):   # 和属性同名，互相覆盖',
+        good: '    self.value = 0\n    def get_total(self):',
+        note: '属性和方法挂在同一个对象上，重名会互相顶掉；命名时区分开（如 value / get_total）。'
       }
     ],
     practice: [
@@ -371,6 +407,151 @@ print(c.value)`,
         question: '调用一个方法只需要写它的方法名，不用加括号。',
         answer: false,
         explain: '方法名后面必须加括号 () 才代表真正调用它并拿到结果。'
+      },
+      {
+        type: 'code',
+        question: '补全：调用 Alarm 对象的 ring 方法。',
+        code: 'clock = Alarm(7, 30)\nprint(clock.__________())',
+        answer: 'ring',
+        accept: [],
+        explain: '用 对象.方法名() 调用，括号不能少。'
+      }
+    ]
+  },
+  {
+    id: 'properties-static',
+    title: '属性进阶：@property 与类方法/静态方法',
+    phase: 4,
+    order: 4,
+    minutes: 28,
+    rating: { level: 4, must: 4 },
+    summary: '@property 让方法伪装成属性，@classmethod 和 @staticmethod 是挂在类身上的另两件工具。',
+    keywords: ['property', 'classmethod', 'staticmethod', '装饰器', '工厂方法'],
+    tip: '零基础提示：这三个 @ 开头的小标记是"变身贴纸"——@property 把方法变成像属性一样直接读，@classmethod、@staticmethod 则是挂在类上、不依赖某个具体对象的工具。',
+    what: '@property 装饰的方法，调用时不加括号，像读属性一样读它，适合"由已有数据算出来的值"。@classmethod 用 cls 代表类本身，常用来写工厂方法——提供另一种创建对象的方式。@staticmethod 既不用 self 也不用 cls，是纯工具函数，只是借住在类里。三个都靠装饰器实现，第 7 阶段会讲装饰器原理。',
+    analogy: '打个比方：@property 像汽车的"实时油耗表"——看起来是个读数（属性），背后其实每次都在计算（方法）；@classmethod 像 4S 店的另一个下单入口（按配置单订车），@staticmethod 则是销售顺手借你的计算器，跟具体哪台车无关。',
+    terms: [
+      { term: 'property', zh: '特性', note: '@property 装饰的方法，像属性一样读，背后是计算。' },
+      { term: 'classmethod', zh: '类方法', note: '@classmethod 装饰，第一个参数是 cls（类本身）。' },
+      { term: 'staticmethod', zh: '静态方法', note: '@staticmethod 装饰的纯工具函数，不依赖实例和类。' },
+      { term: 'factory method', zh: '工厂方法', note: 'classmethod 的常见用法：提供另一种创建对象的方式。' },
+      { term: 'cls', zh: '类自身', note: '类方法里的第一个参数，类似 self，但代表类。' }
+    ],
+    steps: [
+      '写一个由已有数据算值的函数，上面加 @property，试试不加括号直接读',
+      '故意不加 @property，看调用方式的差别',
+      '写一个 @classmethod，在里面用 cls(...) 创建并返回新对象',
+      '写一个 @staticmethod 放纯计算工具，用 类名.工具名() 调用',
+      '想想每个新场景：读算出来的值用 property，换个方式创建用 classmethod',
+    ],
+    examples: [
+      {
+        title: '@property：方法伪装成属性',
+        code: `class Circle:
+    def __init__(self, r):
+        self.r = r
+
+    @property
+    def area(self):
+        return round(3.14159 * self.r ** 2, 2)
+
+c = Circle(2)
+print(c.area)`,
+        output: `12.57`,
+        note: '读 c.area 不加括号，像属性一样；背后每次都在用半径现算。改成 c.area() 反而报错。',
+      },
+      {
+        title: '@classmethod：另一种创建对象的方式',
+        code: `class Temperature:
+    def __init__(self, celsius):
+        self.celsius = celsius
+
+    @classmethod
+    def from_fahrenheit(cls, f):
+        return cls((f - 32) * 5 / 9)
+
+t = Temperature.from_fahrenheit(212)
+print(t.celsius)`,
+        output: `100.0`,
+        note: 'from_fahrenheit 是"工厂方法"：给华氏度，它替你算好摄氏度再 cls(...) 建对象。212°F 正好是 100°C。',
+      },
+      {
+        title: '@staticmethod：挂在类里的纯工具',
+        code: `class MathTool:
+    @staticmethod
+    def is_even(n):
+        return n % 2 == 0
+
+print(MathTool.is_even(10), MathTool.is_even(7))`,
+        output: `True False`,
+        note: '不需要 self 也不需要 cls，纯粹借住在类名下的工具函数，用 类名.方法() 直接调用。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '@property 的方法当方法调用',
+        bad: 'c = Circle(2)\nprint(c.area())   # 报错 int is not callable',
+        good: 'print(c.area)',
+        note: '加了 @property 后 area 已经是"属性"，再加括号等于调用一个数字，直接报错。'
+      },
+      {
+        title: 'classmethod 忘了写 cls',
+        bad: 'class Temperature:\n    @classmethod\n    def from_fahrenheit(f):   # 第一个参数不是 cls',
+        good: '    @classmethod\n    def from_fahrenheit(cls, f):\n        return cls((f - 32) * 5 / 9)',
+        note: '类方法的第一个参数约定叫 cls，代表类本身；少了它就没法用 cls(...) 建对象。'
+      },
+      {
+        title: 'staticmethod 里想用 self',
+        bad: 'class MathTool:\n    @staticmethod\n    def is_even(self, n):   # 参数画蛇添足',
+        good: '    @staticmethod\n    def is_even(n):\n        return n % 2 == 0',
+        note: '静态方法和具体对象无关，写 self 反而让调用时多传一个参数而报错。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '给 Rectangle（宽 w、高 h）加一个 @property area，返回面积；打印 Rectangle(3, 4).area。',
+        starter: `class Rectangle:
+    def __init__(self, w, h):
+        self.w = w
+        self.h = h
+
+    # TODO: 加 @property area
+`,
+        answer: `class Rectangle:
+    def __init__(self, w, h):
+        self.w = w
+        self.h = h
+
+    @property
+    def area(self):
+        return self.w * self.h
+
+print(Rectangle(3, 4).area)`,
+        output: `12`,
+        hint: '在 area 上一行写 @property；函数体 return self.w * self.h；读取时不加括号。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '@classmethod 的第一个参数 cls 代表什么？',
+        options: ['当前对象', '类本身', '父类', '模块'],
+        answer: 1,
+        explain: 'cls 是 class 的缩写，代表类本身，常用 cls(...) 来创建新对象。',
+      },
+      {
+        type: 'judge',
+        question: '@staticmethod 里通常不需要 self 参数，因为它不依赖任何具体对象。',
+        answer: true,
+        explain: '静态方法是纯工具，跟实例无关，所以不需要 self。',
+      },
+      {
+        type: 'code',
+        question: '补全装饰器，让 area 像属性一样被读取。',
+        code: 'class Circle:\n    __________\n    def area(self):\n        return 3.14',
+        answer: '@property',
+        accept: ['@property '],
+        explain: '@property 让方法变身属性，读取时不用加括号。'
       }
     ]
   },
@@ -378,7 +559,7 @@ print(c.value)`,
     id: 'inheritance',
     title: '继承：复用并扩展已有的类',
     phase: 4,
-    order: 4,
+    order: 5,
     minutes: 28,
     rating: { level: 4, must: 4 },
     summary: '继承让你站在已有类的基础上，直接沿用它的方法，再加一点自己的新东西。',
@@ -390,7 +571,8 @@ print(c.value)`,
       { term: 'parent class', zh: '父类', note: '被继承的类，提供通用能力' },
       { term: 'child class', zh: '子类', note: '继承父类并可能添加新东西的类，写在括号里' },
       { term: 'super', zh: '调用父类', note: 'super() 表示去调用父类里现成的代码' },
-      { term: 'override', zh: '覆盖', note: '在子类写一个和父类同名的方法，替换原行为' }
+      { term: 'override', zh: '覆盖', note: '在子类写一个和父类同名的方法，替换原行为' },
+      { term: 'multilevel inheritance', zh: '多层继承', note: 'class Puppy(Dog) 还能再被继承，属性和方法沿链条一路往上找。' }
     ],
     steps: [
       '写 class 子类名(父类名): 开始继承',
@@ -461,6 +643,18 @@ print(d.call())`,
         bad: '每次新种类都想把父类的东西全部重写一遍',
         good: 'class Cat(Pet):\n    def purr(self):\n        return self.name + " 喵喵叫"',
         note: '父类的方法直接用，子类还能再添加自己的专属方法。'
+      },
+      {
+        title: '用父类名硬调用父类方法漏了 self',
+        bad: 'class Dog(Pet):\n    def __init__(self, name):\n        Pet.__init__()   # 漏传 self',
+        good: '    def __init__(self, name):\n        super().__init__(name)',
+        note: 'super() 会自动处理对象本身；用父类名直接调用则要自己传 self，容易漏。'
+      },
+      {
+        title: '覆盖后想用父类的原版却没辙',
+        bad: 'def call(self):\n    return "宠物 " + self.name   # 把父类版本整个丢了',
+        good: 'def call(self):\n    return super().call() + "，快过来！"',
+        note: '覆盖后仍想复用父类逻辑，用 super().方法名() 调用父类版本再加工。'
       }
     ],
     practice: [
@@ -528,10 +722,150 @@ print(r.recharge())`,
     ]
   },
   {
+    id: 'polymorphism',
+    title: '多态与鸭子类型：同一动作，各自表现',
+    phase: 4,
+    order: 6,
+    minutes: 25,
+    rating: { level: 4, must: 4 },
+    summary: '不同类的对象调用同名方法，各干各的事：让代码不关心"你是什么"，只关心"你会什么"。',
+    keywords: ['多态', '鸭子类型', '重写', '统一调用'],
+    tip: '零基础提示：多态就是"同一句话，不同对象有不同反应"。对狗说"叫"是汪汪，对猫说"叫"是喵喵——调用方完全不用管对面是谁。',
+    what: '子类重写父类方法后，同一句 对象.speak() 会根据对象的真实身份执行不同版本，这就是多态。Python 更进一步：不看继承关系，只要对象有这个方法就能调——这叫鸭子类型（"走起来像鸭子、叫起来像鸭子，那它就是鸭子"）。配合 for 循环统一调用，代码就不用写一堆 if 判断类型。',
+    analogy: '打个比方：指挥家和乐手说"演奏你的部分"——小提琴拉弦、鼓打鼓，指挥不需要解释每件乐器怎么响；甚至来个"会演奏的"新乐器，不用彩排也能直接上台。',
+    terms: [
+      { term: 'polymorphism', zh: '多态', note: '同名方法在不同对象上有不同表现。' },
+      { term: 'override', zh: '重写', note: '子类改写父类同名方法，调用时执行子类版本。' },
+      { term: 'duck typing', zh: '鸭子类型', note: '只看对象有没有这个方法，不看重不继承。' },
+      { term: 'isinstance', zh: '类型判断', note: 'isinstance(x, 类) 检查对象是否属于某个类，需要区分时才用。' }
+    ],
+    steps: [
+      '写父类 Animal 和两个子类，各自重写 speak',
+      '把它们放进同一个列表，for 循环统一调用 speak',
+      '再造一个不继承任何人的类，只要它有 speak 也放进列表试试',
+      '体会"不用写 if isinstance"的简洁',
+      '真需要区分类型时，再用 isinstance',
+    ],
+    examples: [
+      {
+        title: '重写带来的多态',
+        code: `class Animal:
+    def speak(self):
+        return "..."
+
+class Dog(Animal):
+    def speak(self):
+        return "汪汪"
+
+class Cat(Animal):
+    def speak(self):
+        return "喵喵"
+
+for a in [Dog(), Cat()]:
+    print(a.speak())`,
+        output: `汪汪
+喵喵`,
+        note: '同一句 a.speak()，Dog 执行子类版本，Cat 执行自己的版本——这就是多态。',
+      },
+      {
+        title: '鸭子类型：不继承也行',
+        code: `class Robot:
+    def speak(self):
+        return "滴嘟"
+
+for thing in [Dog(), Robot()]:
+    print(thing.speak())`,
+        output: `汪汪
+滴嘟`,
+        note: 'Robot 没继承 Animal，但有 speak 方法就能被统一调用——Python 只看"有没有这个动作"。',
+      },
+      {
+        title: '内置函数也是多态的',
+        code: `print(len("你好吗"), len([1, 2, 3]), len({"a": 1}))`,
+        output: `3 3 1`,
+        note: '同一个 len，对字符串数字符、对列表数元素、对字典数键值——你早就在享受多态了。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '重写时参数列表不一致',
+        bad: 'class Dog(Animal):\n    def speak(self, word):   # 父类 speak(self)',
+        good: 'class Dog(Animal):\n    def speak(self):   # 参数要和父类对齐',
+        note: '统一调用时按父类的签名传参，子类签名不一致就会报 TypeError。'
+      },
+      {
+        title: '以为必须继承才能参与多态',
+        bad: '为了能用同一个循环，硬把 Robot 继承 Animal 却什么都不写',
+        good: '只要实现同名方法就能参与统一调用（鸭子类型）',
+        note: 'Python 不检查血统；为了形式而继承反而让类关系变乱。'
+      },
+      {
+        title: '调用对象没有的方法',
+        bad: 'robot.fly()   # Robot 没定义 fly',
+        good: '确认对象确实实现了该方法，或先 hasattr(thing, "fly")',
+        note: '鸭子类型把检查推迟到运行时，调不存在的属性会 AttributeError。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '写 Circle 和 Square 两个类，都有 area 方法返回面积；把它们放进列表统一循环打印。',
+        starter: `class Circle:
+    def __init__(self, r):
+        self.r = r
+    # TODO: area 方法
+
+# TODO: Square 同理
+`,
+        answer: `class Circle:
+    def __init__(self, r):
+        self.r = r
+
+    def area(self):
+        return round(3.14159 * self.r ** 2, 2)
+
+class Square:
+    def __init__(self, side):
+        self.side = side
+
+    def area(self):
+        return self.side ** 2
+
+for shape in [Circle(2), Square(3)]:
+    print(shape.area())`,
+        output: `12.57
+9`,
+        hint: '两个类各自实现 area；循环只管调 area()，不关心它是圆还是方。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: 'Dog 重写了 speak，执行 Dog().speak() 时运行的是哪个版本？',
+        options: ['父类的', '子类的', '两个都执行', '随机一个'],
+        answer: 1,
+        explain: '重写后调用对象自己的类版本——子类覆盖父类同名方法。',
+      },
+      {
+        type: 'judge',
+        question: 'Python 里只要对象有同名方法，就能参与统一调用，不要求有继承关系。',
+        answer: true,
+        explain: '这就是鸭子类型：看行为不看血统。',
+      },
+      {
+        type: 'code',
+        question: '补全：检查对象 x 是否是 Dog 类的实例。',
+        code: 'print(__________(x, Dog))',
+        answer: 'isinstance',
+        accept: [],
+        explain: 'isinstance(对象, 类) 返回 True/False，真需要区分类型时用它。'
+      }
+    ]
+  },
+  {
     id: 'magic-methods',
     title: '魔法方法：str/len/eq 的故事',
     phase: 4,
-    order: 5,
+    order: 7,
     minutes: 27,
     rating: { level: 4, must: 4 },
     summary: '用双下划线取名的魔法方法，让 print、len、== 这些内置动作也能读懂你的对象。',
@@ -605,6 +939,12 @@ False`,
         bad: 'def print_me(self):\n    return "你好"',
         good: 'def __str__(self):\n    return "你好"',
         note: 'print、len、== 都只会认固定那一个魔法方法名，自己起个名字它们不会自动调用。'
+      },
+      {
+        title: '__eq__ 里比完忘了 return',
+        bad: 'def __eq__(self, other):\n    self.name == other.name   # 算了没交',
+        good: 'def __eq__(self, other):\n    return self.name == other.name',
+        note: '只写比较不写 return，方法交回 None，== 永远是 False。'
       }
     ],
     practice: [
@@ -651,6 +991,14 @@ False`,
         question: '魔法方法名少写一个下划线（如 __str_）程序会立刻报错。',
         answer: false,
         explain: '名字不对通常只是让它不生效，并不会明显报错，因此要仔细检查方法名。'
+      },
+      {
+        type: 'code',
+        question: '补全：让 len(book) 返回页数。',
+        code: 'class Book:\n    def __len__(self):\n        ________',
+        answer: 'return self.pages',
+        accept: [],
+        explain: '写上 __len__ 魔法方法后，len(book) 会自动调用它拿到页数。'
       }
     ]
   },
@@ -658,7 +1006,7 @@ False`,
     id: 'magic-methods-overview',
     title: '魔法方法全景：还有哪些咒语',
     phase: 4,
-    order: 6,
+    order: 8,
     minutes: 25,
     rating: { level: 4, must: 3 },
     summary: '一张表认全常见魔法方法：让对象会相加、能取元素、能放进 with，还能像函数一样被调用。',
@@ -826,6 +1174,183 @@ print(p[0])`,
         answer: '6',
         accept: [],
         explain: 'box[3] 触发 __getitem__，返回 3 * 2，所以打印 6。'
+      }
+    ]
+  },
+  {
+    id: 'class-design',
+    title: '类设计综合实战',
+    phase: 4,
+    order: 9,
+    minutes: 30,
+    rating: { level: 4, must: 4 },
+    summary: '把本阶段全部招式串起来：从零设计银行账户、歌单、待办清单三个真实小系统。',
+    keywords: ['类设计', '综合实战', '封装', '组合'],
+    tip: '零基础提示：这一节不学新语法，专门练"设计"。拿到需求先问三个问题：要存什么数据（属性）、要做什么动作（方法）、要不要给内置动作配魔法方法。',
+    what: '类设计的通用思路：先用 __init__ 定下对象出生时有哪些数据（属性），再按需求补方法（动作），最后看要不要用 __str__、__len__ 这类魔法方法让它更好用。更进一层是组合：把对象装进列表、把别的对象当属性，拼出真正的程序结构。第 8 阶段 FastAPI 的数据模型，用的就是这套思路。',
+    analogy: '打个比方：设计类像规划一家小店——__init__ 是装修进货（初始状态），方法是营业项目，魔法方法是店面招牌（别人一眼看懂怎么用）；组合则是开分店。',
+    terms: [
+      { term: 'composition', zh: '组合', note: '把对象作为属性装进另一个对象，拼出更大的结构。' },
+      { term: 'encapsulation', zh: '封装', note: '数据和操作它的方法绑在一起，外部只通过方法打交道。' },
+      { term: 'state', zh: '状态', note: '对象此刻所有属性值的总称，随方法调用而变化。' },
+      { term: 'PascalCase', zh: '大驼峰命名', note: '类名每个单词首字母大写，如 BankAccount、TodoList。' }
+    ],
+    steps: [
+      '需求一：银行账户——存款、取款、余额不足要拦住',
+      '需求二：歌单——能加歌、能用 len() 数、能 print 出好看的一句话',
+      '需求三：待办清单——列表里装对象（组合），能加任务、标记完成、打印全部',
+      '每个类写完先用两三行调用验证，再做下一个',
+      '回头检查命名（大驼峰类名）、属性是否都挂在 self 上',
+    ],
+    examples: [
+      {
+        title: '银行账户：状态 + 规则校验',
+        code: `class BankAccount:
+    def __init__(self, owner, balance=0):
+        self.owner = owner
+        self.balance = balance
+
+    def deposit(self, amount):
+        self.balance += amount
+        return self.balance
+
+    def withdraw(self, amount):
+        if amount > self.balance:
+            return "余额不足"
+        self.balance -= amount
+        return self.balance
+
+acc = BankAccount("小明", 100)
+acc.deposit(50)
+print(acc.withdraw(30))
+print(acc.withdraw(500))`,
+        output: `120
+余额不足`,
+        note: '属性是状态，方法改变状态并守护规则（余额不足不放行）——这就是封装。',
+      },
+      {
+        title: '歌单：用魔法方法融入内置动作',
+        code: `class Playlist:
+    def __init__(self, name):
+        self.name = name
+        self.songs = []
+
+    def add(self, song):
+        self.songs.append(song)
+
+    def __len__(self):
+        return len(self.songs)
+
+    def __str__(self):
+        return f"歌单《{self.name}》共 {len(self)} 首"
+
+p = Playlist("通勤")
+p.add("晴天")
+p.add("稻香")
+print(p)
+print(len(p))`,
+        output: `歌单《通勤》共 2 首
+2`,
+        note: '__str__ 让 print 好看好懂，__len__ 让 len() 直接可用——内置动作都认识了你的类。',
+      },
+      {
+        title: '待办清单：组合（列表里装对象）',
+        code: `class Task:
+    def __init__(self, title, done=False):
+        self.title = title
+        self.done = done
+
+class TodoList:
+    def __init__(self):
+        self.tasks = []
+
+    def add(self, title):
+        self.tasks.append(Task(title))
+
+    def finish(self, index):
+        self.tasks[index].done = True
+
+    def show(self):
+        for i, t in enumerate(self.tasks):
+            mark = "✓" if t.done else " "
+            print(f"{mark} {i + 1}. {t.title}")
+
+todo = TodoList()
+todo.add("买牛奶")
+todo.add("写作业")
+todo.finish(0)
+todo.show()`,
+        output: `✓ 1. 买牛奶
+  2. 写作业`,
+        note: 'TodoList 里装 Task 对象——"组合"是真实程序的基本结构，第 8 阶段存数据库的就是它们。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '把属性写成局部变量',
+        bad: 'def deposit(self, amount):\n    balance = self.balance + amount   # 没挂 self',
+        good: 'def deposit(self, amount):\n    self.balance = self.balance + amount',
+        note: '不挂 self 的变量只在这一行存活，对象的状态根本没变。'
+      },
+      {
+        title: '方法只 print 不 return',
+        bad: 'def total(self):\n    print(self.value)   # 想继续算就拿不到',
+        good: 'def total(self):\n    return self.value',
+        note: '需要被别的代码使用的结果一律 return；print 只是给人看的调试输出。'
+      },
+      {
+        title: '类名方法名混用小驼峰',
+        bad: 'class bankAccount:   # 类名小写开头',
+        good: 'class BankAccount:   # 大驼峰',
+        note: '类名大驼峰（BankAccount）、方法和变量小写下划线（deposit_money）是社区铁律。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '给 BankAccount 加一个 @property display，返回形如 ￥120.00 的余额展示（保留两位小数），打印 acc.display。',
+        starter: `class BankAccount:
+    def __init__(self, owner, balance=0):
+        self.owner = owner
+        self.balance = balance
+
+    # TODO: 加 @property display，返回 "￥120.00" 这样的文字
+`,
+        answer: `class BankAccount:
+    def __init__(self, owner, balance=0):
+        self.owner = owner
+        self.balance = balance
+
+    @property
+    def display(self):
+        return f"￥{self.balance:.2f}"
+
+acc = BankAccount("小明", 120)
+print(acc.display)`,
+        output: `￥120.00`,
+        hint: '@property + f"￥{self.balance:.2f}"：金额保留两位小数、前面加 ￥。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: 'TodoList 里装 Task 对象，这种"对象里装对象"的做法叫？',
+        options: ['继承', '组合', '多态', '递归'],
+        answer: 1,
+        explain: '把对象作为另一个对象的属性（或装进它的列表）就是组合，是拼出大程序的基本手段。',
+      },
+      {
+        type: 'judge',
+        question: '类名约定用大驼峰命名，如 BankAccount、TodoList。',
+        answer: true,
+        explain: '类名大驼峰、函数和变量小写下划线，是 Python 社区的命名铁律。',
+      },
+      {
+        type: 'code',
+        question: '补全：让 len(歌单) 返回歌曲数量。',
+        code: 'class Playlist:\n    def __________(self):\n        return len(self.songs)',
+        answer: '__len__',
+        accept: ['__len__ '],
+        explain: '__len__ 魔法方法让 len() 内置函数直接作用于你的对象。'
       }
     ]
   }
