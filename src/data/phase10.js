@@ -613,89 +613,133 @@ export default [
     ],
   },
   {
-    id: 'pandas-advanced',
-    title: 'pandas 进阶：分组统计与缺失值',
+    id: 'docker-deploy',
+    title: '部署上线：把项目发给全世界',
     phase: 10,
     order: 8,
-    minutes: 30,
-    rating: { level: 5, must: 3 },
-    summary: '按类别分组算总数/均值，先看懂缺失值再决定删行还是填充：这是把表格到结论的最后一公里。',
-    keywords: ['pandas', 'groupby', '缺失值', 'NaN', 'fillna', 'dropna', 'agg', '统计'],
-    tip: '零基础提示：分组之后一定要先检查缺失值，不然你算出来的平均数可能是错的，而且没人提醒你。',
-    what: '有了分组之后，就能按类别比较：每组几条、一共是多少、什么是最多的。但要先面对空值——要么 dropna 丢掉空行，要么 fillna 用合理值补齐。缺失值常常携带意义（比如"未填"），直接丢掉有时会把结论带偏，这一步是把数据当证据的关键。',
-    analogy: '像把调查问卷分类整理：先挑出没填的问卷看看有多少，没填的有的是"不知道"，有的是"没看到"。再按组统计时，这一步不能跳过。',
+    minutes: 32,
+    rating: { level: 4, must: 4 },
+    summary: '构建、授权、部署三步把项目发上线；本课程网站就是用这套流程部署的，环境变量管好密钥。',
+    keywords: ['部署', '上线', 'Docker', '环境变量', '构建', '发布'],
+    tip: '零基础提示：部署就是"让别人通过网址用到你的程序"。本课程网站自己就是案例：构建成静态文件、传到 Cloudflare，得到一个 workers.dev 网址——你现在看的页面就是这么上线的。',
+    what: '上线分两类：静态网站（本课程这种）构建出文件传给托管平台；后端服务（FastAPI 那种）要一台持续运行的服务器，常用 Docker 把"代码 + 环境"打包成镜像，到哪里都能原样跑。共同底线是密钥管理：数据库密码、API Key 一律放环境变量，绝不进代码仓库。',
+    analogy: '打个比方：Docker 像把"食材 + 菜谱 + 厨具"封进同一个集装箱，搬到哪个港口都能做出同一道菜；部署上线则是给这家店挂上招牌和门牌（网址），让客人找得到门。',
     terms: [
-      { term: 'groupby', zh: '分组', note: '按某一列把行分开，对每组分别算。' },
-      { term: 'agg', zh: '聚合', note: '指定每组做什么统计，比如 count、sum、mean。' },
-      { term: 'nan', zh: '缺失值', note: '表格中的空位，统计时会直接忽略或报错，要先决定怎么处理。' },
-      { term: 'fillna', zh: '填充缺失值', note: '用给定值补齐空值，比如用平均数或"未知"填充。' },
-      { term: 'dropna', zh: '删除缺失行', note: '直接丢弃含空值的行，最干净也最容易丢信息。' },
+      { term: 'deploy', zh: '部署', note: '把写好的程序放到服务器或托管平台，让别人能访问。' },
+      { term: 'build', zh: '构建', note: '把源代码加工成可运行的产物，如 npm run build 生成 dist 文件夹。' },
+      { term: 'docker', zh: '容器', note: '把代码和运行环境打包在一起的技术，解决"在我电脑能跑"的问题。' },
+      { term: 'environment variable', zh: '环境变量', note: '在系统层面存配置（如密钥），代码里用 os.environ 读取。' },
+      { term: 'static hosting', zh: '静态托管', note: '专门托管构建后静态文件的平台，如 Cloudflare Pages/Workers。' }
     ],
     steps: [
-      '用 pd.DataFrame 先做一张带空值的小表，打印看看空位在哪。',
-      '用 isna().sum() 数出各列空值数量。',
-      '用 dropna 丢掉空行；用 fillna 用指定值补齐，对比两种结果。',
-      '用 groupby("...")["价格"].agg(["count", "sum", "mean"]) 做分类统计。',
-      '给缺失值填进来之后再统计，确认结论变化符合你的预期。',
+      '构建：npm run build（或你项目的构建命令），产出可发布的文件夹',
+      '授权：npx wrangler login，浏览器里点一次 Allow',
+      '部署：npx wrangler deploy，得到形如 xxx.workers.dev 的网址',
+      '打开网址验证功能正常；把网址分享出去',
+      '之后每次更新：重新构建再 deploy（或配好 Git 自动部署，push 即上线）',
     ],
     examples: [
       {
-        title: '分组并算出两种统计',
-        code: 'import pandas as pd\n\ndf = pd.DataFrame({\n    "city": ["北京", "北京", "上海", "上海"],\n    "price": [100, 200, 150, None],\n})\nprint(df.isna().sum())\nprint(df.dropna().groupby("city")["price"].agg(["count", "sum", "mean"]))',
-        output: 'city     0\nprice    1\ndtype: int64\n       count  sum  mean\ncity                    \n上海     1  150  150.0\n北京     2  300  150.0',
-        note: '能本机运行。先查空值，再丢掉有空值的行，再按城市统计；先看缺失值再动手，结论才可信。',
+        title: '本课程网站真实的三步上线',
+        code: `# 终端里依次执行（本项目真实使用过的命令）：
+# 1) npm run build          # 构建出 dist/ 静态文件
+# 2) npx wrangler login     # 浏览器弹出 Cloudflare 授权页，点允许
+# 3) npx wrangler deploy    # 上传并发布
+
+print("部署完成：https://python-speedrun.3356921908.workers.dev")`,
+        output: `部署完成：https://python-speedrun.3356921908.workers.dev`,
+        note: '这就是本课程网站的上线过程；你正在看的页面就是这三条命令的结果。以后 push 到 GitHub 会自动触发部署。',
       },
       {
-        title: '用 fillna 填补再做平均',
-        code: 'import pandas as pd\n\ndf = pd.DataFrame({\n    "city": ["北京", "北京", "上海"],\n    "price": [100, 200, None],\n})\nprint(df["price"].fillna(0).mean())',
-        output: '166.66666666666666',
-        note: '能本机运行。这里用 0 填补只是示意；真实项目里填补值要结合业务来定，比如用同组均值或固定类别。',
+        title: '认识 Dockerfile：把环境和代码一起打包',
+        code: `dockerfile = """
+FROM python:3.12-slim
+WORKDIR /app
+COPY . .
+RUN pip install -r requirements.txt
+CMD ["python", "main.py"]
+"""
+lines = [l for l in dockerfile.strip().split("\\n") if l.strip()]
+print("指令数:", len(lines))
+print("基础镜像:", lines[0].split()[1])`,
+        output: `指令数: 5
+基础镜像: python:3.12-slim`,
+        note: 'FROM 指定基础环境，COPY 把代码装进去，RUN 装依赖，CMD 是启动命令。有这份文件，任何装了 Docker 的机器都能跑出一样的结果。',
       },
+      {
+        title: '部署前检查：密钥走环境变量',
+        code: `import os
+
+config = {
+    "数据库密码": os.environ.get("MYSQL_PASSWORD"),
+    "AI 接口密钥": os.environ.get("LLM_API_KEY"),
+}
+for name, value in config.items():
+    print(name, "→", "已配置" if value else "未设置")`,
+        output: `数据库密码 → 未设置
+AI 接口密钥 → 未设置`,
+        note: '上线前跑一遍这个检查：两项都应"已配置"。密钥通过平台的环境变量设置页填入，不进代码、不进 Git。',
+      }
     ],
     pitfalls: [
       {
-        title: '不看缺失值直接算平均数',
-        bad: 'print(df["price"].mean())',
-        good: 'print(df["price"].isna().sum())\nprint(df["price"].fillna(df["price"].mean()).mean())',
-        note: '默认 mean 会忽略 NaN，但"忽略"不是"解决"。先搞清空值数量，再决定删还是填。',
+        title: '密钥写进代码并推上仓库',
+        bad: 'api_key = "sk-真实密钥"   # 提交后永久留在 Git 历史里',
+        good: 'api_key = os.environ["LLM_API_KEY"]   # 平台环境变量里配置',
+        note: '代码会进 Git 历史，删了文件也删不掉历史；泄露的密钥要立刻在平台上作废重发。'
       },
       {
-        title: 'fillna 用 0 掩盖了未知',
-        bad: 'df.fillna(0)  # 不知道的填成了 0',
-        good: '先想这个 0 在业务上代表什么，再用合理值填充',
-        note: '价格缺失填 0 会严重拉低平均值，让"没填写"被理解为"免费"。填充要忠于意义，不是图省事。',
+        title: '改了代码忘了重新构建部署',
+        bad: '改完源码直接刷新线上网址，看不到变化',
+        good: '重新 build 再 deploy（或确认 Git 自动部署已触发）',
+        note: '线上跑的是上次构建的产物；源码更新后必须重新走一遍构建和部署。'
       },
       {
-        title: '分组之后还在取原始列',
-        bad: 'df.groupby("city")["price"]  # 拿到的是分组对象，不是表',
-        good: 'df.groupby("city")["price"].agg(["count", "mean"])',
-        note: 'groupby 之后直接打印只会看到分组对象描述，不会得到表格。必须跟上 agg、mean、count 之类的聚合。',
-      },
+        title: '本地能跑，服务器上跑不起来',
+        bad: '依赖没写进 requirements.txt，服务器上根本没装',
+        good: '依赖全部写进 requirements.txt，环境用 Docker 或平台配置固定',
+        note: '"在我电脑能跑"的根因是环境不一致；把依赖和环境写进文件（或镜像）才能处处一致。'
+      }
     ],
     practice: [
       {
-        prompt: '对表格按 city 分组，数出每组有几条、平均价格是多少。',
-        starter: 'import pandas as pd\n\ndf = pd.DataFrame({\n    "city": ["北京", "上海", "北京"],\n    "price": [100, 150, None],\n})\n# TODO: 打印每组的 count 和 mean\n',
-        answer: 'import pandas as pd\n\ndf = pd.DataFrame({\n    "city": ["北京", "上海", "北京"],\n    "price": [100, 150, None],\n})\nprint(df.dropna().groupby("city")["price"].agg(["count", "mean"]))',
-        output: '       count  mean\ncity              \n上海     1  150.0\n北京     1  100.0',
-        hint: '先 dropna，再 groupby，再 agg。',
-      },
+        prompt: '写一个部署前自检脚本：用 for 循环逐条打印 4 项检查清单（构建产物、密钥、依赖、网址），每条前加 [ ] 标记。',
+        starter: `checks = ["dist 目录已生成", "密钥已放环境变量", "依赖已写入 requirements.txt", "已拿到线上网址"]
+# TODO: 循环打印检查清单
+`,
+        answer: `checks = ["dist 目录已生成", "密钥已放环境变量", "依赖已写入 requirements.txt", "已拿到线上网址"]
+for i, item in enumerate(checks, start=1):
+    print(f"[ ] {i}. {item}")`,
+        output: `[ ] 1. dist 目录已生成
+[ ] 2. 密钥已放环境变量
+[ ] 3. 依赖已写入 requirements.txt
+[ ] 4. 已拿到线上网址`,
+        hint: 'enumerate(checks, start=1) 给每条加编号；[ ] 是待办标记，做完可以改成 [x]。',
+      }
     ],
     quiz: [
       {
         type: 'choice',
-        question: '处理缺失值前，最稳妥的第一步是？',
-        options: ['直接 dropna()', '先 isna().sum() 看缺多少', '随便填一个 0', '把空值所在列整列删掉'],
+        question: '为什么部署前要把密钥放进环境变量？',
+        options: ['让密钥更难被猜到', '代码会进 Git 历史，写死的密钥等于公开', '环境变量让程序跑得更快', '平台要求必须这样'],
         answer: 1,
-        explain: '先了解空值的规模和分布，再决定删还是填，才能避免"结论看似合理但其实是空值造成的"。',
+        explain: '写死在代码里的密钥会随仓库公开；环境变量存在平台配置里，不进代码。',
       },
       {
         type: 'judge',
-        question: 'groupby 之后不跟任何聚合方法，只打印分组对象，得不到统计结果。',
+        question: 'Docker 的价值之一是让程序在不同机器上有一致的运行环境。',
         answer: true,
-        explain: 'groupby 返回的是分组对象，需要 agg、mean、count 才能算出具体统计值。',
+        explain: '镜像把代码和依赖环境一起打包，"在我电脑能跑"就变成了"在哪都能跑"。',
       },
-    ],
+      {
+        type: 'code',
+        question: '补全：读取环境变量里的 API 密钥。',
+        code: 'import os\nkey = os.__________["LLM_API_KEY"]',
+        answer: 'environ',
+        accept: [],
+        explain: 'os.environ 是环境变量字典，按键取值；密钥都从这里来。'
+      }
+    ]
   },
   {
     id: 'pytest-advanced',

@@ -16,16 +16,16 @@ import practice from './practice.js'
 import cheatsheet from './cheatsheet.js'
 
 export const PHASES = [
-  { id: 1, name: '认识 Python', short: '入门', minutes: 165, desc: '安装运行环境、第一个程序、变量、条件、循环、函数：让程序第一次在你电脑上跑起来。' },
-  { id: 2, name: '常用的数据', short: '数据', minutes: 190, desc: '字符串处理、列表、字典、元组、解包、推导式、小练习：能处理和展示数据。' },
-  { id: 3, name: '组织代码', short: '组织', minutes: 150, desc: '函数进阶、模块与 import、写自己的工具函数：把一段段代码整理成能复用的模块。' },
-  { id: 4, name: '认识"对象"', short: '对象', minutes: 130, desc: 'class、self、继承：理解什么是对象，给数据和行为打包。' },
-  { id: 5, name: '读文件与异常', short: '异常', minutes: 160, desc: '文件读写、异常处理、with 语句、日志：让程序更健壮、遇错不崩。' },
-  { id: 6, name: '常用模块', short: '模块', minutes: 150, desc: '标准库常用模块：json、datetime、random、os、命令行参数：直接解决日常小需求。' },
-  { id: 7, name: '进阶选修', short: '选修', minutes: 137, desc: '选修：lambda/sorted 精确排序、生成器与装饰器实现小流水线、itertools 工具箱：练到能实现。' },
-  { id: 8, name: 'AI 应用入门', short: 'AI', minutes: 135, desc: '选修：requests 与 JSON、FastAPI 接口与 Pydantic 校验、调用大模型接口：为真实 AI 应用打基础。' },
-  { id: 9, name: '常用框架与工具', short: '框架', minutes: 218, desc: '选修：Flask 与 Django、httpx 并发、pandas 处理表格、pytest 自动测试、网页接口：写出能用的小工具。' },
-  { id: 10, name: 'AI 应用框架', short: 'AI 框架', minutes: 318, desc: '选修：调用大模型接口、LangChain 工具与结构化输出、LlamaIndex RAG、从零实现可测试的问答接口。' },
+  { id: 1, name: '认识 Python', short: '入门', minutes: 255, desc: '安装运行、变量、类型、运算符、列表、判断、循环、分支循环实战与调试入门：让程序第一次在你电脑上跑起来。' },
+  { id: 2, name: '常用的数据', short: '数据', minutes: 245, desc: '字符串与格式化编码、元组、列表深化（切片/排序/拷贝）、字典与遍历嵌套、解包、推导式、集合。' },
+  { id: 3, name: '组织代码', short: '组织', minutes: 241, desc: '函数基础与进阶、闭包与高阶函数、递归、异常处理、模块与 import、作用域、Git 存档：把代码整理成能复用的模块。' },
+  { id: 4, name: '认识"对象"', short: '对象', minutes: 236, desc: 'class、self、方法、@property 与类方法/静态方法、继承、多态与鸭子类型、魔法方法、类设计实战。' },
+  { id: 5, name: '读文件与异常', short: '异常', minutes: 176, desc: '文件读写、CSV 与 pickle、with 语句、异常处理、日志、sqlite3 数据库：让数据落得下来、程序更健壮。' },
+  { id: 6, name: '常用模块', short: '模块', minutes: 209, desc: '标准库常用模块：json、datetime、random、os/pathlib、input/sys.argv、argparse、pip 与虚拟环境、collections。' },
+  { id: 7, name: '进阶特性', short: '进阶', minutes: 312, desc: 'lambda 排序、生成器、装饰器、itertools、正则、类型注解、多线程、多进程、asyncio、socket：进阶 Python 的全部钥匙。' },
+  { id: 8, name: '网络与 AI 应用入门', short: 'AI', minutes: 189, desc: 'HTTP 协议、requests、前端三件套速成、FastAPI 与 Pydantic、POST、调用大模型接口：后端与 AI 的第一课。' },
+  { id: 9, name: '常用框架与工程', short: '框架', minutes: 244, desc: 'Flask 与 Django、httpx 并发、pytest 自动测试、MySQL 与 SQL、调试方法论、Flask JSON 接口。' },
+  { id: 10, name: 'AI 应用框架', short: 'AI 框架', minutes: 320, desc: 'LangChain 工具与结构化输出、LlamaIndex RAG、三大框架进阶、pytest 进阶、Docker 与部署上线，收口于可测试的问答接口。' },
 ]
 
 const RAW = { 1: phase1, 2: phase2, 3: phase3, 4: phase4, 5: phase5, 6: phase6, 7: phase7, 8: phase8, 9: phase9, 10: phase10 }
