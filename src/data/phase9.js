@@ -20,6 +20,7 @@ export default [
     terms: [
       { term: 'framework', zh: '框架', note: '别人已经写好骨架、你只填自己那部分代码的工具包；Flask 是专做网页服务的框架。' },
       { term: 'route', zh: '路由', note: '网址和函数之间的对应关系：访问这个网址，就执行这个函数。' },
+      { term: 'debug mode', zh: '调试模式', note: 'app.run(debug=True) 出错时直接在网页上显示完整报错，方便开发期排查。' },
       { term: 'status code', zh: '状态码', note: '服务器对这次访问的回答代号，200 表示一切正常，404 表示这个网址不存在。' },
       { term: 'wsgi', zh: 'WSGI', note: 'Python 网页服务程序的通用接口标准，Flask 应用按这个标准被服务器调用。' },
     ],
@@ -154,6 +155,12 @@ export default [
         good: '在 urls.py 的 urlpatterns 里加 path("index/", views.index)',
         note: '404 有时不是代码错，而是这个网址压根没登记。写完视图顺手把网址接上，再看结果。',
       },
+      {
+        title: '新建了 app 却没登记进 INSTALLED_APPS',
+        bad: '写了 myapp/ 应用，settings.py 里没有加它',
+        good: "在 settings.py 的 INSTALLED_APPS 列表里加上 'myapp'",
+        note: 'Django 的模型、后台都对 INSTALLED_APPS 里的应用生效；忘了登记会出现"表不存在"这类奇怪报错。'
+      },
     ],
     practice: [
       {
@@ -241,6 +248,12 @@ export default [
         good: 'client = httpx.AsyncClient(timeout=10)',
         note: '显式写超时，等于说"最多等 10 秒"。网络不稳时程序会及时报错，而不是一直转圈。',
       },
+      {
+        title: '拿 r.text 当 JSON 解析失败还不知道原因',
+        bad: 'data = r.json()   # 返回的不是 JSON 时抛异常',
+        good: '先看 r.headers["content-type"] 是不是 application/json，再决定 r.json()',
+        note: '接口出错时常常返回 HTML 错误页；先看响应头里的类型，再选解析方式。'
+      },
     ],
     practice: [
       {
@@ -265,90 +278,11 @@ export default [
         answer: false,
         explain: 'await 只能出现在 async def 定义的函数里，否则是语法错误。',
       },
-    ],
-  },
-  {
-    id: 'pandas-basics',
-    title: 'pandas：像表格一样处理数据',
-    phase: 9,
-    order: 4,
-    minutes: 34,
-    rating: { level: 4, must: 4 },
-    summary: '把一列数据放进 DataFrame，用几行代码完成筛选、统计、分组和读 CSV。',
-    keywords: ['pandas', 'DataFrame', 'Series', '筛选', 'groupby', '分组', 'read_csv', '缺失值'],
-    tip: '零基础提示：把 DataFrame 想成一张 Excel 表。你不是在写循环，而是在说"把满足条件的那几行给我"、"按这一列分组求平均"。',
-    what: '列表和字典适合几十条数据，数据一多、要按条件筛选和统计时就很费劲。pandas 提供两种结构：Series（一列）和 DataFrame（一张带行列表格的表）。你可以按条件筛选行、对某列求平均、按某列分组统计，也能用 read_csv 直接把表格文件读进来。它是"用代码做表格活"的标准工具。',
-    analogy: 'DataFrame 就像一张 Excel 表：列有名字、行有编号。你平时拖筛选、写透视表的动作，在这里变成一行行代码，而且能重复跑一万次。',
-    terms: [
-      { term: 'dataframe', zh: '数据表', note: 'pandas 里的二维表格结构，有行有列，列有名字，是处理表格数据的主角。' },
-      { term: 'series', zh: '一列数据', note: 'DataFrame 里的单独一列，比如 df["score"] 拿到的就是 Series。' },
-      { term: 'filter', zh: '筛选', note: '用条件表达式挑出满足要求的行，像 df[df["score"] >= 60]。' },
-      { term: 'groupby', zh: '分组', note: '按某一列的值把行分成几组，再对每组分别算统计量。' },
-      { term: 'nan', zh: '缺失值', note: '表格里的空值，显示为 NaN，统计前通常要先处理。' },
-    ],
-    steps: [
-      '在终端输入 pip install pandas 安装。',
-      '用 pd.DataFrame({...}) 从字典建一张小表，先 print 出来看看长什么样。',
-      '用 df["列名"] 取一列，df[条件] 筛行，df["列"].mean() 求平均。',
-      '用 df.groupby("列名")["数值列"].mean() 做分组统计。',
-      '用 pd.read_csv("文件路径") 读入表格文件；核对列名和编码，再开始处理。',
-    ],
-    examples: [
-      {
-        title: '建一张表并做筛选统计',
-        code: 'import pandas as pd\n\ndf = pd.DataFrame({\n    "name": ["小明", "小红", "小刚"],\n    "score": [90, 58, 76],\n})\nprint(df)\nprint(df[df["score"] >= 60]["name"].tolist())\nprint(round(df["score"].mean(), 1))',
-        output: '   name  score\n0  小明     90\n1  小红     58\n2  小刚     76\n[\'小明\', \'小刚\']\n74.7',
-        note: '能本机运行：先把 pandas 装好。df[条件] 挑出行，后面加 ["name"] 只保留名字列；tolist() 把结果转成普通列表方便打印。',
-      },
-      {
-        title: '按分组统计并处理缺失值',
-        code: 'import pandas as pd\n\ndf = pd.DataFrame({\n    "city": ["北京", "上海", "北京", "上海"],\n    "price": [3.5, 4.0, None, 2.5],\n})\nprint(df["price"].isna().sum())\nprint(df.dropna()["price"].mean())\nprint(df.groupby("city")["price"].mean())',
-        output: '1\n3.3333333333333335\ncity\n上海    3.25\n北京    3.50\nName: price, dtype: float64',
-        note: '能本机运行。isna().sum() 数出有几个空值；dropna() 先丢掉空行再求平均，避免结果被空值影响；groupby 按城市分组算均价。',
-      },
-    ],
-    pitfalls: [
-      {
-        title: '取一列时用点号，遇到空格或中文就失败',
-        bad: 'df.name  # 列名带空格、中文或与内置名字重名时会出问题',
-        good: 'df["name"]  # 用中括号加列名字符串，永远都对',
-        note: '点号写法只在列名是干净英文时方便。养成用 df["列名"] 的习惯，换数据也不会突然报错。',
-      },
-      {
-        title: '把筛选写成了一个链式的多重比较忘了括号',
-        bad: 'df[df["score"] > 60 and df["score"] < 90]',
-        good: 'df[(df["score"] > 60) & (df["score"] < 90)]',
-        note: 'pandas 里多个条件要用 & 连接，而且每个条件都要用括号包起来；直接写 and 会报"真假值不明确"。',
-      },
-      {
-        title: '算平均之前不看有没有空值',
-        bad: 'df["price"].mean()  # 有 NaN 时结果与预期不符却看不出原因',
-        good: 'df["price"].isna().sum() 先看空值有几个，再决定 dropna() 还是 fillna()',
-        note: '先查空值再统计，是拿 panda 数据前最省事的一步，能避免"数字对不上但找不到原因"。',
-      },
-    ],
-    practice: [
-      {
-        prompt: '建一张含 city 和 price 两列的表，按 city 分组算出平均价格。',
-        starter: 'import pandas as pd\n\ndf = pd.DataFrame({\n    "city": ["北京", "上海", "北京"],\n    "price": [3.5, 4.0, 2.5],\n})\n# TODO: 按 city 分组求 price 的平均值并打印\n',
-        answer: 'import pandas as pd\n\ndf = pd.DataFrame({\n    "city": ["北京", "上海", "北京"],\n    "price": [3.5, 4.0, 2.5],\n})\nprint(df.groupby("city")["price"].mean())',
-        output: 'city\n上海    4.0\n北京    3.0\nName: price, dtype: float64',
-        hint: '先 groupby("city") 分组，再用 ["price"] 挑出要统计的列，最后 .mean()。',
-      },
-    ],
-    quiz: [
-      {
-        type: 'choice',
-        question: 'pandas 里用中括号筛出 score 不小于 60 的行，正确写法是？',
-        options: ['df["score" >= 60]', 'df[df["score"] >= 60]', 'df.filter(score >= 60)', 'df["score"] >= 60'],
-        answer: 1,
-        explain: '条件表达式 df["score"] >= 60 会得到一串真假值，用它去筛整张表：df[条件]。',
-      },
       {
         type: 'judge',
-        question: 'pandas 里按不同城市分别算平均价格，用 groupby 比手写循环更省事。',
+        question: '给 httpx.AsyncClient 设置 timeout=10 后，请求超过 10 秒会抛超时异常。',
         answer: true,
-        explain: 'groupby 一组直接给出每组的统计结果，不用自己写循环累加，也不容易算错。',
+        explain: '超时就是"最多等多久"；到点报错总比无限等待好，还能在 except 里给出提示。',
       },
     ],
   },
@@ -356,7 +290,7 @@ export default [
     id: 'pytest-basics',
     title: 'pytest：给你的代码加自动检查',
     phase: 9,
-    order: 5,
+    order: 4,
     minutes: 32,
     rating: { level: 3, must: 4 },
     summary: '把"我手动跑了一次，看起来对"变成一条能重复执行的检查：写一个以 test_ 开头的函数，用 assert 说明期望。',
@@ -369,6 +303,7 @@ export default [
       { term: 'assert', zh: '断言', note: 'Python 关键字，后面跟一个条件，条件不成立就报错——这就是测试失败的信号。' },
       { term: 'fixture', zh: '夹具', note: '用 @pytest.fixture 装饰的函数，为多个测试准备好公共数据，谁需要就在参数里写谁的名字。' },
       { term: 'parametrize', zh: '参数化', note: '用 @pytest.mark.parametrize 给同一个测试喂多组输入，一次跑完所有组合。' },
+      { term: 'regression', zh: '回归', note: '改代码后跑一遍旧测试，确认没把原来能用的功能弄坏。' },
     ],
     steps: [
       '在终端输入 pip install pytest 安装。',
@@ -412,6 +347,12 @@ export default [
         good: 'assert add(1, 2) == 3',
         note: '类型不同也是不相等。失败信息里会同时给出左右两边的值和类型，一行行读它就能定位问题。',
       },
+      {
+        title: '测试之间互相依赖执行顺序',
+        bad: 'def test_b():\n    assert cache.count == 1   # 依赖 test_a 先跑过',
+        good: '每个测试自己准备数据（或用 fixture），互不依赖',
+        note: 'pytest 不保证顺序；单独跑某一个测试时也能通过，测试才可靠。'
+      },
     ],
     practice: [
       {
@@ -436,13 +377,21 @@ export default [
         answer: true,
         explain: 'assert 后面条件为假就抛错误，pytest 捕获后报告失败并给出实际值与预期值的对比。',
       },
+      {
+        type: 'code',
+        question: '补全：用参数化覆盖 double(0) == 0 这一组。',
+        code: '@pytest.mark.parametrize("x, expected", [(0, ____)])\ndef test_double(x, expected):\n    assert double(x) == expected',
+        answer: '0',
+        accept: [],
+        explain: 'parametrize 的每组数据是一个元组，(0, 0) 表示输入 0 期望 0。'
+      }
     ],
   },
   {
     id: 'writing-checklist',
     title: '写 Python 前先过一遍：四个必查',
     phase: 9,
-    order: 6,
+    order: 5,
     minutes: 22,
     rating: { level: 2, must: 5 },
     summary: '把最常见的书写错误记成四条检查：半角标点、缩进一致、引号成对、类型先搞清楚。',
@@ -455,6 +404,7 @@ export default [
       { term: 'indentation', zh: '缩进', note: '每一行代码前的空格，Python 用它表示代码块的层次。' },
       { term: 'type', zh: '类型', note: '数据的种类，决定它能和哪些操作结合；str、int 不是随便互换的。' },
       { term: 'error', zh: '错误', note: '程序没法继续正常往下跑时，Python 停下并告诉你出错原因的提示。' },
+      { term: 'half-width', zh: '半角字符', note: '英文标点占一格、全角占两格；代码里只用半角符号。' },
     ],
     steps: [
       '写代码前先看编辑器里有没有中文标点（括号、逗号、引号、冒号）。',
@@ -540,7 +490,7 @@ export default [
     id: 'flask-api',
     title: '用 Flask 写一个 JSON 接口',
     phase: 9,
-    order: 7,
+    order: 6,
     minutes: 34,
     rating: { level: 4, must: 4 },
     summary: '做一个能被别的程序调用的接口：收到 JSON 校验字段，处理后在响应里带上正确的状态码。',
@@ -553,6 +503,7 @@ export default [
       { term: 'request', zh: '请求对象', note: '本次访问带进来的信息，包含请求体、网址参数和请求头' },
       { term: 'status code', zh: '状态码', note: '数字形式的处理结果：200 成功、400 调用方数据不对、404 找不到、500 服务端出错' },
       { term: 'validate', zh: '校验', note: '检查调用方传来的字段是否齐全、类型是否正确' },
+      { term: 'get_json', zh: '取请求体', note: 'request.get_json(silent=True) 拿到请求体字典，格式不对也不炸' },
     ],
     steps: [
       '写 @app.post("/todos") 的接口函数，先只返回一个固定字典，确认能通。',
@@ -667,4 +618,275 @@ def echo():
       },
     ],
   },
+  {
+    id: 'mysql-basics',
+    title: 'MySQL 与 SQL：把数据存进真正的数据库',
+    phase: 9,
+    order: 7,
+    minutes: 32,
+    rating: { level: 4, must: 4 },
+    summary: '把 sqlite 里学的 SQL 搬到 MySQL：装服务、装驱动、用同样的语句读写真实的多用户数据库。',
+    keywords: ['MySQL', 'SQL', '数据库', 'DDL', 'DML', '连接'],
+    tip: '零基础提示：你在第 5 阶段用过的 CREATE TABLE、INSERT、SELECT 是通用语言——MySQL 里几乎原样能用。差别是：MySQL 是"独立安装的服务"，多个人、多个程序可以同时用它。',
+    what: 'MySQL 是最常用的开源数据库软件。用法三步：装好 MySQL 服务并建一个库；pip install mysql-connector-python 装驱动；用 mysql.connector.connect(主机, 账号, 密码, 库名) 连上，之后的 execute、fetchall 和 sqlite3 一模一样。SQL 语句分三类记：DDL 管结构（CREATE/ALTER）、DML 管数据（INSERT/UPDATE/DELETE）、DQL 管查询（SELECT）。',
+    analogy: '打个比方：sqlite 是你电脑里的单机记账本，MySQL 是银行的核心系统——大家连的是同一个服务，账本只有一份，谁都改不坏谁的数据。',
+    terms: [
+      { term: 'mysql', zh: 'MySQL', note: '最常用的开源数据库服务，需要独立安装并保持运行。' },
+      { term: 'connector', zh: '连接驱动', note: 'pip install mysql-connector-python，让 Python 能连上 MySQL。' },
+      { term: 'ddl', zh: '数据定义语言', note: 'CREATE TABLE、ALTER TABLE 这类"定义结构"的 SQL。' },
+      { term: 'dml', zh: '数据操作语言', note: 'INSERT、UPDATE、DELETE 这类"改数据"的 SQL。' },
+      { term: 'dql', zh: '数据查询语言', note: 'SELECT 这类"查数据"的 SQL。' }
+    ],
+    steps: [
+      '安装 MySQL 并记住 root 密码；用命令行或图形工具建一个库：CREATE DATABASE shop;',
+      'pip install mysql-connector-python 安装 Python 驱动',
+      '连接：mysql.connector.connect(host="localhost", user="root", password="...", database="shop")',
+      '建表、插入、查询——语句和 sqlite 阶段学的相同',
+      '连接放 try/finally 里，finally 中 close',
+    ],
+    examples: [
+      {
+        title: '先在 sqlite 里把 SQL 练熟（本机可跑）',
+        code: `import sqlite3
+
+conn = sqlite3.connect("shop.db")
+cur = conn.cursor()
+cur.execute("CREATE TABLE goods (name TEXT, price INT)")
+cur.executemany("INSERT INTO goods VALUES (?, ?)", [("钢笔", 5), ("台灯", 39)])
+cur.execute("SELECT name, price FROM goods WHERE price > 10 ORDER BY price")
+print(cur.fetchall())
+conn.close()`,
+        output: `[('台灯', 39)]`,
+        note: 'CREATE、INSERT、SELECT、WHERE、ORDER BY 在 sqlite 和 MySQL 里写法一致——先把 SQL 练熟，换数据库零成本。',
+      },
+      {
+        title: '连接真正的 MySQL',
+        code: `import mysql.connector
+
+conn = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="你的密码",
+    database="shop",
+)
+cur = conn.cursor()
+cur.execute("SELECT name, price FROM goods")
+print(cur.fetchall())
+conn.close()`,
+        output: `预期说明：打印你 shop 库里 goods 表的所有行，例如 [('钢笔', 5), ('台灯', 39)]。需先安装 MySQL、建库并 pip install mysql-connector-python，在本机运行。`,
+        note: '连接参数四件套：主机、账号、密码、库名；密码不要写死在代码里，用环境变量（第 10 阶段细讲）。',
+        verify: false
+      },
+      {
+        title: 'SQL 三大类对照',
+        code: `sql_types = {
+    "CREATE TABLE / ALTER": "DDL：定义结构",
+    "INSERT / UPDATE / DELETE": "DML：修改数据",
+    "SELECT": "DQL：查询数据",
+}
+for sql, kind in sql_types.items():
+    print(kind, "→", sql)`,
+        output: `DDL：定义结构 → CREATE TABLE / ALTER
+DML：修改数据 → INSERT / UPDATE / DELETE
+DQL：查询数据 → SELECT`,
+        note: '报错或看文档时先分清类别：结构问题查 DDL 语法，数据不对查 DML，查不出结果看 DQL 的 WHERE。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: 'UPDATE / DELETE 忘了 WHERE',
+        bad: 'UPDATE goods SET price = 0   # 全表价格都变 0',
+        good: 'UPDATE goods SET price = 0 WHERE name = "钢笔"',
+        note: '没有 WHERE 就是"对全表执行"，MySQL 里一秒毁掉全部数据；执行前先 SELECT 确认范围。'
+      },
+      {
+        title: '数据库密码写死在代码里',
+        bad: 'password="我的密码123"   # 提交到仓库就泄露了',
+        good: 'password 存进环境变量，代码里 os.environ["MYSQL_PASSWORD"]',
+        note: '代码会进 Git 历史，密码一旦提交就删不干净；一律走环境变量或配置文件。'
+      },
+      {
+        title: '连不上就乱猜',
+        bad: "报 Access denied 或 Can't connect，反复改代码",
+        good: '先确认 MySQL 服务在运行、账号密码正确、库名存在，再看驱动装没装',
+        note: '连接错误分三类：服务没启动、凭据不对、驱动缺失；按顺序排查一遍基本都能解决。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '在 sqlite 里建 products 表（name TEXT, price INT），插入两件商品，按价格从高到低查询并打印全部。',
+        starter: `import sqlite3
+
+conn = sqlite3.connect("products.db")
+cur = conn.cursor()
+# TODO: 建表、插入、排序查询
+conn.close()
+`,
+        answer: `import sqlite3
+
+conn = sqlite3.connect("products.db")
+cur = conn.cursor()
+cur.execute("CREATE TABLE products (name TEXT, price INT)")
+cur.executemany("INSERT INTO products VALUES (?, ?)", [("键盘", 199), ("鼠标", 79)])
+conn.commit()
+cur.execute("SELECT name, price FROM products ORDER BY price DESC")
+print(cur.fetchall())
+conn.close()`,
+        output: `[('键盘', 199), ('鼠标', 79)]`,
+        hint: 'ORDER BY price DESC 是从高到低；这些语句到 MySQL 里一字不改也能用。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: 'SELECT 属于哪一类 SQL？',
+        options: ['DDL（定义结构）', 'DML（修改数据）', 'DQL（查询数据）', '都不是'],
+        answer: 2,
+        explain: 'SELECT 只查不改，属于数据查询语言 DQL。',
+      },
+      {
+        type: 'judge',
+        question: '在 sqlite 里学的 CREATE TABLE、INSERT、SELECT 语句，到 MySQL 里基本原样可用。',
+        answer: true,
+        explain: 'SQL 是通用语言，基础语句跨数据库通用；差异主要在高级特性和连接方式。',
+      },
+      {
+        type: 'code',
+        question: '补全：安装 MySQL 的 Python 驱动。',
+        code: 'pip install mysql-connector-____',
+        answer: 'python',
+        accept: [],
+        explain: '驱动包名是 mysql-connector-python。'
+      }
+    ]
+  },
+  {
+    id: 'debug-methodology',
+    title: '调试方法论：系统化地找 bug',
+    phase: 9,
+    order: 8,
+    minutes: 28,
+    rating: { level: 3, must: 5 },
+    summary: '复现、二分定位、最小复现、修复后回归：一套可重复的排错流程，不再凭感觉乱改。',
+    keywords: ['调试', '复现', '二分', '最小复现', '回归'],
+    tip: '零基础提示：第 1 阶段学过读报错和 print 打点，这一节把它们升级成一套"按步骤走"的流程——bug 不靠灵感抓，靠流程围。',
+    what: '成熟的排错流程五步走：①稳定复现（每次都能让它出错）②读报错定位到行 ③print 打点或二分注释，把范围从 200 行缩小到 2 行 ④造一个最小复现（几行就能触发同样错误）⑤修复后用原来的数据回归验证。每一步都有明确动作，修完还能确认没修出新问题。',
+    analogy: '打个比方：修电路不用把整面墙砸开——先确认"哪一路灯不亮"（复现），再逐段断电排查（二分），最后在接线上找到松的那颗螺丝（最小复现），修好后把所有灯打开试一遍（回归）。',
+    terms: [
+      { term: 'reproduce', zh: '复现', note: '让 bug 每次都稳定出现；能复现的 bug 已经解决了一半。' },
+      { term: 'bisection', zh: '二分定位', note: '注释掉一半代码看错误还在不在，反复对半缩小范围。' },
+      { term: 'minimal example', zh: '最小复现', note: '用最少的代码触发同一个错误，聚焦真正的原因。' },
+      { term: 'regression', zh: '回归', note: '修好后把原来的用法再跑一遍，确认没修出新问题。' }
+    ],
+    steps: [
+      '让 bug 稳定复现：记录输入和操作步骤',
+      '读报错：类型、行号、原因（第 1 阶段的藏宝图）',
+      '范围大时用二分：注释掉一半代码，看错误还在不在，反复对半',
+      '写最小复现：用最少几行代码触发同样的错误',
+      '修复后回归：用当初出错的输入再跑一遍全部功能',
+    ],
+    examples: [
+      {
+        title: 'print 打点对照预期',
+        code: `data = "1,2,三"
+parts = data.split(",")
+print("拆分结果:", parts)   # 打点：看到 '三' 就知道 int() 会炸`,
+        output: `拆分结果: ['1', '2', '三']`,
+        note: '在每步之后打印中间值，和"预期应该是什么"对照：第一个和预期不一致的地方就是病根。',
+      },
+      {
+        title: '最小复现：200 行缩到 2 行',
+        code: `print("最小复现：'3' + 4")
+try:
+    _ = "3" + 4
+except TypeError as e:
+    print("TypeError:", e)`,
+        output: `最小复现：'3' + 4
+TypeError: can only concatenate str (not "int") to str`,
+        note: '大程序里报 TypeError，二分后只剩一行 "3" + 4——原因一目了然：文字加数字。修复方案立刻就清楚了。',
+      },
+      {
+        title: '修复后加防御并回归',
+        code: `def parse_numbers(text):
+    ok, skipped = [], 0
+    for p in text.split(","):
+        try:
+            ok.append(int(p))
+        except ValueError:
+            skipped += 1
+    return ok, skipped
+
+nums, skipped = parse_numbers("1,2,x,4")
+print(nums, "跳过", skipped)`,
+        output: `[1, 2, 4] 跳过 1`,
+        note: '修复不只"让它别炸"：给出合理行为（跳过坏数据并计数），再用当初出错的输入回归验证。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '凭感觉乱改，改完也不验证',
+        bad: '同时改 5 处，运行一次说"好像好了"',
+        good: '一次改一处 → 运行 → 确认 → 记录',
+        note: '不验证的修复等于没修；"好像好了"的 bug 通常还在，只是这次输入没踩到。'
+      },
+      {
+        title: '只修表象不修根因',
+        bad: '用 try/except 把 TypeError 吞掉，程序不炸了就算修好',
+        good: '顺着异常找到 "3" + 4 的来源，修数据或转类型',
+        note: '吞掉异常只是把症状掩盖，根因还在；先问"这里为什么会出现文字加数字"。'
+      },
+      {
+        title: '修好一个坏三个（没有回归）',
+        bad: '改完只测了出错的那个输入',
+        good: '把正常的输入也全部再跑一遍（或跑 pytest）',
+        note: '改动可能影响别的路径；回归就是"确认没修出新问题"的那一步。'
+      }
+    ],
+    practice: [
+      {
+        prompt: 'parse_numbers("1,2,x,4") 会因 int("x") 报错。先运行复现，再用 try/except 修复：跳过非数字并统计跳过了几个。',
+        starter: `def parse_numbers(text):
+    return [int(p) for p in text.split(",")]
+
+# TODO: 修复它，让坏数据被跳过并计数
+`,
+        answer: `def parse_numbers(text):
+    ok, skipped = [], 0
+    for p in text.split(","):
+        try:
+            ok.append(int(p))
+        except ValueError:
+            skipped += 1
+    return ok, skipped
+
+nums, skipped = parse_numbers("1,2,x,4")
+print(nums, "跳过", skipped)`,
+        output: `[1, 2, 4] 跳过 1`,
+        hint: '复现 → 知道是 int("x") 炸 → 把推导式展开成循环加 try/except → 用原输入回归。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '报错范围横跨 200 行代码，最快的定位方法是？',
+        options: ['从头到尾逐行读三遍', '注释掉一半代码看错误还在不在，反复对半缩小', '重写整个程序', '把所有变量都打印一遍'],
+        answer: 1,
+        explain: '二分定位每次把范围减半，7 次就能从 200 行缩到 2 行。',
+      },
+      {
+        type: 'judge',
+        question: '修好 bug 后，只要出错的那个输入能跑了，就算修复完成。',
+        answer: false,
+        explain: '还要回归：用其他正常输入（或跑测试）确认这次修改没有弄坏原来的功能。',
+      },
+      {
+        type: 'code',
+        question: '补全：把错误"藏"起来之前，先把它打印出来留线索。',
+        code: 'except ValueError as e:\n    ______("跳过:", e)',
+        answer: 'print',
+        accept: ['print'],
+        explain: '捕获异常时打印一条线索，之后排查就不用从零开始。'
+      }
+    ]
+  }
 ]

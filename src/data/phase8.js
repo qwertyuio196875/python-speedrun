@@ -5,10 +5,139 @@
  */
 export default [
   {
+    id: 'http-protocol',
+    title: 'HTTP 协议：请求与响应的规矩',
+    phase: 8,
+    order: 1,
+    minutes: 26,
+    rating: { level: 3, must: 5 },
+    summary: '看懂一次网络访问的两封信：请求（我要什么）和响应（给你什么），以及三位数状态码。',
+    keywords: ['HTTP', '请求', '响应', '状态码', 'GET', 'POST', '请求头'],
+    tip: '零基础提示：浏览器和服务器之间来回传的是两封"格式固定的信"——请求信写清"我要什么"，响应信写清"给不给、给什么"。会读这两封信，后面 requests、FastAPI、调大模型全都通透。',
+    what: 'HTTP 是浏览器和服务器之间约定好的通信格式。请求由三部分组成：请求行（方法 + 路径 + 版本，如 GET /api/user）、请求头（Host、User-Agent 等说明信息）、请求体（POST 才有的数据）。响应也是三部分：状态行（HTTP/1.1 200 OK）、响应头、响应体（真正的数据）。方法常用 GET（拿数据）和 POST（交数据）；状态码 200 成功、3xx 跳转、4xx 你的问题、5xx 服务器的问题。',
+    analogy: '打个比方：请求像去银行填的取款单——单头写业务类型（GET/POST）、表头填个人信息（请求头）、下面附资料（请求体）；响应像银行给的回执单——抬头是办理结果（状态码），正文是给你的钱和回执（响应体）。',
+    terms: [
+      { term: 'http', zh: '超文本传输协议', note: '浏览器和服务器之间约定好的通信格式，两边都按这个规矩写信。' },
+      { term: 'request line', zh: '请求行', note: '请求的第一行：方法 + 路径 + 版本，如 GET /api/user HTTP/1.1。' },
+      { term: 'status line', zh: '状态行', note: '响应的第一行：版本 + 状态码 + 说明，如 HTTP/1.1 200 OK。' },
+      { term: 'header', zh: '头', note: '一行一条的"说明信息"，如 Host、Content-Type，冒号分隔。' },
+      { term: 'body', zh: '请求体/响应体', note: '真正装数据的那一段，与头部之间隔一个空行。' }
+    ],
+    steps: [
+      '打开浏览器按 F12，切到 Network（网络）标签，随便打开一个网页',
+      '点第一条请求，看 Request Headers（请求头）和 Response Headers（响应头）',
+      '对照认识请求行和状态行：方法、路径、状态码',
+      '把常见状态码记成小抄：200 成功、301/302 跳转、404 找不到、500 服务器出错',
+      '下一节用 requests 发同样的请求，你会发现结构一模一样',
+    ],
+    examples: [
+      {
+        title: '拆解一个请求',
+        code: `request = (
+    "GET /api/user HTTP/1.1\\r\\n"
+    "Host: example.com\\r\\n"
+    "User-Agent: my-app/1.0\\r\\n"
+)
+lines = request.split("\\r\\n")
+print("请求行:", lines[0])
+print("请求头有", len(lines) - 2, "个")`,
+        output: `请求行: GET /api/user HTTP/1.1
+请求头有 2 个`,
+        note: '第一行是请求行（方法 GET、路径 /api/user）；剩下的 Host、User-Agent 都是请求头。',
+      },
+      {
+        title: '状态码速查表',
+        code: `codes = {
+    200: "成功",
+    301: "永久跳转",
+    404: "页面不存在",
+    500: "服务器出错",
+}
+for code, meaning in codes.items():
+    print(code, "→", meaning)`,
+        output: `200 → 成功
+301 → 永久跳转
+404 → 页面不存在
+500 → 服务器出错`,
+        note: '2 开头成功、3 开头跳转、4 开头调用方的问题、5 开头服务器的问题——报错先看开头数字。',
+      },
+      {
+        title: '拆解一个响应',
+        code: `response = (
+    "HTTP/1.1 200 OK\\r\\n"
+    "Content-Type: application/json\\r\\n"
+    "\\r\\n"
+    '{"name": "小明"}'
+)
+head, body = response.split("\\r\\n\\r\\n")
+print("状态行:", head.split("\\r\\n")[0])
+print("响应体:", body)`,
+        output: `状态行: HTTP/1.1 200 OK
+响应体: {"name": "小明"}`,
+        note: '头部和响应体之间隔一个空行；requests 里 r.status_code、r.headers、r.text/r.json() 分别对应这三样。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '用 GET 去提交数据',
+        bad: 'GET /send?message=你好   # 把要提交的数据挂在网址上',
+        good: 'POST /send，数据放进请求体',
+        note: 'GET 的语义是"获取"，数据会暴露在网址和日志里；提交数据用 POST + 请求体。'
+      },
+      {
+        title: '看到 500 就以为自己写错了',
+        bad: '状态码 500，翻来覆去检查自己的客户端代码',
+        good: '4xx 查自己（参数、路径），5xx 查服务端（看服务日志）',
+        note: '状态码开头数字就是"谁的锅"：4 开头先检查你发的请求，5 开头是服务器那边出错了。'
+      },
+      {
+        title: '手拼网址时忘了给中文编码',
+        bad: 'requests.get("https://a.com/查?词=你好")   # 网址里不该直接放中文',
+        good: 'requests.get(url, params={"词": "你好"})   # 让库替你编码',
+        note: '网址里只允许特定字符；中文和空格要 URL 编码，requests 的 params 会自动处理。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '从状态行 line = "HTTP/1.1 404 Not Found" 里取出状态码数字并打印。',
+        starter: `line = "HTTP/1.1 404 Not Found"
+# TODO: 拆出第二段并转成整数
+`,
+        answer: `line = "HTTP/1.1 404 Not Found"
+print(int(line.split()[1]))`,
+        output: `404`,
+        hint: '按空格 split 后第 1 项（下标 1）就是 "404"，用 int() 转成数字。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '状态码 404 表示什么？',
+        options: ['请求成功', '页面或资源不存在', '服务器内部出错', '需要登录'],
+        answer: 1,
+        explain: '4 开头是调用方的问题：404 是"找不到这个网址或资源"。',
+      },
+      {
+        type: 'judge',
+        question: 'GET 请求的数据放在请求体里，POST 请求的数据挂在网址上。',
+        answer: false,
+        explain: '正好相反：GET 的参数挂在网址上（params），POST 的数据放进请求体。',
+      },
+      {
+        type: 'code',
+        question: '补全：从请求行里取出访问路径。',
+        code: 'line = "GET /api/user HTTP/1.1"\nprint(line.____()[1])',
+        answer: 'split',
+        accept: [],
+        explain: '按空格 split 后，下标 1 是路径 /api/user。'
+      }
+    ]
+  },
+  {
     id: 'requests-http',
     title: 'requests：让程序去访问网页',
     phase: 8,
-    order: 1,
+    order: 2,
     minutes: 25,
     rating: { level: 4, must: 4 },
     summary: '用 requests 库让你的程序像浏览器一样去访问网页，并读懂返回的"状态码"。',
@@ -20,7 +149,8 @@ export default [
       { term: 'request', zh: '请求', note: '客户端（你的程序）向服务器提出的一次访问动作，包含网址、方法、参数等。' },
       { term: 'response', zh: '响应', note: '服务器针对请求发回的内容，包含状态码、响应头和正文。' },
       { term: 'status code', zh: '状态码', note: '三位数字说明访问结果，200 代表成功，404 代表找不到，500 代表服务器出错了。' },
-      { term: 'get', zh: 'GET 方法', note: 'HTTP 的一种请求方法，语义是"把某个资源拿给我"，一般不带长内容，只带网址和少量参数。' }
+      { term: 'get', zh: 'GET 方法', note: 'HTTP 的一种请求方法，语义是"把某个资源拿给我"，一般不带长内容，只带网址和少量参数。' },
+      { term: 'params', zh: '查询参数', note: '拼在网址 ? 后面的参数，requests 里用 params={"q": "词"} 传。' }
     ],
     steps: [
       '在终端输入 pip install requests 安装这个库。',
@@ -62,6 +192,12 @@ export default [
         bad: 'requests.get(url, data={"k": "v"})　# 传了 data 也被忽略，GET 不认它',
         good: '传简单参数用 params：requests.get(url, params={"q": "你好"})',
         note: 'GET 的参数要拼在网址上（params），data 是后面 POST 的专属。记住这个分工，学完下一节就更清楚。'
+      },
+      {
+        title: '不给超时，网络一卡就永远转圈',
+        bad: 'requests.get(url)   # 默认一直等',
+        good: 'requests.get(url, timeout=10)   # 最多等 10 秒',
+        note: 'requests 默认不设超时；网络异常时程序会无限期卡住，显式写 timeout 才安全。'
       }
     ],
     practice: [
@@ -86,6 +222,138 @@ export default [
         question: 'requests 的 GET 结果 r.json() 会把响应正文解析成一个 Python 字典。',
         answer: true,
         explain: '只要正文是 JSON 文本，.json() 就能解析成 dict，方便按字段取值。'
+      },
+      {
+        type: 'code',
+        question: '补全：给请求附上查询参数 q=你好。',
+        code: 'r = requests.get(url, ______={"q": "你好"})',
+        answer: 'params',
+        accept: [],
+        explain: 'GET 的参数用 params= 传，requests 会自动拼到网址上并编码。'
+      }
+    ]
+  },
+  {
+    id: 'web-basics',
+    title: '前端三件套速成：看懂网页的构成',
+    phase: 8,
+    order: 3,
+    minutes: 28,
+    rating: { level: 3, must: 3 },
+    summary: 'HTML 搭结构、CSS 管样式、JS 管交互：后端开发者需要看懂网页的三块积木。',
+    keywords: ['HTML', 'CSS', 'JS', '前端', '标签', '选择器'],
+    tip: '零基础提示：你不需要会写前端，但要"看得懂"：HTML 是骨架（有哪些内容）、CSS 是皮肤（长什么样）、JS 是肌肉（点了会怎样）。后端返回的 JSON，最终就是被这三样变成页面的。',
+    what: '网页由三样拼成：HTML 用标签描述结构（<h1> 标题、<p> 段落、<div> 分块），CSS 用选择器给标签定样式（颜色、大小、布局），JS 负责交互（点击、刷新数据）。后端开发者的日常是：写出接口返回 JSON，前端拿 JSON 渲染页面；所以你要能看懂前端同事拿到的 HTML 结构和字段名。',
+    analogy: '打个比方：HTML 是毛坯房的墙和门窗（结构），CSS 是装修（颜色和布局），JS 是电器（会动的部分）。你写的后端是"供货商"，把 JSON 这批货送到，前端负责摆进房间。',
+    terms: [
+      { term: 'html', zh: '超文本标记语言', note: '用标签描述页面结构，如 <h1>、<p>、<div>，标签大多成对出现。' },
+      { term: 'css', zh: '层叠样式表', note: '用选择器给标签定样式，如 h1 { color: red }。' },
+      { term: 'selector', zh: '选择器', note: 'CSS/JS 里"选中哪类标签"的写法，如 .intro 选中 class="intro"。' },
+      { term: 'js', zh: '脚本语言', note: '浏览器里运行的脚本语言，负责页面的交互和刷新数据。' }
+    ],
+    steps: [
+      '在任意网页按 F12 打开 Elements（元素）面板，看标签的层级树',
+      '对照认三个常用标签：<h1> 标题、<p> 段落、<div> 分块',
+      '在 Styles 面板看 CSS 怎么改颜色和字号',
+      '在 Console 面板输入 document.title 看页面标题',
+      '回到后端视角：接口返回的 JSON 字段名，就是前端取值的键',
+    ],
+    examples: [
+      {
+        title: '认识 HTML 标签',
+        code: `html = """
+<html>
+  <body>
+    <h1>我的页面</h1>
+    <p class="intro">你好，世界</p>
+  </body>
+</html>
+"""
+print("标签数量:", html.count("<"))
+print("有 intro 样式:", 'class="intro"' in html)`,
+        output: `标签数量: 8
+有 intro 样式: True`,
+        note: '<html>、<body>、<h1>、<p> 各有一对开合标签共 8 个"<"；class="intro" 是给标签贴的样式标记。',
+      },
+      {
+        title: '从标签里取出文字（解析的雏形）',
+        code: `html = '<p class="intro">你好，世界</p>'
+
+start = html.find(">") + 1
+end = html.find("</p>")
+print(html[start:end])`,
+        output: `你好，世界`,
+        note: 'find 找到 ">" 后一位开始、"</p>" 前结束——这就是"网页解析"最原始的样子，第 11 阶段会用现成库替代手写。',
+      },
+      {
+        title: 'CSS 与 JS 各管什么',
+        code: `sheet = {
+    "h1 { color: red }": "CSS：把标题涂红",
+    "document.querySelector('p')": "JS：选中第一个 p 标签",
+}
+for code, meaning in sheet.items():
+    print(code, "→", meaning)`,
+        output: `h1 { color: red } → CSS：把标题涂红
+document.querySelector('p') → JS：选中第一个 p 标签`,
+        note: 'CSS 的选择器决定"给谁上样式"；JS 用同样的选择器选中标签做交互——两者共用一套定位规则。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '标签只写一半不闭合',
+        bad: '<p>你好，世界   # 少了 </p>',
+        good: '<p>你好，世界</p>',
+        note: '大部分标签要成对闭合；不闭合时浏览器会"猜"，猜的结果常和想的不一样。'
+      },
+      {
+        title: 'CSS 类名和选择器对不上',
+        bad: '标签写 class="intro"，样式却写 p { }',
+        good: '样式写 .intro { }   # 点号表示按 class 选',
+        note: '.intro 选中 class="intro" 的标签；光写 p 只对所有 <p> 生效。'
+      },
+      {
+        title: '在后端里硬写页面',
+        bad: '把整页 HTML 拼进 Python 字符串再返回',
+        good: '后端返回 JSON 数据，结构和样式交给前端',
+        note: '前后端分工：后端管数据和接口，前端管展示；写死页面是两头不讨好的做法。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '从 html = \'<h1>标题文字</h1>\' 里提取标签中间的文字并打印。',
+        starter: `html = '<h1>标题文字</h1>'
+# TODO: 取出两个标签之间的文字
+`,
+        answer: `html = '<h1>标题文字</h1>'
+
+start = html.find(">") + 1
+end = html.find("</h1>")
+print(html[start:end])`,
+        output: `标题文字`,
+        hint: 'find(">") 找到开头标签的结尾，find("</h1>") 找到结尾标签的开头。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: 'HTML 的作用是？',
+        options: ['让页面变色', '描述页面的结构和内容', '处理用户点击', '连接数据库'],
+        answer: 1,
+        explain: 'HTML 用标签搭出页面的"骨架"；变色是 CSS、交互是 JS 的事。',
+      },
+      {
+        type: 'judge',
+        question: 'CSS 选择器 .intro 选中的是 class="intro" 的标签。',
+        answer: true,
+        explain: '点号开头的选择器按 class 匹配；不带点的是按标签名匹配。',
+      },
+      {
+        type: 'code',
+        question: '补全：JS 选中页面上第一个 <p> 标签。',
+        code: "document.__________('p')",
+        answer: 'querySelector',
+        accept: [],
+        explain: 'querySelector 用 CSS 选择器的写法选中元素。'
       }
     ]
   },
@@ -93,7 +361,7 @@ export default [
     id: 'fastapi-basics',
     title: 'FastAPI：一分钟写一个接口',
     phase: 8,
-    order: 2,
+    order: 4,
     minutes: 28,
     rating: { level: 4, must: 4 },
     summary: '用 FastAPI 加 uvicorn 几行代码起一个本地 HTTP 服务，打开浏览器就能看到"你好"。',
@@ -140,6 +408,12 @@ export default [
         note: '报错找不到 app 时，九成是文件名或变量名对不上。微调一下就能跑起来。'
       },
       {
+        title: '路径参数的花括号写法没掌握',
+        bad: '@app.get("/users/用户ID")   # 写死的文字，不是动态的',
+        good: '@app.get("/users/{user_id}")\ndef get_user(user_id: int):',
+        note: '花括号 {名字} 是路径参数：网址里那一截会变成函数参数传进来，还能配类型校验。'
+      },
+      {
         title: '改了的代码看不到效果',
         bad: '启动时没加 --reload，改完代码不重启直接刷新浏览器',
         good: '开发时用 uvicorn main:app --reload，改完存盘自动生效',
@@ -174,6 +448,14 @@ export default [
         question: 'FastAPI 会在 /docs 地址自动生成一份交互式接口文档，不用手写。',
         answer: true,
         explain: '照着代码里的装饰器和类型注解，FastAPI 自动生成 /docs 页面，方便调试。'
+      },
+      {
+        type: 'code',
+        question: '补全：把 hello 函数挂到 GET / 网址上。',
+        code: '@app.____("/")\ndef hello():\n    return {"message": "你好"}',
+        answer: 'get',
+        accept: ['get'],
+        explain: '@app.get("/") 表示"访问这个网址时执行下面的函数"——方法写在装饰器里。'
       }
     ]
   },
@@ -181,7 +463,7 @@ export default [
     id: 'pydantic-basics',
     title: 'Pydantic：规定数据长什么样',
     phase: 8,
-    order: 3,
+    order: 5,
     minutes: 24,
     rating: { level: 4, must: 4 },
     summary: '用 Pydantic 的 BaseModel 把"数据该有几个字段、各是什么类型"写清楚，让你调接口时不再糊涂。',
@@ -235,6 +517,12 @@ export default [
         bad: 'User(age="abc")　# 转不了还指望程序自己懂',
         good: '让字符串能转成 int；实在要严格，再用 strict 相关配置',
         note: '"20"->20 是便利，但"abc"转不成整数就会报错。理解这个转换方向，写数据时才不会踩意料之外的坑。'
+      },
+      {
+        title: '发出去的字段拼错了，被悄悄忽略',
+        bad: 'User(nmae="小明", age=20)   # name 拼成了 nmae',
+        good: 'User(name="小明", age=20)',
+        note: 'Pydantic 默认忽略模型里没有的多余字段：拼错的键不报错，对应字段却缺了。收发字段名要照着模型核对。'
       }
     ],
     practice: [
@@ -259,6 +547,12 @@ export default [
         question: '缺了必填字段时，Pydantic 在实例化那一刻就会报错，不会静悄悄地放过去。',
         answer: true,
         explain: '校验发生在构造阶段，哪缺哪错立刻抛 ValidationError，这正是它帮你兜底的价值。'
+      },
+      {
+        type: 'judge',
+        question: '给字段写默认值（如 name: str = ""）后，实例化时不传它也不会报错。',
+        answer: true,
+        explain: '有默认值的字段是可选的；没传就用默认值，必填字段则仍然必须传。',
       }
     ]
   },
@@ -266,7 +560,7 @@ export default [
     id: 'post-request',
     title: 'POST：把数据发给服务器',
     phase: 8,
-    order: 4,
+    order: 6,
     minutes: 26,
     rating: { level: 4, must: 4 },
     summary: '用 POST 请求把自己这一方的数据发给刚写的服务，服务接收并用 Pydantic 校验后返回结果。',
@@ -278,7 +572,8 @@ export default [
       { term: 'post', zh: 'POST 方法', note: 'HTTP 请求里用来"提交数据"的方法，数据放进请求体而不是贴在网址上。' },
       { term: 'request body', zh: '请求体', note: '请求里携带的那一段数据内容，POST 通常放一段 JSON 在这里面。' },
       { term: 'request body model', zh: '请求体模型', note: '用 Pydantic 定义、用来接收并校验请求体的模型类，函数参数写上它，框架自动解析。' },
-      { term: 'content-type', zh: '内容类型头', note: '请求/响应里说明数据格式的字段，发 JSON 时一般标 application/json。' }
+      { term: 'content-type', zh: '内容类型头', note: '请求/响应里说明数据格式的字段，发 JSON 时一般标 application/json。' },
+      { term: 'requests.post', zh: '发 POST 请求', note: 'requests.post(url, json={...}) 一行把 JSON 请求体发出去。' }
     ],
     steps: [
       '确认按前两节装好并写好接收 POST 的服务（fastapi uvicorn）。',
@@ -321,6 +616,12 @@ export default [
         bad: 'json={"messege": "你好"}　# 拼错成 messege',
         good: 'json={"message": "你好"}　# 与接收方模型字段名严格一致',
         note: 'Pydantic 对"模型里没有的字段"默认会忽略不报错，容易让你以为发出去了，结果服务端根本没用到。收发双方字段名要照着模型对一遍。'
+      },
+      {
+        title: '服务没启动就发请求',
+        bad: 'uvicorn 还没跑，直接 requests.post("http://127.0.0.1:8000/chat", ...)',
+        good: '先启动 uvicorn main:app --reload，看到服务就绪再发',
+        note: '本地端口连不上会抛 ConnectionError；先确认服务在跑、端口没写错。'
       }
     ],
     practice: [
@@ -345,6 +646,12 @@ export default [
         question: '在 FastAPI 里，POST 接口想接收请求体，让参数沾上 Pydantic 模型类型就行，框架会自动解析校验。',
         answer: true,
         explain: '参数类型写成 Pydantic 模型，框架就把 JSON 请求体解析成对象并校验，取字段直接用 body.字段名。'
+      },
+      {
+        type: 'judge',
+        question: '用 requests.post(url, json={...}) 发送时，requests 会自动把字典变成 JSON 并加上 Content-Type 头。',
+        answer: true,
+        explain: 'json= 参数就是"序列化 + 设置 Content-Type"一条龙，比手动拼字符串可靠。',
       }
     ]
   },
@@ -352,7 +659,7 @@ export default [
     id: 'llm-chat-api',
     title: '调用大模型接口：第一次拿到 AI 回复',
     phase: 8,
-    order: 5,
+    order: 7,
     minutes: 32,
     rating: { level: 4, must: 5 },
     summary: '用一个 POST 请求调用兼容 OpenAI 格式的 chat 接口，拿到模型的回复；把密钥放进环境变量，再按类别处理报错。',
