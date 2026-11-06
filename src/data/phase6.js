@@ -20,7 +20,8 @@ export default [
       { term: 'module', zh: '模块', note: '一堆写好的、可以直接拿来用的功能，用 import 引入' },
       { term: 'dictionary', zh: '字典', note: '用花括号 {} 包起来、按"键: 值"成对存数据的东西' },
       { term: 'json', zh: 'JSON', note: '一种有固定书写规则的纯文本格式，专门给程序之间交换数据用' },
-      { term: 'serialize', zh: '序列化', note: '把内存中的数据变成可保存、可传输的文本的过程' }
+      { term: 'serialize', zh: '序列化', note: '把内存中的数据变成可保存、可传输的文本的过程' },
+      { term: 'indent', zh: '缩进参数', note: 'json.dumps(数据, indent=2) 让输出的 JSON 带缩进，更好读' }
     ],
     steps: [
       '用 import json 引入模块',
@@ -53,6 +54,18 @@ export default [
         bad: 'json.dumps({"name": "小明"})',
         good: 'json.dumps({"name": "小明"}, ensure_ascii=False)',
         note: '不加 ensure_ascii=False 时中文会变成 \\u5c0f\\u660e 一类的转义码，人不好读，但程序能读。'
+      },
+      {
+        title: '手动拼字符串写 JSON 文件',
+        bad: 'f.write(\'{"name": "\' + name + \'}\')   # 又拼引号又怕漏',
+        good: 'json.dump(data, f, ensure_ascii=False)   # 直接把数据写进文件',
+        note: 'dumps/loads 处理字符串，dump/load 直接读写文件对象，别再手动拼 JSON 文本。'
+      },
+      {
+        title: '读 JSON 文件忘了编码',
+        bad: "json.load(open('data.json'))   # 中文可能乱码",
+        good: "json.load(open('data.json', encoding='utf-8'))",
+        note: '带中文的 JSON 文件读写都要 encoding="utf-8"，和普通文本文件一个道理。'
       }
     ],
     practice: [
@@ -102,7 +115,9 @@ export default [
     terms: [
       { term: 'date', zh: '日期', note: '只关心年、月、日，不含时分秒' },
       { term: 'strftime', zh: '格式化日期时间', note: '按指定模板把日期时间变成字符串，%Y %m %d 是具体的格式符号' },
-      { term: 'timedelta', zh: '时间差', note: '两个日期或时间相减得到的差值，可以读出 days（天数）' }
+      { term: 'timedelta', zh: '时间差', note: '两个日期或时间相减得到的差值，可以读出 days（天数）' },
+      { term: 'strptime', zh: '解析字符串', note: '按格式把字符串转成日期时间，与 strftime 方向相反' },
+      { term: 'datetime type', zh: '日期时间类型', note: 'date 和 time 合起来的类型，now() 返回的就是它' }
     ],
     steps: [
       'from datetime import date, datetime 引入需要的类型',
@@ -142,6 +157,18 @@ export default [
         bad: 'now.strftime("%Y/%m/%d")   # 不是错，但如果你想要别的分隔，可能看错符号',
         good: 'now.strftime("%Y-%m-%d")   # %Y 年，%m 月，%d 日',
         note: '格式里的大小写有讲究：%Y 是大写表示四位数年份，%y 小写只表示后两位。'
+      },
+      {
+        title: '把字符串直接当日期用',
+        bad: 'd = date("2026-01-01")   # 报错，date 只收数字',
+        good: 'from datetime import datetime\nd = datetime.strptime("2026-01-01", "%Y-%m-%d").date()',
+        note: '从字符串得到日期要用 strptime 按格式解析；strftime 是反过来"格式化成字符串"。'
+      },
+      {
+        title: '以为 now() 的结果固定不变',
+        bad: '拿 datetime.now() 的输出当练习的固定答案',
+        good: '练固定日期用 date(2026, 1, 1)，需要当前时间才用 now()',
+        note: 'now() 每次运行都是当下时刻，结果随时间变化；做练习和对答案时用固定日期。'
       }
     ],
     practice: [
@@ -191,7 +218,9 @@ export default [
     terms: [
       { term: 'randint', zh: '随机整数', note: 'randint(a, b) 返回 a 到 b 之间的整数，两个端点都包含' },
       { term: 'choice', zh: '随机选取', note: 'choice(列表) 从列表里随机挑一个元素返回' },
-      { term: 'seed', zh: '随机种子', note: '给随机生成器设一个初始值；相同种子会产生相同的随机序列' }
+      { term: 'seed', zh: '随机种子', note: '给随机生成器设一个初始值；相同种子会产生相同的随机序列' },
+      { term: 'shuffle', zh: '洗牌', note: 'random.shuffle(列表) 把列表原地随机打乱顺序' },
+      { term: 'sample', zh: '抽样', note: 'random.sample(列表, n) 不重复地随机抽 n 个，返回新列表' }
     ],
     steps: [
       'import random 引入模块',
@@ -225,6 +254,18 @@ export default [
         bad: 'print(random.randint(1, 6))   # 每次运行结果都不同',
         good: 'random.seed(42)\nprint(random.randint(1, 6))\n# 之后再运行，结果和第一次一致',
         note: 'seed 要写在取随机数之前，并且写在同一个位置，才能真正复现。'
+      },
+      {
+        title: '从空列表里 choice',
+        bad: 'random.choice([])   # 报 IndexError',
+        good: '先判断列表非空，再 choice',
+        note: 'choice 是"从里面挑一个"，空的抽不了；不确定就先 if items:。'
+      },
+      {
+        title: '接住 shuffle 的返回值',
+        bad: 'new_nums = random.shuffle(nums)   # 得到 None',
+        good: 'random.shuffle(nums)\nprint(nums)   # 原地修改，直接看 nums',
+        note: 'shuffle 和 sort 一样是原地修改、返回 None；要新列表用 sample(nums, len(nums))。'
       }
     ],
     practice: [
@@ -249,6 +290,14 @@ export default [
         question: '只要在取随机数之前写下 random.seed(42)，每次运行结果就都能复现。',
         answer: true,
         explain: '相同种子 + 相同调用顺序会产生相同的随机序列，这对对答案和写测试很有用。'
+      },
+      {
+        type: 'code',
+        question: '补全：把整副牌 nums 随机打乱顺序。',
+        code: 'random.__________(nums)',
+        answer: 'shuffle',
+        accept: [],
+        explain: 'shuffle 原地打乱列表顺序；只要抽样不重复用 sample。'
       }
     ]
   },
@@ -268,7 +317,8 @@ export default [
       { term: 'path', zh: '路径', note: '文件在电脑里的位置描述，例如 C:/report/2026.txt' },
       { term: 'getcwd', zh: '获取当前目录', note: 'get working directory，返回程序当前所在文件夹的完整路径' },
       { term: 'Path', zh: '路径对象', note: 'pathlib 里表示一个路径的类型，支持用 / 轻松拼接' },
-      { term: 'exists', zh: '是否存在', note: '判断某个文件或文件夹存不存在，存在返回 True' }
+      { term: 'exists', zh: '是否存在', note: '判断某个文件或文件夹存不存在，存在返回 True' },
+      { term: 'mkdir', zh: '创建文件夹', note: 'Path("docs").mkdir(exist_ok=True) 创建目录，已存在也不报错' }
     ],
     steps: [
       '看当前目录：os.getcwd()',
@@ -302,6 +352,18 @@ export default [
         bad: 'Path("docs") + "readme.md"   # 报错，Path 不支持加号',
         good: 'Path("docs") / "readme.md"  # 用斜杠拼接',
         note: 'pathlib 用的是 / 运算符来拼接，不是 +。'
+      },
+      {
+        title: 'Windows 路径里的反斜杠转义',
+        bad: 'path = "C:\\table\\name.txt"   # \\t 被当成制表符',
+        good: 'path = r"C:\\table\\name.txt"   # 前面加 r',
+        note: '反斜杠开头的 \\t、\\n 会被当转义符；Windows 路径要么加 r，要么用 pathlib 和正斜杠。'
+      },
+      {
+        title: '以为相对路径从哪里运行都一样',
+        bad: 'open("data.txt")   # 在别的文件夹运行就找不到',
+        good: '用 os.getcwd() 确认工作目录，或直接用绝对路径',
+        note: '相对路径是相对"运行程序时所在的文件夹"，不是相对 .py 文件的位置。'
       }
     ],
     practice: [
@@ -351,7 +413,9 @@ export default [
     terms: [
       { term: 'input', zh: '输入函数', note: '打印提示语、等待用户按键盘回车，返回用户输入内容的字符串' },
       { term: 'argv', zh: '命令行参数', note: 'argument vector，运行程序时在程序名后跟的一串参数，以列表形式存在' },
-      { term: 'command_line', zh: '命令行', note: '在终端或命令窗口里，用一行命令把程序跑起来的界面' }
+      { term: 'command_line', zh: '命令行', note: '在终端或命令窗口里，用一行命令把程序跑起来的界面' },
+      { term: 'prompt', zh: '提示语', note: 'input 括号里的文字，先打印出来提示用户该输入什么' },
+      { term: 'strip', zh: '去除空白', note: 'input 的结果常带首尾空格，顺手 .strip() 更稳' }
     ],
     steps: [
       '问用户要输入：text = input("请输入名字：")',
@@ -384,6 +448,12 @@ export default [
         bad: 'print(sys.argv[1])   # 如果运行时没带参数，会报 IndexError',
         good: 'if len(sys.argv) > 1:\n    print(sys.argv[1])',
         note: '先判断参数个数再取，避免参数没传时程序崩掉。'
+      },
+      {
+        title: 'input 的结果直接当数字用',
+        bad: 'age = input("年龄：")\nprint(age + 1)   # 文字加数字报错',
+        good: 'age = int(input("年龄："))',
+        note: 'input 永远返回字符串；当数字用先 int()，不确定用户输入就包上 try/except。'
       }
     ],
     practice: [
@@ -471,6 +541,14 @@ charset-normalizer
 idna
 markdown-it-py`,
         note: '装好 requests 和 rich 后的真实结果；数量和清单随环境不同而变化。importlib.metadata 是标准库，不用联网就能查。',
+      },
+      {
+        title: '看看当前用的是哪个 Python',
+        code: `import sys
+
+print(sys.executable)`,
+        output: `C:\\Users\\33569\\AppData\\Local\\Temp\\opencode\\venv-demo\\Scripts\\python.exe`,
+        note: '在虚拟环境里运行的真实结果：路径末尾带 venv 文件夹名，说明用的确实是这个项目的解释器。',
       }
     ],
     pitfalls: [
@@ -491,6 +569,12 @@ markdown-it-py`,
         bad: 'requests==2.34.2        # 只写了自己 import 的包',
         good: 'pip freeze > requirements.txt',
         note: '你装的库还会自带依赖，手写容易漏。让 pip freeze 自动生成，才不会少东西。'
+      },
+      {
+        title: '终端激活了，编辑器还在用全局 Python',
+        bad: '终端里 (.venv) 正常，VS Code 运行却提示没有 requests',
+        good: 'Ctrl+Shift+P → 选择解释器 → 指向 .venv 里的 python',
+        note: '终端和编辑器是两套环境；让编辑器也切到 .venv 的解释器，运行和提示才一致。'
       }
     ],
     practice: [
@@ -555,7 +639,8 @@ flask 未安装`,
       { term: 'argparse', zh: '参数解析库', note: 'Python 标准库，把命令行参数解析成有名字的变量。' },
       { term: 'positional argument', zh: '位置参数', note: '按顺序必须提供的参数，如脚本名后直接跟的名字。' },
       { term: 'option', zh: '选项', note: '带 -- 前缀的可选参数，如 --count，可配默认值。' },
-      { term: 'default', zh: '默认值', note: '用户没传这个参数时使用的值。' }
+      { term: 'default', zh: '默认值', note: '用户没传这个参数时使用的值。' },
+      { term: 'choices', zh: '可选值限制', note: 'add_argument("--op", choices=["+", "-"]) 限制只能取列出的值。' }
     ],
     steps: [
       'import argparse，创建 parser = argparse.ArgumentParser(description="一句话说明")',
@@ -616,6 +701,12 @@ options:
         bad: 'name = sys.argv[1]   # 用了 argparse 就别这样',
         good: 'args = parser.parse_args()\nname = args.name',
         note: 'parse_args() 的结果是有名字的：用 args.name、args.count 取，不再关心第几个位置。'
+      },
+      {
+        title: '声明的参数和使用的写法对不上',
+        bad: 'parser.add_argument("count", type=int)   # 声明成位置参数',
+        good: 'parser.add_argument("--count", type=int)   # 想用 --count 就要带 --',
+        note: '名字前有没有 -- 决定它是位置参数还是选项；运行时写 --count 就必须按选项声明。'
       }
     ],
     practice: [
@@ -668,6 +759,130 @@ else:
         answer: 'type',
         accept: [],
         explain: 'type=int 让 argparse 自动把命令行里的字符串转成整数。'
+      }
+    ]
+  },
+  {
+    id: 'collections-module',
+    title: 'collections：好用的容器升级包',
+    phase: 6,
+    order: 8,
+    minutes: 26,
+    rating: { level: 3, must: 4 },
+    summary: '标准库的容器升级包：Counter 一行统计次数，defaultdict 免判空，deque 高效排队。',
+    keywords: ['collections', 'Counter', 'defaultdict', 'deque', '容器'],
+    tip: '零基础提示：这三个是第 2 阶段字典和列表的"增强版"。统计次数用 Counter、分组收集用 defaultdict、排队叫号用 deque——全部来自标准库，不用安装。',
+    what: 'collections 模块提供三种常用增强容器。Counter 传入列表就统计每个元素出现的次数，most_common 还能直接给"前几名"；defaultdict 带默认值，往不存在的键里 append 也不报错，分组收集特别顺手；deque 是双端队列，往队头队尾增删都高效，适合排队、滑动窗口这类场景。',
+    analogy: '打个比方：Counter 像唱票员，报出每个名字得了几票；defaultdict 像自动开新文件夹的柜员——你提到一个新名字，它先递上一个空文件夹；deque 像双向开门的公交站，前后门都能上下客。',
+    terms: [
+      { term: 'Counter', zh: '计数器', note: '传入列表就统计每个元素出现次数的字典子类。' },
+      { term: 'most_common', zh: '最常见的', note: 'Counter 的方法，按次数从多到少返回前 n 个。' },
+      { term: 'defaultdict', zh: '带默认值的字典', note: '访问不存在的键时自动创建默认值（如空列表）。' },
+      { term: 'deque', zh: '双端队列', note: '两头都能高效增删的队列，读作 deck。' },
+      { term: 'container', zh: '容器', note: '能装多个数据的类型的统称，如列表、字典、集合。' }
+    ],
+    steps: [
+      'from collections import Counter，传一个列表统计次数',
+      '用 most_common(2) 直接拿前两名',
+      '用 defaultdict(list) 做分组：往新键 append 也不会报错',
+      '用 deque 做排队：append 进队尾、popleft 从队首出',
+      '对照第 2 阶段手写的计数模式，体会 Counter 一行的简洁',
+    ],
+    examples: [
+      {
+        title: 'Counter 一行统计次数',
+        code: `from collections import Counter
+
+words = ["苹果", "香蕉", "苹果", "橙子", "苹果", "香蕉"]
+counts = Counter(words)
+print(counts)
+print(counts.most_common(2))`,
+        output: `Counter({'苹果': 3, '香蕉': 2, '橙子': 1})
+[('苹果', 3), ('香蕉', 2)]`,
+        note: '第 2 阶段手写五行的计数模式，Counter 一行搞定；most_common 直接给排行榜。',
+      },
+      {
+        title: 'defaultdict：免判空的分组字典',
+        code: `from collections import defaultdict
+
+scores = defaultdict(list)
+scores["小明"].append(92)
+scores["小明"].append(88)
+scores["小红"].append(95)
+print(dict(scores))`,
+        output: `{'小明': [92, 88], '小红': [95]}`,
+        note: '普通字典要先判键存在再 append；defaultdict 遇到新键自动给一个空列表，直接就能装。',
+      },
+      {
+        title: 'deque：排队与叫号',
+        code: `from collections import deque
+
+queue = deque(["小明", "小红"])
+queue.append("小刚")        # 排到队尾
+first = queue.popleft()     # 队首叫号出队
+print(first, list(queue))`,
+        output: `小明 ['小红', '小刚']`,
+        note: 'append 进队尾、popleft 从队首出；普通列表 pop(0) 要整体挪动，排队场景都用 deque。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: 'defaultdict 会"无中生有"',
+        bad: 'print(scores["小亮"])   # 字典里其实没有小亮',
+        good: '先 "小亮" in scores 判断，或普通字典用 get',
+        note: '访问不存在的键会自动创建一个空条目——分组收集很方便，查数据时小心"越查越多"。'
+      },
+      {
+        title: '转成普通字典后还调 Counter 的方法',
+        bad: 'd = dict(counts)\nd.most_common(2)   # 普通字典没有这个方法',
+        good: 'counts.most_common(2)   # 在 Counter 上调用',
+        note: 'dict() 转换后就失去 Counter 的方法；要排行榜就在 Counter 上先调好。'
+      },
+      {
+        title: '拿 deque 当普通列表随机取值',
+        bad: 'queue[5000]   # 支持下标但不是它的强项',
+        good: '两端操作用 append / appendleft / pop / popleft',
+        note: 'deque 的强项是两头增删；按下标随机读，普通列表更快。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '统计字符串 "abracadabra" 里每个字符的出现次数，打印出现最多的前两个。',
+        starter: `from collections import Counter
+
+text = "abracadabra"
+# TODO: 统计并打印前两名
+`,
+        answer: `from collections import Counter
+
+text = "abracadabra"
+counts = Counter(text)
+print(counts.most_common(2))`,
+        output: `[('a', 5), ('b', 2)]`,
+        hint: 'Counter 直接收字符串也行，每个字符就是一个元素；most_common(2) 拿前两名。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '用 defaultdict(list) 时，访问一个不存在的键会发生什么？',
+        options: ['报 KeyError', '返回 None', '自动创建一个空列表并返回它', '删掉这个键'],
+        answer: 2,
+        explain: '默认值在这里是空列表，访问新键会自动建条目——分组收集全靠它。',
+      },
+      {
+        type: 'judge',
+        question: 'deque 的 popleft() 能高效地从队首取出元素。',
+        answer: true,
+        explain: 'deque 两头增删都是高效操作；普通列表 pop(0) 则要整体挪动。',
+      },
+      {
+        type: 'code',
+        question: '补全：用 Counter 统计列表。',
+        code: 'from collections import Counter\n\ncounts = __________(["a", "b", "a"])',
+        answer: 'Counter',
+        accept: [],
+        explain: 'Counter 传入列表（甚至字符串）即统计每个元素的出现次数。'
       }
     ]
   }

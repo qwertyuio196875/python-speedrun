@@ -21,7 +21,8 @@ export default [
       { term: 'open', zh: '打开（文件）', note: 'Python 内置函数，用于打开一个文件并返回文件对象' },
       { term: 'file-object', zh: '文件对象', note: 'open() 返回的东西，代表这个已打开的文件' },
       { term: 'encoding', zh: '编码方式', note: '文字在电脑里的存取规则，中文常用 utf-8' },
-      { term: 'line', zh: '一行', note: '文本里以换行符结尾的一整行' }
+      { term: 'line', zh: '一行', note: '文本里以换行符结尾的一整行' },
+      { term: 'enumerate', zh: '枚举', note: '同时给出编号和内容，读文件加行号常用它' }
     ],
     steps: [
       '用 open("data.txt", encoding="utf-8") 打开文件，拿到文件对象 f',
@@ -70,6 +71,12 @@ export default [
         bad: "for line in f:\n    total = total + line   # 字符串和数字加不到一起",
         good: "    total = total + int(line)   # 先转成数字再加",
         note: '读出来的每一行都是字符串，哪怕内容看起来是数字；算数前要先用 int() 或 float() 转换。'
+      },
+      {
+        title: '文件还没建就去读',
+        bad: "open('data.txt')   # 当前目录根本没有这个文件",
+        good: "先建好 data.txt，或用 try/except FileNotFoundError 给提示",
+        note: 'open 只负责读，不会替你创建；读不存在的文件会抛 FileNotFoundError。'
       }
     ],
     practice: [
@@ -127,7 +134,8 @@ export default [
       { term: 'mode', zh: '模式', note: 'open() 的第二个参数，告诉文件要读还是要写' },
       { term: 'write', zh: '写入', note: '文件对象的方法，把字符串写进文件' },
       { term: 'overwrite', zh: '覆盖', note: 'mode="w" 的行为，把原文件内容整个清掉再写入' },
-      { term: 'append', zh: '追加', note: 'mode="a" 的行为，接着原文件末尾继续写' }
+      { term: 'append', zh: '追加', note: 'mode="a" 的行为，接着原文件末尾继续写' },
+      { term: 'newline', zh: '换行符', note: '文字里的 \\n；write 不会自动补，多行要自己拼' }
     ],
     steps: [
       '用 open("out.txt", "w", encoding="utf-8") 打开（第二个参数是模式）',
@@ -176,6 +184,12 @@ export default [
         bad: "f.write('第一行')\nf.write('第二行')   # 会挤在同一行",
         good: "f.write('第一行' + '\\n')\nf.write('第二行' + '\\n')",
         note: 'write() 把内容原样写进去，不会补换行；想要多行就自己在字符串末尾拼 \\n。'
+      },
+      {
+        title: '把数字直接交给 write',
+        bad: 'f.write(100)   # 报错 TypeError',
+        good: 'f.write(str(100))   # 先转成字符串',
+        note: 'write 只接受字符串；数字要先 str() 转换，或用 f-string 拼进文字。'
       }
     ],
     practice: [
@@ -218,10 +232,147 @@ export default [
     ]
   },
   {
+    id: 'csv-pickle',
+    title: 'CSV 与 pickle：两种存档格式',
+    phase: 5,
+    order: 3,
+    minutes: 28,
+    rating: { level: 3, must: 4 },
+    summary: 'csv 存给人看的表格文本，pickle 存给 Python 自己用的原样数据：两种存档各有分工。',
+    keywords: ['csv', 'pickle', '序列化', 'DictReader', '存档', '表格'],
+    tip: '零基础提示：csv 是"用逗号分格的表格文本"，Excel 和记事本都能打开；pickle 是"Python 专属的打包袋"，原样保存列表字典。给人看用 csv，给程序下次用选 pickle。',
+    what: 'csv 模块按表格读写文本：writerow 一行行写，csv.reader 或 DictReader 读回来。注意读回来的每个格子都是字符串，数字要自己转。pickle 则把 Python 对象原封不动存成二进制文件——load 回来还是原来的字典、列表，连类型都不用转。但 pickle 只给 Python 自己用，且绝不要加载来路不明的 pickle 文件。',
+    analogy: '打个比方：csv 像把成绩抄成一张人人能看的表格；pickle 像把整个书包原样封进保险箱——打开时连笔的位置都没变，但只有你（Python）打得开。',
+    terms: [
+      { term: 'csv', zh: '逗号分隔值', note: '用逗号分列的纯文本表格格式，通用性最好。' },
+      { term: 'DictReader', zh: '字典读取器', note: '把第一行当表头，每行读成"列名: 值"的字典。' },
+      { term: 'pickle', zh: '序列化模块', note: '把 Python 对象原样存成二进制文件，load 回来不用转换。' },
+      { term: 'binary mode', zh: '二进制模式', note: 'pickle 读写要用 "wb" / "rb" 模式打开文件。' },
+      { term: 'newline', zh: '换行参数', note: '写 csv 时 open 加 newline=""，防止 Windows 下多出空行。' }
+    ],
+    steps: [
+      '用 csv.writer 配合 open(..., "w", newline="", encoding="utf-8") 写表格',
+      '用 csv.reader 或 DictReader 把表格读回来',
+      '给程序自己用的中间数据改用 pickle.dump 存、pickle.load 取',
+      'pickle 文件必须用 "wb" / "rb" 二进制模式打开',
+      '要发给别人看的报表用 csv，要下次接着跑的结果用 pickle',
+    ],
+    examples: [
+      {
+        title: '写一张表格再读回来',
+        code: `import csv
+
+with open("scores.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+    writer.writerow(["姓名", "分数"])
+    writer.writerow(["小明", 92])
+    writer.writerow(["小红", 88])
+
+with open("scores.csv", encoding="utf-8") as f:
+    for row in csv.reader(f):
+        print(row)`,
+        output: `['姓名', '分数']
+['小明', '92']
+['小红', '88']`,
+        note: '写进去的数字 92，读回来变成了字符串 "92"——csv 的一切都是文字，算数前要自己转。',
+      },
+      {
+        title: 'DictReader：第一行当表头',
+        code: `import csv
+
+with open("scores.csv", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+        print(row["姓名"], row["分数"])`,
+        output: `小明 92
+小红 88`,
+        note: 'DictReader 自动把第一行当列名，每行读成一个字典，用列名取值比下标清楚得多。',
+      },
+      {
+        title: 'pickle：原样保存再取回',
+        code: `import pickle
+
+data = {"name": "小明", "scores": [92, 88]}
+with open("data.pkl", "wb") as f:
+    pickle.dump(data, f)
+
+with open("data.pkl", "rb") as f:
+    loaded = pickle.load(f)
+print(loaded["name"], loaded["scores"][0])`,
+        output: `小明 92`,
+        note: 'dump 存、load 取，字典列表原样回来；文件用 "wb"/"rb" 二进制模式打开。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '读回来的数字直接当数用',
+        bad: 'row = ["小明", "92"]\nprint(row[1] + 8)   # 文字加数字报错',
+        good: 'print(int(row[1]) + 8)',
+        note: 'csv 里一切皆文本；需要计算就先 int() 或 float()。'
+      },
+      {
+        title: '加载来路不明的 pickle 文件',
+        bad: 'pickle.load(open("别人发来的.pkl", "rb"))',
+        good: '只加载你自己存的 pickle 文件；对外交换数据用 csv 或 JSON',
+        note: 'pickle 能还原任意对象，恶意文件可借机执行代码；它只适合程序自己的中间存档。'
+      },
+      {
+        title: '写 csv 忘了 newline 参数',
+        bad: 'open("scores.csv", "w", encoding="utf-8")   # Windows 下会多出空行',
+        good: 'open("scores.csv", "w", newline="", encoding="utf-8")',
+        note: 'csv 模块自己管换行，open 再补一次就会在 Windows 上隔行出现空行。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '把商品 [["钢笔", 5], ["笔记本", 3]] 用 csv 写进 goods.csv（带表头 商品/数量），再用 DictReader 读回打印。',
+        starter: `import csv
+
+# TODO: 写入并读回
+`,
+        answer: `import csv
+
+with open("goods.csv", "w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+    writer.writerow(["商品", "数量"])
+    writer.writerows([["钢笔", 5], ["笔记本", 3]])
+
+with open("goods.csv", encoding="utf-8") as f:
+    for row in csv.DictReader(f):
+        print(row["商品"], row["数量"])`,
+        output: `钢笔 5
+笔记本 3`,
+        hint: 'writerows 一次写多行；DictReader 按表头列名取值。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: '用 csv.reader 读回表格时，数字 92 会变成什么？',
+        options: ['整数 92', '字符串 "92"', '小数 92.0', '布尔 True'],
+        answer: 1,
+        explain: 'csv 的一切都是文本，读回来是字符串 "92"，需要计算先转 int。',
+      },
+      {
+        type: 'judge',
+        question: 'pickle 存的文件可以直接发给任何人、任何程序打开查看。',
+        answer: false,
+        explain: 'pickle 是 Python 专属的二进制格式，且加载来路不明的文件有安全风险；对外交换用 csv 或 JSON。',
+      },
+      {
+        type: 'code',
+        question: '补全：写 csv 文件时防止 Windows 下多出空行。',
+        code: 'open("scores.csv", "w", ________, encoding="utf-8")',
+        answer: 'newline=""',
+        accept: ['newline=""'],
+        explain: 'newline="" 交给 csv 模块自己处理换行。'
+      }
+    ]
+  },
+  {
     id: 'with-statement',
     title: 'with 语句：用完自动收拾',
     phase: 5,
-    order: 3,
+    order: 4,
     minutes: 20,
     rating: { level: 1, must: 4 },
     summary: 'with ... as 能保证文件用完自动关闭，即使中途出错了也不会漏关，让程序更安全。',
@@ -233,7 +384,8 @@ export default [
       { term: 'with', zh: '随着（语句）', note: 'Python 的关键字，用来保证资源一定被收拾好' },
       { term: 'context-manager', zh: '上下文管理器', note: '实现了 __enter__ 和 __exit__ 的对象，可被 with 管理' },
       { term: 'as', zh: '作为', note: '把 with 打开的对象的返回值绑定到一个名字上' },
-      { term: 'close', zh: '关闭', note: '收回文件等资源，with 会自动做这一件事' }
+      { term: 'close', zh: '关闭', note: '收回文件等资源，with 会自动做这一件事' },
+      { term: 'resource', zh: '资源', note: '用完要归还的东西，如文件、网络连接，适合交给 with 管理' }
     ],
     steps: [
       'with 后面跟一个表达式，比如 open(...)',
@@ -282,6 +434,12 @@ export default [
         bad: "with open('data.txt') as f:\n    f.read()\n    f.close()",
         good: "with open('data.txt') as f:\n    data = f.read()",
         note: '用 with 就不要再手动调用 f.close()，那会重复关闭；交给 with 自动处理即可。'
+      },
+      {
+        title: '要同时开两个文件，缩进越套越深',
+        bad: "with open('a.txt') as fa:\n    with open('b.txt') as fb:\n        ...",
+        good: "with open('a.txt') as fa, open('b.txt') as fb:\n    ...",
+        note: '一个 with 用逗号可以同时管理多个资源，缩进只有一层。'
       }
     ],
     practice: [
@@ -307,6 +465,18 @@ export default [
         question: 'with 块里即使抛出了异常，文件也依然会被自动关闭。',
         answer: true,
         explain: 'with 的 __exit__ 在所有离开块的情况下都会被调用，包括异常路径。'
+      },
+      {
+        type: 'choice',
+        question: '想同时打开两个文件并都交给 with 管理，正确写法是？',
+        options: [
+          '写两层嵌套的 with',
+          'with open("a") as fa, open("b") as fb:',
+          '一个 with 只能管一个文件，无法同开',
+          '把两个文件名都塞进一个 open'
+        ],
+        answer: 1,
+        explain: '一个 with 用逗号分隔多个 open，每个配一个 as 名字，缩进只有一层。',
       }
     ]
   },
@@ -314,7 +484,7 @@ export default [
     id: 'exception-handling',
     title: '异常：程序遇到意外怎么处理',
     phase: 5,
-    order: 4,
+    order: 5,
     minutes: 28,
     rating: { level: 1, must: 5 },
     summary: '用 try/except/else/finally 接住运行时错误，让程序不因一次意外就整个崩溃，必要时用 raise 主动抛错。',
@@ -372,6 +542,12 @@ export default [
         note: '只捕获你确实能处理的异常类型，其余交给更外层，别把所有问题都当成同一种。'
       },
       {
+        title: '宽异常写在窄异常前面',
+        bad: 'try:\n    risky()\nexcept Exception:\n    print("出错")\nexcept ValueError:\n    print("值错误")   # 永远轮不到',
+        good: '先写 except ValueError，再写 except Exception 兜底',
+        note: '异常按从上到下的顺序匹配，宽的类型放前面，后面的就永远接不到。'
+      },
+      {
         title: '把入口全包成一个大 try 导致定位困难',
         bad: 'try:\n    ...很多行代码...\nexcept Exception:\n    print("出错")',
         good: 'try 只包住真正那几行可能出错的语句',
@@ -421,7 +597,7 @@ export default [
     id: 'logging-basic',
     title: '日志：记录程序运行过程',
     phase: 5,
-    order: 5,
+    order: 6,
     minutes: 22,
     rating: { level: 1, must: 4 },
     summary: '用 logging 模块给程序记日志，把“运行到哪了、发生了什么”写下来，方便日后排查问题。',
@@ -433,7 +609,8 @@ export default [
       { term: 'logging', zh: '日志（模块）', note: 'Python 自带的、用于记录运行信息的模块' },
       { term: 'level', zh: '级别', note: '日志的严重程度，如 DEBUG、INFO、WARNING、ERROR' },
       { term: 'basicConfig', zh: '基础配置', note: '一次性设好日志显示级别、格式等' },
-      { term: 'INFO', zh: '信息级', note: '用来记“正常进行中”的重要信息的一种级别' }
+      { term: 'INFO', zh: '信息级', note: '用来记"正常进行中"的重要信息的一种级别' },
+      { term: 'WARNING', zh: '警告级', note: '比 INFO 严重一档：程序还能跑，但有问题要注意' }
     ],
     steps: [
       'import logging 引入模块',
@@ -473,6 +650,12 @@ export default [
         note: '日志会长期保存并可能被很多人看到，别把密码、账号等敏感信息记进去。'
       },
       {
+        title: '重复调用 basicConfig 想改级别',
+        bad: "logging.basicConfig(level=logging.INFO)\nlogging.basicConfig(level=logging.ERROR)   # 不生效",
+        good: '程序开头设一次；运行中要改就用 logging.getLogger().setLevel(logging.ERROR)',
+        note: 'basicConfig 只有第一次调用生效，之后再设都是无效的；要动态改级别用 setLevel。'
+      },
+      {
         title: '到处用 print 当日志',
         bad: "print('开始读取')\nprint('读取结束')",
         good: "logging.info('开始读取')\nlogging.info('读取结束')",
@@ -507,6 +690,14 @@ export default [
         question: '写日志时应该把用户的密码也记进去，方便排查登录问题。',
         answer: false,
         explain: '日志可能长期保存、被许多人看到，绝不能记录密码等敏感信息。'
+      },
+      {
+        type: 'code',
+        question: '补全：记录一条最高级别的错误日志。',
+        code: 'logging.____("数据库连不上")',
+        answer: 'error',
+        accept: ['error('],
+        explain: 'logging.error 记录 ERROR 级日志，是四个常用级别里最严重的一档。'
       }
     ]
   },
@@ -514,7 +705,7 @@ export default [
     id: 'sqlite-basics',
     title: 'sqlite3：把数据存进数据库',
     phase: 5,
-    order: 6,
+    order: 7,
     minutes: 30,
     rating: { level: 3, must: 4 },
     summary: '不装任何东西，用自带的 sqlite3 建表、插入、查询，把数据稳妥地存进一个文件。',
@@ -567,6 +758,21 @@ print(cur.fetchall())
 conn.close()`,
         output: `[('小刚',), ('小明',), ('小红',)]`,
         note: 'executemany 一次插多行，? 占位符自动处理引号和转义；单元素元组末尾的逗号是 Python 的固定写法，别漏。',
+      },
+      {
+        title: '更新与删除：改数据、清数据',
+        code: `import sqlite3
+
+conn = sqlite3.connect("score.db")
+cur = conn.cursor()
+cur.execute("UPDATE student SET score = 96 WHERE name = '小明'")
+cur.execute("DELETE FROM student WHERE score < 90")
+conn.commit()
+cur.execute("SELECT name, score FROM student ORDER BY score DESC")
+print(cur.fetchall())
+conn.close()`,
+        output: `[('小明', 96), ('小刚', 95)]`,
+        note: 'UPDATE 改值、DELETE 删行，都要带 WHERE 指明"改谁/删谁"；忘写 WHERE 会波及全表。改完同样要 commit。',
       }
     ],
     pitfalls: [
@@ -588,6 +794,12 @@ cur.execute("INSERT INTO student VALUES ('" + name + "', 90)")`,
         bad: 'cur.execute("CREATE TABLE student (name TEXT, score INT)")   # 第二次运行报错',
         good: 'cur.execute("CREATE TABLE IF NOT EXISTS student (name TEXT, score INT)")',
         note: '表已存在再 CREATE 会报 table already exists；加上 IF NOT EXISTS 就能放心重复运行。'
+      },
+      {
+        title: 'fetchone 查不到结果还去取值',
+        bad: 'row = cur.fetchone()\nprint(row[0])   # 没查到时 row 是 None',
+        good: 'row = cur.fetchone()\nif row:\n    print(row[0])',
+        note: '查询无结果时 fetchone() 返回 None；先判空再取值，否则 AttributeError。'
       }
     ],
     practice: [
