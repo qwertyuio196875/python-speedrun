@@ -21,6 +21,7 @@ export default [
       { term: 'terminal', zh: '终端 / 命令行', note: '一个可以打字给电脑、通过文字交流的窗口。' },
       { term: 'code', zh: '代码', note: '用英文和符号写出来的"命令"，电脑照着它执行。' },
       { term: 'print', zh: '打印', note: '把内容显示到屏幕上的命令。' },
+      { term: 'PATH', zh: '环境变量路径', note: '告诉系统去哪里找 python 命令；安装时勾选 Add python.exe to PATH 就是加它。' },
     ],
     steps: [
       '去 Python 官网 python.org 下载 Python 3.12 版本。Windows 安装时一定勾选 "Add python.exe to PATH"。',
@@ -66,6 +67,12 @@ export default [
         bad: 'python hello.py   # 但还是打印出一堆报错',
         good: '运行前先 Ctrl+S 保存，再回命令行运行',
         note: '改完代码先保存，再运行；不保存时运行的是上一次的旧代码。',
+      },
+      {
+        title: '提示 python 不是内部或外部命令',
+        bad: 'python : 无法将"python"项识别为命令',
+        good: '重新运行安装包并勾选 Add python.exe to PATH，或先用 py 命令代替',
+        note: '这是 PATH 没加上的典型报错；重装修复，Windows 下也可以用 py 代替 python。',
       },
     ],
     practice: [
@@ -113,10 +120,18 @@ export default [
     tip: '零基础提示：变量就是一个"带名字的小盒子"。把东西放进去（赋值），以后喊名字就能把它拿出来。',
     what: '程序里经常要记住数据，比如一个人的名字、年龄。如果把数据直接写死在每个角落，改起来很麻烦。变量帮你把一个值"命名"并保存，之后用那个名字就能反复使用同一个值。这就是为什么程序能处理会变化的数据。',
     analogy: '变量像冰箱冷藏柜的格子：你把一块肉放进去并贴上"猪肉"的标签，之后随时能按标签把它拿出来用。',
+    steps: [
+      '想好要保存什么数据，取一个见名知义的英文名（如 name、age）',
+      '用等号把值赋给变量：name = "小明"',
+      '之后在代码里直接写变量名，就等于在使用它装的数据',
+      '数据变了就重新赋值，旧值自动被覆盖',
+    ],
     terms: [
       { term: 'variable', zh: '变量', note: '给一个值起的名字，用于保存和反复使用。' },
       { term: 'assign', zh: '赋值', note: '用等号把右侧的值"放"进左边名字的操作。' },
       { term: 'type', zh: '数据类型', note: '数据的种类，比如数字、文字；不同类型处理方式不同。' },
+      { term: 'naming convention', zh: '命名规范', note: '变量名用小写字母加下划线（如 user_name），见名知意。' },
+      { term: 'value', zh: '值', note: '变量里装的具体数据，可以读取，也可以被覆盖。' },
     ],
     examples: [
       {
@@ -156,6 +171,12 @@ export default [
         bad: 'age = 18\nprint(age = 18)',
         good: 'age = 18\nprint(age == 18)',
         note: '单个等号 = 是"把值放进变量"，两个等号 == 才是"比较是否相等"。',
+      },
+      {
+        title: '变量还没定义就使用',
+        bad: 'print(score)\nscore = 90',
+        good: 'score = 90\nprint(score)',
+        note: 'Python 从上往下一行行执行，用之前必须先赋值，否则报 NameError。',
       },
     ],
     practice: [
@@ -207,6 +228,7 @@ export default [
       { term: 'float', zh: '小数', note: '带小数点的数，比如 3.14、0.5。' },
       { term: 'str', zh: '字符串', note: '一串文字，写代码时要放进引号里。' },
       { term: 'bool', zh: '布尔', note: '只有真（True）或假（False）两种取值。' },
+      { term: 'None', zh: '空值', note: '表示"这里还没有值"的特殊类型，打印出来就是 None。' },
     ],
     examples: [
       {
@@ -247,6 +269,12 @@ export default [
         good: 'print(int("123"))',
         note: 'int() 只认长得像数字的文字，"abc" 不是数字，会报错。',
       },
+      {
+        title: '小数精度陷阱',
+        bad: 'print(0.1 + 0.2 == 0.3)   # 得到 False',
+        good: 'print(round(0.1 + 0.2, 10) == 0.3)   # 得到 True',
+        note: '小数在电脑里是近似存储，0.1 + 0.2 其实是 0.30000000000000004；比较前先 round。',
+      },
     ],
     practice: [
       {
@@ -281,10 +309,109 @@ export default [
     ],
   },
   {
+    id: 'operators',
+    title: '运算符与表达式：让数据动起来',
+    phase: 1,
+    order: 4,
+    minutes: 30,
+    rating: { level: 1, must: 5 },
+    summary: '加减乘除、取余、乘方、比较、与或非：把数据和条件"算"起来的那批符号。',
+    keywords: ['运算符', '算术', '取余', '比较', 'and', 'or', 'not'],
+    tip: '零基础提示：运算符就是数学课那些符号外加几个新朋友。先记住 / 是除、// 是整除、% 是取余、** 是乘方，其余和数学课一样。',
+    what: '程序的本质是"算"：价格乘数量、成绩比大小、条件与或非。运算符把这些计算写成一行行表达式，表达式算完都会得到一个值，可以直接打印，也可以存进变量。后面要写的判断、循环、业务逻辑，全都建立在它们上面。',
+    analogy: '打个比方：运算符像厨房里的刀具套装——切块（+ - * /）、切丁（//）、分份取份（%）、翻倍（**），配上秤（比较）和电闸开关（and/or/not），就能做一桌菜。',
+    terms: [
+      { term: 'operator', zh: '运算符', note: '+ - * / 这类表示运算的符号。' },
+      { term: 'expression', zh: '表达式', note: '由数据和运算符组成、能算出一个值的式子。' },
+      { term: 'modulo', zh: '取余', note: '% 求除法余数，常用判断整除，如 n % 2 == 0 表示偶数。' },
+      { term: 'logical operator', zh: '逻辑运算符', note: 'and 与、or 或、not 非，把多个真假条件组合起来。' },
+      { term: 'augmented assignment', zh: '简写赋值', note: '+=、*= 这类"算完就存回原变量"的简写。' }
+    ],
+    steps: [
+      '打开上一节的 hello.py，把各种运算符挨个 print 一遍',
+      '重点试 // 整除和 % 取余，观察它们和 / 的区别',
+      '把比较运算的 True / False 打印出来看看',
+      '用 and / or / not 组合两个条件试试',
+      '用 n += 1 代替 n = n + 1，体会简写赋值',
+    ],
+    examples: [
+      {
+        title: '算术运算全家桶',
+        code: 'print(7 + 3, 7 - 3, 7 * 3, 7 / 3)\nprint(17 % 5, 2 ** 10)\nprint(7 // 2)',
+        output: '10 4 21 2.3333333333333335\n2 1024\n3',
+        note: '/ 得到精确小数；// 整除只取整数部分；% 取余数；** 是乘方。',
+      },
+      {
+        title: '比较与逻辑运算',
+        code: 'age = 20\nprint(age >= 18, age == 18, age != 18)\nprint(age >= 18 and age < 60)\nprint(age < 18 or age > 100)\nprint(not age < 18)',
+        output: 'True False True\nTrue\nFalse\nTrue',
+        note: '比较得到 True/False；and 两边都真才真，or 一边真就真，not 取反。',
+      },
+      {
+        title: '简写赋值：算完就存回去',
+        code: 'n = 10\nn += 5   # 等价于 n = n + 5\nprint(n)\nn *= 2   # 等价于 n = n * 2\nprint(n)',
+        output: '15\n30',
+        note: '+=、-=、*=、//= 都是同一套路：先运算，再把结果赋回同一个变量。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '除法的三个符号混用',
+        bad: 'print(7 // 2)   # 想算精确除法却用了 //，得到 3',
+        good: 'print(7 / 2)   # 得到 3.5',
+        note: '/ 精确除、// 向下取整、% 取余数，想清楚要哪种再下手。'
+      },
+      {
+        title: 'and / or 的含义记反',
+        bad: 'if age < 18 or age > 60:   # 想表达"18 到 60 之间"',
+        good: 'if 18 <= age <= 60:',
+        note: 'or 是"任一满足就成立"；两个条件都要满足必须用 and。区间还能像右边这样连写。'
+      },
+      {
+        title: '字符串和数字相乘想当然',
+        bad: 'print("3" * 3 == 9)   # 得到 False',
+        good: 'print(int("3") * 3)   # 9；而 "3" * 3 会得到 "333"',
+        note: '"数字文字" * 整数是重复文字，不是数学乘法；先转 int 再算。'
+      }
+    ],
+    practice: [
+      {
+        prompt: 'total 有 3725 秒，用整除和取余拆成"几小时几分钟几秒"并打印。',
+        starter: 'total = 3725\n# TODO: 用 // 和 % 拆出时分秒\n',
+        answer: 'total = 3725\nhours = total // 3600\nminutes = total % 3600 // 60\nseconds = total % 60\nprint(hours, "小时", minutes, "分", seconds, "秒")',
+        output: '1 小时 2 分 5 秒',
+        hint: '先 // 3600 得小时；剩余部分 % 3600 再 // 60 得分钟；最后 % 60 得秒。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: 'print(17 % 5) 的输出是？',
+        options: ['3', '2', '3.4', '0'],
+        answer: 1,
+        explain: '17 除以 5 商 3 余 2，% 取的是余数 2。',
+      },
+      {
+        type: 'judge',
+        question: '表达式 3 > 2 and 2 > 1 的结果是 True。',
+        answer: true,
+        explain: 'and 要求两边都为真，3>2 与 2>1 都成立，所以是 True。',
+      },
+      {
+        type: 'code',
+        question: '补全：判断 n 是偶数（能被 2 整除）。',
+        code: 'n = 8\nprint(__________ == 0)',
+        answer: 'n % 2',
+        accept: ['n%2'],
+        explain: 'n % 2 是 n 除以 2 的余数，余 0 就是偶数。',
+      },
+    ],
+  },
+  {
     id: 'list',
     title: '列表：把一组数据装在一起',
     phase: 1,
-    order: 4,
+    order: 5,
     minutes: 30,
     rating: { level: 1, must: 5 },
     summary: '列表能按顺序装很多个数据，用下标取其中的某一个，是 Python 里最常用的一种"容器"。',
@@ -296,6 +423,8 @@ export default [
       { term: 'list', zh: '列表', note: '按顺序存放一组数据，用方括号 [] 定义。' },
       { term: 'index', zh: '下标 / 索引', note: '元素在列表里的位置编号，从 0 开始。' },
       { term: 'append', zh: '追加', note: '往列表末尾加一个元素。' },
+      { term: 'slice', zh: '切片', note: '用 [起:止] 取出一段元素，含头不含尾。' },
+      { term: 'negative index', zh: '负下标', note: '-1 是最后一个元素，-2 是倒数第二个。' },
     ],
     examples: [
       {
@@ -336,6 +465,12 @@ export default [
         good: 'b = a[:]   # 或 b = list(a)，复制一份再改',
         note: 'a = b 只是让两个名字指向同一个列表，改一个等于改全部。要复制用 list(a) 或切片。',
       },
+      {
+        title: 'append 和 extend 混用',
+        bad: 'nums = [1, 2, 3]\nnums.append([4, 5])   # 变成 [1, 2, 3, [4, 5]]',
+        good: 'nums.extend([4, 5])   # 变成 [1, 2, 3, 4, 5]',
+        note: 'append 把整个东西当一个元素塞进去；合并两个列表要用 extend 或 +=。',
+      },
     ],
     practice: [
       {
@@ -374,7 +509,7 @@ export default [
     id: 'if-condition',
     title: 'if 判断：让程序做选择',
     phase: 1,
-    order: 5,
+    order: 6,
     minutes: 30,
     rating: { level: 1, must: 5 },
     summary: '用 if / elif / else 让程序根据不同条件走不同分支，是真的做"判断"的能力。',
@@ -386,6 +521,8 @@ export default [
       { term: 'if', zh: '如果', note: '满足某个条件时才执行下面的代码。' },
       { term: 'condition', zh: '条件', note: '一个能算成真或假的判断，比如 age >= 18。' },
       { term: 'indentation', zh: '缩进', note: '行首的空格；用它表示代码属于哪个块。' },
+      { term: 'elif', zh: '否则如果', note: '多个条件从上到下依次检查，命中一个就不再往下。' },
+      { term: 'chained comparison', zh: '连写比较', note: '像数学一样连写区间，如 0 <= score <= 100。' },
     ],
     examples: [
       {
@@ -426,6 +563,12 @@ export default [
         good: 'if score >= 60:',
         note: 'if 条件之后必须跟一个英文冒号 :。',
       },
+      {
+        title: '多分支写成 else if',
+        bad: 'if score >= 90:\n    print("优")\nelse if score >= 60:\n    print("及格")',
+        good: 'if score >= 90:\n    print("优")\nelif score >= 60:\n    print("及格")',
+        note: 'Python 的多分支关键字是 elif，写成 else if 会直接语法错误。',
+      },
     ],
     practice: [
       {
@@ -464,7 +607,7 @@ export default [
     id: 'for-loop',
     title: 'for 循环：反复做同一件事',
     phase: 1,
-    order: 6,
+    order: 7,
     minutes: 30,
     rating: { level: 1, must: 5 },
     summary: '用 for 循环遍历列表里的每一项，或照指定次数反复执行，是处理批量数据的核心。',
@@ -476,6 +619,8 @@ export default [
       { term: 'for loop', zh: 'for 循环', note: '逐个遍历一组数据，对每个元素执行循环里的代码。' },
       { term: 'iterate', zh: '遍历 / 迭代', note: '按顺序访问每一个元素的过程。' },
       { term: 'range', zh: '范围', note: '生成从几到几的整数序列，常配合 for 循环用。' },
+      { term: 'enumerate', zh: '枚举', note: '同时拿到下标和元素的内置函数：for i, f in enumerate(列表)。' },
+      { term: 'zip', zh: '配对遍历', note: 'zip(列表A, 列表B) 把两个列表按位置配对，一次遍历两份。' },
     ],
     examples: [
       {
@@ -516,6 +661,12 @@ export default [
         good: 'for i, f in enumerate(fruits):\n    print(i, f)',
         note: '需要"下标 + 元素"时用 enumerate，干净且不会出错。',
       },
+      {
+        title: 'range 起点写错漏掉第一个',
+        bad: 'for i in range(1, len(nums)):\n    print(nums[i])   # 漏了下标 0',
+        good: 'for i in range(len(nums)):\n    print(nums[i])',
+        note: 'range 默认从 0 开始；写成 range(1, ...) 会悄悄漏掉第一个元素。'
+      },
     ],
     practice: [
       {
@@ -548,6 +699,253 @@ export default [
         accept: ['range(5)'],
         explain: 'range(5) 生成 0、1、2、3、4 五个数，逐个打印。',
       },
-    ],
+    ]
   },
+  {
+    id: 'branch-loop-practice',
+    title: '综合实战：分支加循环解决问题',
+    phase: 1,
+    order: 8,
+    minutes: 30,
+    rating: { level: 2, must: 5 },
+    summary: '把 if 和 for 组合起来：统计、找最值、算平均，以及经典的九九乘法表。',
+    keywords: ['综合练习', '统计', 'max', 'sum', '嵌套循环', '乘法表'],
+    tip: '零基础提示：真正的程序都是"循环里套判断"。这一节不学新语法，专门把它们拼起来解决三个真实小问题。',
+    what: '单独的 if 和 for 都很简单，程序的本领来自组合：循环负责"挨个拿到数据"，判断负责"对每个数据决定怎么办"。统计及格人数、找最大值、算平均分、打印九九乘法表，用的全是这两样的组合。max()、sum() 这些现成函数，也是把常见组合打包好了送给你。',
+    analogy: '打个比方：for 是流水线传送带，if 是传送带旁的质检员——东西一个个过来，合格的装箱、不合格的剔除，合起来就是一条完整产线。',
+    terms: [
+      { term: 'max', zh: '求最大值', note: '内置函数，max(列表) 返回最大的元素。' },
+      { term: 'sum', zh: '求和', note: '内置函数，sum(列表) 把所有数加起来。' },
+      { term: 'nested loop', zh: '嵌套循环', note: '循环里面再放循环：外圈走一步，内圈走一整圈。' },
+      { term: 'end', zh: '结尾参数', note: 'print(..., end="...") 可以把默认的换行换成别的内容。' },
+      { term: 'accumulator', zh: '累加器', note: '在循环外清零、循环里不断累加的变量。' }
+    ],
+    steps: [
+      '先写数据：scores = [58, 92, 74, 81, 45]',
+      '任务一：for 里嵌 if，数出及格人数',
+      '任务二：用 max()、sum()、len() 求最高分和平均分',
+      '任务三：用两层 for 打印乘法口诀表前三行',
+      '全部跑通后，改动数据再验证一遍结果',
+    ],
+    examples: [
+      {
+        title: '统计及格人数',
+        code: `scores = [58, 92, 74, 81, 45]
+passed = 0
+for s in scores:
+    if s >= 60:
+        passed += 1
+print("及格人数", passed)`,
+        output: `及格人数 3`,
+        note: '循环负责逐个拿分，判断负责筛选；计数器要在循环外先清零。',
+      },
+      {
+        title: '最高分与平均分',
+        code: `scores = [58, 92, 74, 81, 45]
+print("最高分", max(scores))
+print("平均分", round(sum(scores) / len(scores), 1))`,
+        output: `最高分 92
+平均分 70.0`,
+        note: 'max/sum/len 是现成的内置函数；除法得到小数，用 round 保留一位。',
+      },
+      {
+        title: '九九乘法表前三行',
+        code: `for i in range(1, 4):
+    for j in range(1, i + 1):
+        print(f"{j}×{i}={i*j}", end="\\t")
+    print()`,
+        output: `1×1=1
+1×2=2\t2×2=4
+1×3=3\t2×3=6\t3×3=9`,
+        note: '外层 i 控制第几行，内层 j 控制一行里几列；end="\\t" 用制表符代替换行对齐。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '计数器放在循环里清零',
+        bad: 'for s in scores:\n    passed = 0\n    if s >= 60:\n        passed += 1',
+        good: 'passed = 0\nfor s in scores:\n    if s >= 60:\n        passed += 1',
+        note: '累计用的变量必须在循环外初始化，放里面每转一圈都会被清零。'
+      },
+      {
+        title: '嵌套循环内外层写反',
+        bad: 'for j in range(1, i + 1):\n    for i in range(1, 4):',
+        good: 'for i in range(1, 4):\n    for j in range(1, i + 1):',
+        note: '内层要用到 i，外层就必须是 i 在外；写反了内层根本读不到它。'
+      },
+      {
+        title: '判断放错了缩进层级',
+        bad: 'for s in scores:\n    pass\nif s >= 60:\n    passed += 1   # 循环外只判断最后一个',
+        good: 'for s in scores:\n    if s >= 60:\n        passed += 1',
+        note: 'if 想对每个元素生效，就必须缩进在 for 里面；缩进出循环它只执行一次。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '统计 nums = [3, 6, 4, 7, 8] 里偶数的个数与总和，输出：偶数个数 3 总和 18。',
+        starter: `nums = [3, 6, 4, 7, 8]
+count = 0
+total = 0
+# TODO: 循环加判断，统计偶数个数与总和
+`,
+        answer: `nums = [3, 6, 4, 7, 8]
+count = 0
+total = 0
+for n in nums:
+    if n % 2 == 0:
+        count += 1
+        total += n
+print("偶数个数", count, "总和", total)`,
+        output: `偶数个数 3 总和 18`,
+        hint: 'n % 2 == 0 判断偶数；count 和 total 都要在循环外清零。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: 'max([58, 92, 74]) 的结果是？',
+        options: ['58', '74', '92', '224'],
+        answer: 2,
+        explain: 'max 返回列表里最大的元素，这里是 92。',
+      },
+      {
+        type: 'judge',
+        question: 'print(f"{j}×{i}={i*j}", end="\\t") 里的 end="\\t" 表示打印后不换行，改打一个制表符。',
+        answer: true,
+        explain: 'print 默认 end 是换行符；换成 \\t 就能一行里并排打印多个算式。',
+      },
+      {
+        type: 'code',
+        question: '补全：遍历 scores 求总和。',
+        code: 'scores = [58, 92, 74]\ntotal = 0\nfor s in scores:\n    __________',
+        answer: 'total += s',
+        accept: ['total = total + s'],
+        explain: '每圈把当前分数累加进 total，等价写法是 total = total + s。',
+      }
+    ]
+  },
+  {
+    id: 'debug-basics',
+    title: '调试入门：读懂报错与 print 排查',
+    phase: 1,
+    order: 9,
+    minutes: 30,
+    rating: { level: 2, must: 5 },
+    summary: '学会读错误提示的三要素，用 print 打点定位问题，把"报错就慌"变成"按图索骥"。',
+    keywords: ['调试', '报错', 'traceback', 'print 调试', 'NameError', 'TypeError'],
+    tip: '零基础提示：报错不是"程序坏了"，是电脑在给你留线索。最后一行是错误类型和原因，往上还能找到出错的行号——顺着读就能找到病根。',
+    what: '写程序一定会遇到报错。Python 的报错信息其实是一张"藏宝图"：最后两行写清错误类型（如 NameError）和一句话原因，往上翻能找到出错的文件和行号。更高一层的办法是 print 调试：在关键位置打印变量的值，看程序每一步实际算出了什么、和预期差在哪。这两个本事会伴你整个编程生涯。',
+    analogy: '报错信息像医院的化验单：类型是"病名"，行号是"病灶位置"，原因是"症状描述"；print 打点像自己沿途撒面包屑，走丢了顺着屑找回来。',
+    terms: [
+      { term: 'traceback', zh: '错误追踪', note: '报错时打印的整段信息，从下往上读：最先看到错误类型和位置。' },
+      { term: 'debug', zh: '调试', note: '找到并修掉程序错误的过程。' },
+      { term: 'print debugging', zh: 'print 调试法', note: '在关键步骤打印变量值，观察程序实际算出的内容。' },
+      { term: 'NameError', zh: '名字错误', note: '用了没定义或拼错的变量名。' },
+      { term: 'TypeError', zh: '类型错误', note: '对不匹配的类型做了运算，如文字加数字。' }
+    ],
+    steps: [
+      '故意写一个错代码（如 print(naem)），运行并完整读一遍报错',
+      '对照报错：最后一行是"类型 + 原因"，往上找 File 和 line 指向的行号',
+      '修好后运行确认，再故意换一种错（如下标越界）练一遍',
+      '写超过 10 行的程序时，在每步算完的地方加 print 打点',
+      '问题定位后删掉临时 print，保持代码干净',
+    ],
+    examples: [
+      {
+        title: '用 print 打点看程序走到了哪',
+        code: `def total(price, count):
+    print("收到参数:", price, count)
+    result = price * count
+    print("算出结果:", result)
+    return result
+
+print(total(3, 5))`,
+        output: `收到参数: 3 5
+算出结果: 15
+15`,
+        note: '在每个关键步骤后打印变量值：哪一步的输出不对，问题就出在那一步。',
+      },
+      {
+        title: '常见错误类型速查',
+        code: `errors = {
+    "SyntaxError": "语法写错了",
+    "NameError": "名字没定义或拼错了",
+    "TypeError": "类型用错了",
+    "IndexError": "下标越界了",
+}
+for k, v in errors.items():
+    print(k, "→", v)`,
+        output: `SyntaxError → 语法写错了
+NameError → 名字没定义或拼错了
+TypeError → 类型用错了
+IndexError → 下标越界了`,
+        note: '把这张表贴在手边：报错先认类型，再对号入座排查。',
+      },
+      {
+        title: '一个 NameError 的修复过程',
+        code: `# 错误写法：print("你好,", naem)
+# 报错：NameError: name 'naem' is not defined
+# 原因：naem 拼错了，应该是 name
+name = "小明"
+print("你好,", name)`,
+        output: `你好, 小明`,
+        note: '修复三步：读类型（NameError）→ 看行号 → 对着原因找拼错的变量名。',
+      }
+    ],
+    pitfalls: [
+      {
+        title: '只盯着报错最后一行不看行号',
+        bad: '看到 TypeError 就到处乱改',
+        good: '从报错里找到 "File xxx, line N"，跳到那一行看',
+        note: '报错里的 File 和 line 告诉你病灶在哪一行，先到那行再对症下药。'
+      },
+      {
+        title: '改完不保存就运行',
+        bad: '在编辑器里改了代码，直接切回终端运行旧文件',
+        good: 'Ctrl+S 保存后再运行',
+        note: '运行的是硬盘上的文件，编辑器里没保存的改动等于没改。'
+      },
+      {
+        title: '一次改五个地方再运行',
+        bad: '凭感觉连改多处，报错换了但更懵',
+        good: '一次只改一处，运行验证，再改下一处',
+        note: '小步验证才能确定"这一处改对了"；一次改多处会让线索全乱。'
+      }
+    ],
+    practice: [
+      {
+        prompt: '下面的脚本会报 IndexError。先运行看报错，再修复：让它打印列表的最后一个元素。',
+        starter: `nums = [1, 2, 3]
+print(nums[5])
+`,
+        answer: `nums = [1, 2, 3]
+print(nums[-1])`,
+        output: `3`,
+        hint: '报错 IndexError: list index out of range；最后一个元素用负下标 -1。',
+      }
+    ],
+    quiz: [
+      {
+        type: 'choice',
+        question: "看到 NameError: name 'naem' is not defined，最可能的原因是？",
+        options: ['电脑中毒了', '变量名拼错了', 'Python 没安装', '文件没保存'],
+        answer: 1,
+        explain: 'NameError 表示这个名字不存在，多半是拼错或还没定义就用。',
+      },
+      {
+        type: 'judge',
+        question: '报错信息里通常包含出错的行号，可以帮你快速定位。',
+        answer: true,
+        explain: '报错里的 File "xxx", line N 指向出错位置，是排错的第一入口。',
+      },
+      {
+        type: 'code',
+        question: '补全：安全地打印列表最后一个元素。',
+        code: 'nums = [1, 2, 3]\nprint(nums[__________])',
+        answer: '-1',
+        accept: ['len(nums) - 1'],
+        explain: '负下标 -1 表示最后一个元素，不会越界。',
+      }
+    ]
+  }
 ]
