@@ -2,7 +2,7 @@
   <div class="app">
     <AppHeader
       :collapsed="collapsed"
-      :dark="isDark"
+      :theme="themeMode"
       @toggle-drawer="drawerOpen = true"
       @toggle-sidebar="toggleSidebar"
       @set-theme="setTheme"
@@ -18,8 +18,11 @@
           <RouterView />
         </div>
         <footer class="site-foot">
-          <span>Python 零基础教程 · 从第一行代码开始 · 约 30 小时</span>
-          <span class="muted">进度保存在浏览器本地（localStorage），不会上传</span>
+          <span>© 2026 Python 零基础教程（Python-SpeedRun） · 从第一行代码到后端与 AI 应用</span>
+          <span class="muted">
+            部署于 Cloudflare · 最近更新 2026-11 ·
+            <a href="https://github.com/qwertyuio196875/python-speedrun" target="_blank" rel="noopener">GitHub</a>
+          </span>
         </footer>
       </main>
     </div>
@@ -47,12 +50,20 @@ const router = useRouter()
 
 const drawerOpen = ref(false)
 const collapsed = computed(() => store.sidebarCollapsed)
-const isDark = computed(() => store.theme === 'dark')
+const themeMode = computed(() => store.theme)
 
-/* ============ 主题 ============ */
+/* ============ 主题（浅色 / 深色 / 跟随系统） ============ */
+const media = window.matchMedia('(prefers-color-scheme: dark)')
+
+function resolveTheme(theme) {
+  if (theme === 'auto') return media.matches ? 'dark' : 'light'
+  return theme === 'dark' ? 'dark' : 'light'
+}
+
 function applyTheme(theme) {
-  document.documentElement.classList.toggle('dark', theme === 'dark')
-  document.documentElement.style.colorScheme = theme
+  const resolved = resolveTheme(theme)
+  document.documentElement.classList.toggle('dark', resolved === 'dark')
+  document.documentElement.style.colorScheme = resolved
 }
 
 function setTheme(theme) {
@@ -60,7 +71,10 @@ function setTheme(theme) {
   applyTheme(theme)
 }
 
-watch(isDark, (dark) => applyTheme(dark ? 'dark' : 'light'), { immediate: true })
+watch(themeMode, (theme) => applyTheme(theme), { immediate: true })
+media.addEventListener?.('change', () => {
+  if (themeMode.value === 'auto') applyTheme('auto')
+})
 
 function toggleSidebar() {
   store.setSidebarCollapsed(!store.sidebarCollapsed)
@@ -176,7 +190,7 @@ onBeforeUnmount(() => {
 .content {
   flex: 1;
   width: 100%;
-  max-width: 940px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: 26px 26px 40px;
 }
@@ -190,7 +204,7 @@ onBeforeUnmount(() => {
   font-size: 11.5px;
   color: var(--muted);
   border-top: 1px solid var(--border);
-  max-width: 940px;
+  max-width: 1180px;
   margin: 0 auto;
   width: 100%;
 }

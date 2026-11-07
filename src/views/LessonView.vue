@@ -1,7 +1,8 @@
 <template>
-  <article v-if="lesson" class="lesson">
-    <!-- 标题与元信息 -->
-    <header class="head">
+  <div v-if="lesson" class="lesson-layout">
+    <article class="lesson">
+      <!-- 标题与元信息 -->
+      <header class="head">
       <div class="crumbs">
         <RouterLink to="/">学习总览</RouterLink>
         <span class="sep">/</span>
@@ -32,19 +33,19 @@
     </header>
 
     <!-- 1. 它是什么 -->
-    <section class="section">
+    <section class="section" id="sec-what">
       <h2 class="h2"><span class="idx">{{ sec.what }}</span> 它是什么</h2>
       <p class="p"><RichText :text="lesson.what" /></p>
     </section>
 
     <!-- 2. 打个比方 -->
-    <section class="section">
+    <section class="section" id="sec-analogy">
       <h2 class="h2"><span class="idx">{{ sec.analogy }}</span> 打个比方</h2>
       <p class="p analogy"><RichText :text="lesson.analogy" /></p>
     </section>
 
     <!-- 3. 术语卡 -->
-    <section class="section">
+    <section class="section" id="sec-terms">
       <h2 class="h2"><span class="idx">{{ sec.terms }}</span> 术语卡</h2>
       <div class="terms">
         <div v-for="(t, i) in lesson.terms" :key="i" class="term card">
@@ -58,7 +59,7 @@
     </section>
 
     <!-- 4. 跟着做（可选） -->
-    <section v-if="sec.steps" class="section">
+    <section v-if="sec.steps" class="section" id="sec-steps">
       <h2 class="h2"><span class="idx">{{ sec.steps }}</span> 跟着做</h2>
       <ol class="steps">
         <li v-for="(s, i) in lesson.steps" :key="i"><RichText :text="s" /></li>
@@ -66,7 +67,7 @@
     </section>
 
     <!-- 5. 代码示例 -->
-    <section class="section">
+    <section class="section" id="sec-examples">
       <h2 class="h2"><span class="idx">{{ sec.examples }}</span> 代码示例</h2>
       <div class="examples">
         <div v-for="(ex, i) in lesson.examples" :key="`${lesson.id}-ex-${i}`" class="example">
@@ -84,7 +85,7 @@
     </section>
 
     <!-- 6. 常见坑 -->
-    <section class="section">
+    <section class="section" id="sec-pitfalls">
       <h2 class="h2"><span class="idx">{{ sec.pitfalls }}</span> 常见坑</h2>
       <div class="pitfalls">
         <div v-for="(p, i) in lesson.pitfalls" :key="i" class="pitfall card">
@@ -105,7 +106,7 @@
     </section>
 
     <!-- 7. 小练习 -->
-    <section class="section">
+    <section class="section" id="sec-practice">
       <h2 class="h2"><span class="idx">{{ sec.practice }}</span> 小练习</h2>
       <div class="practices">
         <div v-for="(ex, i) in lesson.practice" :key="`${lesson.id}-pr-${i}`" class="practice card">
@@ -137,10 +138,10 @@
     </section>
 
     <!-- 8. 自测 -->
-    <QuizSection :lesson="lesson" :index="sec.quiz" />
+    <div id="sec-quiz"><QuizSection :lesson="lesson" :index="sec.quiz" /></div>
 
     <!-- 9. 掌握情况 -->
-    <section class="section">
+    <section class="section" id="sec-mastery">
       <h2 class="h2"><span class="idx">{{ sec.mastery }}</span> 掌握情况</h2>
       <div class="mastery card">
         <div class="mastery-left">
@@ -163,8 +164,11 @@
       </div>
     </section>
 
+    <!-- 底部《上一节 / 下一节 / 标记》 -->
     <LessonFooterNav :lesson="lesson" />
-  </article>
+    </article>
+    <LessonToc :items="tocItems" />
+  </div>
 
   <div v-else class="not-found card">
     <h2 class="h2">没有找到这个知识点</h2>
@@ -182,6 +186,7 @@ import { useProgressStore } from '../stores/progress.js'
 import CodeBlock from '../components/CodeBlock.vue'
 import QuizSection from '../components/QuizSection.vue'
 import LessonFooterNav from '../components/LessonFooterNav.vue'
+import LessonToc from '../components/LessonToc.vue'
 import StarRating from '../components/StarRating.vue'
 import RichText from '../components/RichText.vue'
 import { highlight } from '../utils/highlight.js'
@@ -212,6 +217,25 @@ const sec = computed(() => {
   return { what, analogy, terms, steps, examples, pitfalls, practice, quiz: quizNo, mastery }
 })
 
+const tocItems = computed(() => {
+  const s = sec.value
+  if (!s.what) return []
+  const list = [
+    { id: 'sec-what', label: '它是什么', index: String(s.what).padStart(2, '0') },
+    { id: 'sec-analogy', label: '打个比方', index: String(s.analogy).padStart(2, '0') },
+    { id: 'sec-terms', label: '术语卡', index: String(s.terms).padStart(2, '0') },
+  ]
+  if (s.steps) list.push({ id: 'sec-steps', label: '跟着做', index: String(s.steps).padStart(2, '0') })
+  list.push(
+    { id: 'sec-examples', label: '代码示例', index: String(s.examples).padStart(2, '0') },
+    { id: 'sec-pitfalls', label: '常见坑', index: String(s.pitfalls).padStart(2, '0') },
+    { id: 'sec-practice', label: '小练习', index: String(s.practice).padStart(2, '0') },
+    { id: 'sec-quiz', label: '自测', index: String(s.quiz).padStart(2, '0') },
+    { id: 'sec-mastery', label: '掌握情况', index: String(s.mastery).padStart(2, '0') },
+  )
+  return list
+})
+
 function toggleAnswer(i) {
   revealed[i] = !revealed[i]
 }
@@ -234,8 +258,18 @@ watch(
 </script>
 
 <style scoped>
+.lesson-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
 .lesson {
   max-width: 860px;
+  flex: 1;
+  min-width: 0;
 }
 
 .head {

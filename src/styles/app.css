@@ -1,28 +1,28 @@
-/* ============ 设计 Token（浅色 / 深色） ============ */
+/* ============ 设计 Token（浅色 / 深色，对齐 JavaGuide 白底 + 品牌蓝） ============ */
 :root {
-  --bg: #f6f5f4;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-2: #fbfaf9;
-  --surface-3: #f1efee;
-  --text: #1f2937;
-  --text-strong: #111827;
-  --muted: #6b7280;
-  --border: #e7e5e4;
-  --border-strong: #d6d3d1;
-  --primary: #a4552f;
-  --primary-hover: #8f4626;
-  --primary-weak: #f6ece7;
-  --primary-border: #e3c9ba;
+  --surface-2: #f7f8fa;
+  --surface-3: #eef0f3;
+  --text: #2c3e50;
+  --text-strong: #1b2a41;
+  --muted: #6a7280;
+  --border: #e9ebee;
+  --border-strong: #d5d8dd;
+  --primary: #3a7afe;
+  --primary-hover: #2b62e0;
+  --primary-weak: #eef3ff;
+  --primary-border: #bcd0ff;
   --success: #3f7d5c;
   --success-weak: #eef5f0;
   --warning: #b4632a;
   --warning-weak: #fdf1e7;
   --danger: #b3453a;
-  --code-bg: #ffffff;
-  --code-fg: #1f2937;
-  --code-border: #e7e5e4;
-  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-md: 0 6px 18px rgba(16, 24, 40, 0.08);
+  --code-bg: #f6f8fa;
+  --code-fg: #24292f;
+  --code-border: #e9ebee;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 6px 18px rgba(16, 24, 40, 0.07);
   --radius: 10px;
   --radius-sm: 6px;
   --header-h: 56px;
@@ -34,27 +34,27 @@
 }
 
 html.dark {
-  --bg: #141414;
-  --surface: #1b1b1b;
-  --surface-2: #171717;
-  --surface-3: #232323;
-  --text: #e7e5e4;
-  --text-strong: #f5f5f4;
-  --muted: #a8a29e;
-  --border: #2f2f2f;
-  --border-strong: #4b4b4b;
-  --primary: #c9774b;
-  --primary-hover: #d8895c;
-  --primary-weak: #2a1c16;
-  --primary-border: #583b2c;
+  --bg: #1b1b1f;
+  --surface: #202024;
+  --surface-2: #1e1e23;
+  --surface-3: #26262c;
+  --text: #d6d6de;
+  --text-strong: #f1f1f5;
+  --muted: #8f8f9a;
+  --border: #2e2e34;
+  --border-strong: #43434c;
+  --primary: #6a95ff;
+  --primary-hover: #85a8ff;
+  --primary-weak: #1e2740;
+  --primary-border: #31436b;
   --success: #7bc99a;
   --success-weak: #17251d;
   --warning: #f4b76a;
   --warning-weak: #2a2118;
   --danger: #f2796b;
-  --code-bg: #ffffff;
-  --code-fg: #1f2937;
-  --code-border: #d6d3d1;
+  --code-bg: #1f1f24;
+  --code-fg: #e4e4ea;
+  --code-border: #2e2e34;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 8px 22px rgba(0, 0, 0, 0.45);
 }

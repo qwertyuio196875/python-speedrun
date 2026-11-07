@@ -6,13 +6,14 @@
         ref="inputRef"
         v-model="keyword"
         type="text"
-        placeholder="搜索 Python 知识点…（变量 / 列表 / 字典 / 函数）"
+        placeholder="搜索文档…（变量 / 列表 / 字典 / 函数）"
         @focus="focused = true"
         @keydown.down.prevent="move(1)"
         @keydown.up.prevent="move(-1)"
         @keydown.enter.prevent="goActive"
         @keydown.esc="clear"
       />
+      <kbd v-if="!keyword && !focused" class="kbd">Ctrl K</kbd>
       <button v-if="keyword" class="clear" @click="clear">✕</button>
     </div>
 
@@ -84,6 +85,10 @@ function onDocClick(event) {
 
 onMounted(() => document.addEventListener('click', onDocClick))
 onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
+
+defineExpose({
+  focus: () => inputRef.value?.focus(),
+})
 </script>
 
 <style scoped>
@@ -129,6 +134,18 @@ input {
 
 input::placeholder {
   color: var(--muted);
+}
+
+.kbd {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  pointer-events: none;
 }
 
 .clear {

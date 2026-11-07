@@ -5,13 +5,20 @@
       <button class="icon-btn only-desktop" :title="collapsed ? '展开导航' : '收起导航'" @click="emit('toggle-sidebar')">
         {{ collapsed ? '☰' : '⇤' }}
       </button>
-      <RouterLink v-if="collapsed" class="mini-brand" to="/">
+      <RouterLink class="mini-brand" to="/">
         <span class="logo">{ }</span>
         <span class="mini-name">Python 零基础教程</span>
       </RouterLink>
+
+      <nav class="nav-links only-desktop" aria-label="主导航">
+        <RouterLink to="/" class="nav-link" :class="{ on: isRoute('overview', '/') }">总览</RouterLink>
+        <RouterLink to="/cheatsheet" class="nav-link" :class="{ on: isRoute('cheatsheet') }">速查表</RouterLink>
+        <RouterLink to="/practice" class="nav-link" :class="{ on: isRoute('practice') }">综合实战</RouterLink>
+        <RouterLink to="/finish" class="nav-link" :class="{ on: isRoute('finish') }">通关</RouterLink>
+      </nav>
     </div>
 
-    <SearchBox class="search-slot" />
+    <SearchBox ref="searchRef" class="search-slot" />
 
     <div class="right">
       <RouterLink to="/" class="progress-chip only-desktop" :title="`已掌握 ${store.doneCount} / ${store.totalCount} 个知识点`">
@@ -36,17 +43,16 @@
         </svg>
       </a>
 
-      <button class="icon-btn" :title="isDark ? '切换到浅色模式' : '切换到深色模式'" @click="toggleTheme">
-        {{ isDark ? '☀️' : '🌙' }}
-      </button>
+      <button class="icon-btn" :title="themeTitle" @click="cycleTheme">{{ themeIcon }}</button>
 
       <div class="settings" ref="settingsRef">
         <button class="icon-btn" title="设置" @click="menuOpen = !menuOpen">⋯</button>
         <div v-if="menuOpen" class="menu card">
           <div class="menu-title">外观</div>
           <div class="theme-row">
-            <button :class="['theme-btn', { on: !isDark }]" @click="setTheme('light')">☀️ 浅色</button>
-            <button :class="['theme-btn', { on: isDark }]" @click="setTheme('dark')">🌙 深色</button>
+            <button :class="['theme-btn', { on: theme === 'auto' }]" @click="setTheme('auto')">🌓 跟随系统</button>
+            <button :class="['theme-btn', { on: theme === 'light' }]" @click="setTheme('light')">☀️ 浅色</button>
+            <button :class="['theme-btn', { on: theme === 'dark' }]" @click="setTheme('dark')">🌙 深色</button>
           </div>
           <div class="divider" />
           <div class="menu-stat">
@@ -68,23 +74,45 @@
 
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import SearchBox from './SearchBox.vue'
 import { useProgressStore } from '../stores/progress.js'
 import { useResetProgress } from '../composables/useResetProgress.js'
 
 const props = defineProps({
   collapsed: { type: Boolean, default: false },
-  dark: { type: Boolean, default: false },
+  theme: { type: String, default: 'light' }, // 'auto' | 'light' | 'dark'
 })
 const emit = defineEmits(['toggle-drawer', 'toggle-sidebar', 'set-theme'])
 
+const route = useRoute()
 const store = useProgressStore()
 const resetProgress = useResetProgress()
 
 const menuOpen = ref(false)
 const settingsRef = ref(null)
+const searchRef = ref(null)
 
-const isDark = computed(() => props.dark)
+const theme = computed(() => props.theme)
+const themeIcon = computed(() => (props.theme === 'auto' ? '🌓' : props.theme === 'dark' ? '🌙' : '☀️'))
+const themeTitle = computed(() =>
+  props.theme === 'auto' ? '跟随系统（点击切换）' : props.theme === 'dark' ? '深色（点击切换）' : '浅色（点击切换）',
+)
+
+function isRoute(name, path) {
+  if (path) return route.path === path
+  return route.name === name
+}
+
+function cycleTheme() {
+  const order = ['auto', 'light', 'dark']
+  const next = order[(order.indexOf(props.theme) + 1) % order.length]
+  emit('set-theme', next)
+}
+
+function setTheme(value) {
+  emit('set-theme', value)
+}
 
 const studyText = computed(() => {
   const m = store.studyMinutes
@@ -99,25 +127,25 @@ const remainingText = computed(() => {
   return `${Math.floor(m / 60)} 小时 ${m % 60} 分钟`
 })
 
-function toggleTheme() {
-  emit('set-theme', isDark.value ? 'light' : 'dark')
-}
-
-function setTheme(theme) {
-  emit('set-theme', theme)
-}
-
-async function onReset() {
-  menuOpen.value = false
-  await resetProgress()
-}
-
 function onDocClick(event) {
   if (settingsRef.value && !settingsRef.value.contains(event.target)) menuOpen.value = false
 }
 
-onMounted(() => document.addEventListener('click', onDocClick))
-onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
+function onSearchKey(event) {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+    event.preventDefault()
+    searchRef.value?.focus()
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', onDocClick)
+  window.addEventListener('keydown', onSearchKey)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocClick)
+  window.removeEventListener('keydown', onSearchKey)
+})
 </script>
 
 <style scoped>
@@ -164,6 +192,34 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
   font-size: 14px;
   font-weight: 600;
   color: var(--text-strong);
+  white-space: nowrap;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+}
+
+.nav-link {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  color: var(--text-strong);
+  background: var(--surface-3);
+  text-decoration: none;
+}
+
+.nav-link.on {
+  color: var(--primary);
+  background: var(--primary-weak);
 }
 
 .search-slot {
@@ -311,6 +367,16 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 .menu-item.danger:hover {
   background: var(--danger);
   color: #fff;
+}
+
+@media (max-width: 1150px) {
+  .nav-links {
+    display: none;
+  }
+
+  .mini-name {
+    display: none;
+  }
 }
 
 .only-mobile {

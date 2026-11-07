@@ -1,5 +1,17 @@
 <template>
   <div class="overview">
+    <!-- JavaGuide 式 hero：大标题 + 一句话 + 双按钮 -->
+    <section class="hero" aria-labelledby="hero-title">
+      <h1 id="hero-title" class="hero-title">Python 零基础教程</h1>
+      <p class="hero-sub">10 阶段 · 87 节，从第一行代码到后端与 AI 应用开发</p>
+      <div class="hero-actions">
+        <button class="btn primary hero-btn" @click="goLesson(currentLesson)">
+          {{ store.doneCount === 0 ? '开始学习' : '继续学习' }}
+        </button>
+        <RouterLink class="btn hero-btn outline" to="/cheatsheet">速查表</RouterLink>
+      </div>
+    </section>
+
     <!-- 全部主线完成时，优先给出明确的下一步 -->
     <section v-if="allLessonsDone" class="complete-banner card">
       <div class="complete-copy">
@@ -198,8 +210,56 @@ function goPhase(phase) {
 .overview {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
   max-width: 880px;
+}
+
+.hero {
+  background: var(--primary-weak);
+  border: 1px solid var(--primary-border);
+  border-radius: var(--radius);
+  padding: 34px 24px 30px;
+  text-align: center;
+}
+
+.hero-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text-strong);
+  letter-spacing: 0.01em;
+}
+
+.hero-sub {
+  margin: 8px auto 0;
+  max-width: 520px;
+  color: var(--muted);
+  font-size: 14.5px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.hero-btn {
+  height: 40px;
+  padding: 0 22px;
+  font-size: 14.5px;
+  border-radius: var(--radius-sm);
+}
+
+.btn.outline {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+}
+
+.btn.outline:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 /* 聚焦卡：当前任务优先，减少装饰和信息噪声 */

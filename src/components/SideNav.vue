@@ -5,7 +5,7 @@
         <span class="logo">{ }</span>
         <div>
           <div class="name">Python 零基础教程</div>
-          <div class="sub">从第一行代码开始 · 约 30 小时</div>
+          <div class="sub">从第一行代码到后端与 AI 应用 · 约 40 小时</div>
         </div>
       </div>
       <div class="brand-progress">
