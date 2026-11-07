@@ -32,21 +32,30 @@
       </div>
     </header>
 
-    <!-- 1. 它是什么 -->
-    <section class="section" id="sec-what">
-      <h2 class="h2"><span class="idx">{{ sec.what }}</span> 它是什么</h2>
-      <p class="p"><RichText :text="lesson.what" /></p>
+    <!-- 1. 知识讲解（新格式）：系统讲完一个知识点 -->
+    <section v-if="lesson.lecture" class="section" id="sec-lecture">
+      <h2 class="h2"><span class="idx">{{ sec.lecture }}</span> 知识讲解</h2>
+      <LectureBody :blocks="lesson.lecture" />
     </section>
 
-    <!-- 2. 打个比方 -->
-    <section class="section" id="sec-analogy">
-      <h2 class="h2"><span class="idx">{{ sec.analogy }}</span> 打个比方</h2>
-      <p class="p analogy"><RichText :text="lesson.analogy" /></p>
-    </section>
+    <!-- 旧格式兜底：它是什么 + 打个比方 -->
+    <template v-else>
+      <!-- 1. 它是什么 -->
+      <section class="section" id="sec-what">
+        <h2 class="h2"><span class="idx">{{ sec.what }}</span> 它是什么</h2>
+        <p class="p"><RichText :text="lesson.what" /></p>
+      </section>
 
-    <!-- 3. 术语卡 -->
+      <!-- 2. 打个比方 -->
+      <section class="section" id="sec-analogy">
+        <h2 class="h2"><span class="idx">{{ sec.analogy }}</span> 打个比方</h2>
+        <p class="p analogy"><RichText :text="lesson.analogy" /></p>
+      </section>
+    </template>
+
+    <!-- 常用术语（细化补充） -->
     <section class="section" id="sec-terms">
-      <h2 class="h2"><span class="idx">{{ sec.terms }}</span> 术语卡</h2>
+      <h2 class="h2"><span class="idx">{{ sec.terms }}</span> 常用术语</h2>
       <div class="terms">
         <div v-for="(t, i) in lesson.terms" :key="i" class="term card">
           <div class="term-head">
@@ -162,6 +171,7 @@ import CodeBlock from '../components/CodeBlock.vue'
 import QuizSection from '../components/QuizSection.vue'
 import LessonFooterNav from '../components/LessonFooterNav.vue'
 import LessonToc from '../components/LessonToc.vue'
+import LectureBody from '../components/LectureBody.vue'
 import StarRating from '../components/StarRating.vue'
 import RichText from '../components/RichText.vue'
 import { highlight } from '../utils/highlight.js'
@@ -178,26 +188,39 @@ const hl = (code) => highlight(code, 'python')
 const sec = computed(() => {
   const item = lesson.value
   if (!item) return {}
+  const hasLecture = Boolean(item.lecture && item.lecture.length)
   let i = 0
-  const what = ++i
-  const analogy = ++i
+  const lecture = hasLecture ? ++i : null
+  let what, analogy
+  if (hasLecture) {
+    what = null
+    analogy = null
+  } else {
+    what = ++i
+    analogy = ++i
+  }
   const terms = ++i
   const steps = (item.steps || []).length ? ++i : null
   const examples = ++i
   const pitfalls = ++i
   const practice = ++i
   const quizNo = ++i
-  return { what, analogy, terms, steps, examples, pitfalls, practice, quiz: quizNo }
+  return { lecture, what, analogy, terms, steps, examples, pitfalls, practice, quiz: quizNo }
 })
 
 const tocItems = computed(() => {
   const s = sec.value
-  if (!s.what) return []
-  const list = [
-    { id: 'sec-what', label: '它是什么', index: String(s.what).padStart(2, '0') },
-    { id: 'sec-analogy', label: '打个比方', index: String(s.analogy).padStart(2, '0') },
-    { id: 'sec-terms', label: '术语卡', index: String(s.terms).padStart(2, '0') },
-  ]
+  if (!lesson.value) return []
+  const list = []
+  if (s.lecture) {
+    list.push({ id: 'sec-lecture', label: '知识讲解', index: String(s.lecture).padStart(2, '0') })
+  } else {
+    list.push(
+      { id: 'sec-what', label: '它是什么', index: String(s.what).padStart(2, '0') },
+      { id: 'sec-analogy', label: '打个比方', index: String(s.analogy).padStart(2, '0') },
+    )
+  }
+  list.push({ id: 'sec-terms', label: '常用术语', index: String(s.terms).padStart(2, '0') })
   if (s.steps) list.push({ id: 'sec-steps', label: '跟着做', index: String(s.steps).padStart(2, '0') })
   list.push(
     { id: 'sec-examples', label: '代码示例', index: String(s.examples).padStart(2, '0') },

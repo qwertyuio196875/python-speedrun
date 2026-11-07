@@ -9,12 +9,12 @@ const errors = []
 const warnings = []
 
 const REQUIRED = [
-  'id', 'title', 'phase', 'order', 'minutes', 'rating', 'summary', 'keywords', 'tip', 'what',
-  'analogy', 'terms', 'examples', 'pitfalls', 'practice', 'quiz',
+  'id', 'title', 'phase', 'order', 'minutes', 'rating', 'summary', 'keywords', 'tip', 'terms',
+  'examples', 'pitfalls', 'practice', 'quiz',
 ]
 
 /** 文案字段：禁止出现其它编程语言名称 */
-const TEXT_FIELDS = ['summary', 'tip', 'what', 'analogy', 'note', 'explain', 'question', 'prompt', 'detail', 'hint']
+const TEXT_FIELDS = ['summary', 'tip', 'what', 'analogy', 'lecture', 'note', 'explain', 'question', 'prompt', 'detail', 'hint']
 const BANNED = /\b(Java|Spring|Maven|Gradle|JVM|Servlet|JUnit|JavaScript|TypeScript|C\+\+|C#|Rust|Go|Kotlin|Swift|PHP|Ruby)\b/
 const bannedWord = /(Java|Maven|JVM|Spring Boot|JUnit)/
 
@@ -42,9 +42,19 @@ for (const lesson of lessons) {
     }
   }
 
+  // 讲解格式（新）与旧格式二选一
+  const hasLecture = Array.isArray(lesson.lecture) && lesson.lecture.length > 0
+  if (hasLecture) {
+    lesson.lecture.forEach((block, i) => {
+      if (typeof block !== 'string' || !block.trim()) errors.push(`${where}: lecture[${i}] 必须是非空字符串`)
+    })
+  } else {
+    if (!lesson.what) errors.push(`${where}: 缺少讲解内容（请写 lecture 或 what）`)
+    if (!lesson.analogy) errors.push(`${where}: 缺少类比 analogy`)
+  }
+
   // 零基础专属字段
   if (!lesson.tip?.includes('零基础提示')) errors.push(`${where}: tip 必须以「零基础提示：」开头`)
-  if (!lesson.analogy) errors.push(`${where}: 缺少类比 analogy`)
   if (!Array.isArray(lesson.terms) || lesson.terms.length < 2 || lesson.terms.length > 5) {
     errors.push(`${where}: terms 必须是 2~5 条`)
   } else {
