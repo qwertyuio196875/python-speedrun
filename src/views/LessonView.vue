@@ -140,30 +140,6 @@
     <!-- 8. 自测 -->
     <div id="sec-quiz"><QuizSection :lesson="lesson" :index="sec.quiz" /></div>
 
-    <!-- 9. 掌握情况 -->
-    <section class="section" id="sec-mastery">
-      <h2 class="h2"><span class="idx">{{ sec.mastery }}</span> 掌握情况</h2>
-      <div class="mastery card">
-        <div class="mastery-left">
-          <div class="ms-title">
-            {{ store.isDone(lesson.id) ? '你已经学会了这一节' : '学会了就把这一节标记为已掌握' }}
-          </div>
-          <div class="ms-sub muted">
-            <template v-if="quiz">
-              自测成绩：{{ quiz.correct }} / {{ quiz.total }}（{{ new Date(quiz.at).toLocaleString('zh-CN') }}）
-            </template>
-            <template v-else>还没有自测记录，建议先做一遍上面的自测。</template>
-          </div>
-        </div>
-        <div class="mastery-actions">
-          <button class="btn" :class="{ success: store.isDone(lesson.id) }" @click="store.toggleDone(lesson.id)">
-            {{ store.isDone(lesson.id) ? '✓ 已掌握（点击取消）' : '✓ 标记为已掌握' }}
-          </button>
-          <button class="btn ghost" @click="relearn">重新学习</button>
-        </div>
-      </div>
-    </section>
-
     <!-- 底部《上一节 / 下一节 / 标记》 -->
     <LessonFooterNav :lesson="lesson" />
     </article>
@@ -180,7 +156,6 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { lessonById, totalLessons } from '../data/curriculum.js'
 import { useProgressStore } from '../stores/progress.js'
 import CodeBlock from '../components/CodeBlock.vue'
@@ -196,7 +171,6 @@ const store = useProgressStore()
 const total = totalLessons
 
 const lesson = computed(() => lessonById[route.params.id])
-const quiz = computed(() => store.quizOf(route.params.id))
 
 const revealed = reactive({})
 const hl = (code) => highlight(code, 'python')
@@ -213,8 +187,7 @@ const sec = computed(() => {
   const pitfalls = ++i
   const practice = ++i
   const quizNo = ++i
-  const mastery = ++i
-  return { what, analogy, terms, steps, examples, pitfalls, practice, quiz: quizNo, mastery }
+  return { what, analogy, terms, steps, examples, pitfalls, practice, quiz: quizNo }
 })
 
 const tocItems = computed(() => {
@@ -231,7 +204,6 @@ const tocItems = computed(() => {
     { id: 'sec-pitfalls', label: '常见坑', index: String(s.pitfalls).padStart(2, '0') },
     { id: 'sec-practice', label: '小练习', index: String(s.practice).padStart(2, '0') },
     { id: 'sec-quiz', label: '自测', index: String(s.quiz).padStart(2, '0') },
-    { id: 'sec-mastery', label: '掌握情况', index: String(s.mastery).padStart(2, '0') },
   )
   return list
 })
@@ -240,10 +212,7 @@ function toggleAnswer(i) {
   revealed[i] = !revealed[i]
 }
 
-function relearn() {
-  store.unmarkDone(route.params.id)
-  ElMessage({ message: '已重置本节掌握状态，可以重新学一遍', type: 'info' })
-}
+
 
 watch(
   () => route.params.id,
@@ -582,32 +551,6 @@ watch(
   flex-direction: column;
   gap: 10px;
   align-items: flex-start;
-}
-
-.mastery {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px;
-  flex-wrap: wrap;
-}
-
-.ms-title {
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--text-strong);
-}
-
-.ms-sub {
-  font-size: 12.5px;
-  margin-top: 3px;
-}
-
-.mastery-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .not-found {
