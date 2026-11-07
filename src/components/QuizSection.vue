@@ -382,6 +382,12 @@ watch(
   border-color: var(--primary);
 }
 
+@media (max-width: 720px) {
+  .answer-input {
+    font-size: 16px;
+  }
+}
+
 .q-foot {
   display: flex;
   align-items: center;

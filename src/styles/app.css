@@ -463,8 +463,7 @@ html.dark .inline-code {
     font-size: 15.5px;
   }
 
-  .code-body,
   .code-editor {
-    font-size: 12.5px;
+    font-size: 16px;
   }
 }

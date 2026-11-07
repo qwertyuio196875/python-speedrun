@@ -6,7 +6,7 @@
         ref="inputRef"
         v-model="keyword"
         type="text"
-        placeholder="搜索文档…（变量 / 列表 / 字典 / 函数）"
+        placeholder="搜索知识点…"
         @focus="focused = true"
         @keydown.down.prevent="move(1)"
         @keydown.up.prevent="move(-1)"
@@ -154,6 +154,16 @@ input::placeholder {
   color: var(--muted);
   cursor: pointer;
   font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .kbd {
+    display: none;
+  }
+
+  input {
+    font-size: 16px;
+  }
 }
 
 .results {

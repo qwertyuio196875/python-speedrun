@@ -48,7 +48,7 @@
           <div class="step-panel">
             <div class="step-title">完成这一节前，按顺序确认</div>
             <ol class="step-list">
-              <li><span class="step-no">1</span><span>先读“它是什么”，能说清它解决什么问题就过关</span></li>
+              <li><span class="step-no">1</span><span>先读“知识讲解”，能说清它解决什么问题就过关</span></li>
               <li><span class="step-no">2</span><span>照示例做一遍，字符、括号和中文标点都要对上</span></li>
               <li><span class="step-no">3</span><span>完成一个小练习，报错就对照“常见坑”</span></li>
               <li><span class="step-no">4</span><span>做一遍自测，答错的回到对应代码再看一遍</span></li>
@@ -748,6 +748,26 @@ function goPhase(phase) {
   .complete-banner {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    padding: 22px 16px 20px;
+  }
+
+  .hero-title {
+    font-size: 24px;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+  }
+
+  .hero-btn {
+    height: 38px;
+    font-size: 13.5px;
+    padding: 0 16px;
   }
 }
 </style>

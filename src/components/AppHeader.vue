@@ -391,5 +391,16 @@ onBeforeUnmount(() => {
   .only-desktop {
     display: none;
   }
+
+  .app-header {
+    padding: 0 10px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  .gh-link {
+    display: none;
+  }
 }
 </style>

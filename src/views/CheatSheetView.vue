@@ -361,11 +361,33 @@ watch(
 
 @media (max-width: 760px) {
   .item-row {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'task caret'
+      'code code'
+      'note note';
+    row-gap: 6px;
+  }
+
+  .cell.task {
+    grid-area: task;
+  }
+
+  .cell.code {
+    grid-area: code;
+    overflow-x: auto;
+    padding: 6px 8px;
+  }
+
+  .caret {
+    grid-area: caret;
+    align-self: center;
   }
 
   .cell.note {
-    grid-column: 1 / -1;
+    grid-area: note;
+    grid-column: auto;
+    font-size: 12.5px;
   }
 }
 </style>
